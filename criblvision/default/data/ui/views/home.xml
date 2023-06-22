@@ -1,0 +1,212 @@
+<form theme="dark" script="button_click.js" version="1.1">
+  <label>Log Analytics</label>
+      <row>
+    <panel>
+      
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+      		
+			<p style="list-style-type:square"><span style="font-size:11pt"><span style="font-family:Arial">This dashboard is interactive and intended for general troubleshooting. It displays a series of panels with log_level counts split by channel or message. You can refine the panel results further by limiting the log type which defaults to all. Clicking on any of the channel or message values in the panels will populate a results table below with the raw messages in syntax highlighted mode.&#160;</span></span></p>
+		
+      </html>
+    </panel>
+  </row>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="field1" searchWhenChanged="true">
+      <label>Timerange</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <choice value="*">All</choice>
+    </input>
+    <input type="dropdown" token="debug">
+      <label>Show Debug?</label>
+      <choice value="yes">Yes!</choice>
+      <choice value="no">No!</choice>
+      <default>no</default>
+      <change>
+        <condition value="no">
+          <unset token="show_debug"></unset>
+        </condition>
+        <condition value="yes">
+          <set token="show_debug">true</set>
+        </condition>
+      </change>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>ERRORS</title>
+      <input type="dropdown" token="messagesplit" searchWhenChanged="true">
+        <label>Split by</label>
+        <choice value="channel">Channel</choice>
+        <choice value="message">Message</choice>
+        <default>channel</default>
+        <initialValue>channel</initialValue>
+      </input>
+      <input type="dropdown" token="logtype">
+        <label>Log Type</label>
+        <choice value="api">Api</choice>
+        <choice value="w*">Worker</choice>
+        <choice value="*">All</choice>
+        <choice value="cfg*">Config events</choice>
+        <default>*</default>
+      </input>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index` host=$host$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="channel">$row.channel$</set>
+          <set token="level">ERROR</set>
+          <set token="message">$row.message$</set>
+          <set token="name">$click.name$</set>
+          <set token="value">$click.value$</set>
+          <set token="cid">$logtype$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>WARNS</title>
+      <input type="dropdown" token="messagesplit1" searchWhenChanged="true">
+        <label>Split by</label>
+        <choice value="channel">Channel</choice>
+        <choice value="message">Message</choice>
+        <default>channel</default>
+        <initialValue>channel</initialValue>
+      </input>
+      <input type="dropdown" token="logtype1">
+        <label>Log Type</label>
+        <choice value="api">Api</choice>
+        <choice value="w*">Worker</choice>
+        <choice value="*">All</choice>
+        <choice value="cfg*">Config events</choice>
+        <default>*</default>
+      </input>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index` host=$host$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="channel">$row.channel$</set>
+          <set token="level">WARN</set>
+          <set token="name">$click.name$</set>
+          <set token="value">$click.value$</set>
+          <set token="cid">$logtype1$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>INFO</title>
+      <input type="dropdown" token="messagesplit2" searchWhenChanged="true">
+        <label>Split by</label>
+        <choice value="channel">Channel</choice>
+        <choice value="message">Message</choice>
+        <default>channel</default>
+        <initialValue>channel</initialValue>
+      </input>
+      <input type="dropdown" token="logtype2">
+        <label>Log Type</label>
+        <choice value="api">Api</choice>
+        <choice value="w*">Worker</choice>
+        <choice value="*">All</choice>
+        <choice value="cfg*">Config events</choice>
+        <default>*</default>
+      </input>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index` host=$host$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="channel">$row.channel$</set>
+          <set token="level">INFO</set>
+          <set token="name">$click.name$</set>
+          <set token="value">$click.value$</set>
+          <set token="cid">$logtype2$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel depends="$show_debug$">
+      <title>DEBUG</title>
+      <input type="dropdown" token="messagesplit3" searchWhenChanged="true">
+        <label>Split by</label>
+        <choice value="channel">Channel</choice>
+        <choice value="message">Message</choice>
+        <default>channel</default>
+        <initialValue>channel</initialValue>
+      </input>
+      <input type="dropdown" token="logtype3">
+        <label>Log Type</label>
+        <choice value="api">Api</choice>
+        <choice value="w*">Worker</choice>
+        <choice value="*">All</choice>
+        <choice value="cfg*">Config events</choice>
+        <default>*</default>
+      </input>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index`  host=$host$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="channel">$row.channel$</set>
+          <set token="level">DEBUG</set>
+          <set token="name">$click.name$</set>
+          <set token="value">$click.value$</set>
+          <set token="cid">$logtype3$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <event>
+        <search>
+          <query>`set_cribl_internal_log_index` host=$host$ $name$=$value|s$ level=$level$</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="list.drilldown">full</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20%20source%3D*.log%20$name$%3D$value|s$%20level%3D$level$&amp;earliest=$field1.earliest$&amp;latest=$field1.latest$</link>
+        </drilldown>
+      </event>
+    </panel>
+  </row>
+</form>

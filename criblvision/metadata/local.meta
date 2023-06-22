@@ -1,0 +1,105 @@
+[app/ui]
+version = 8.1.3
+modtime = 1635455781.516950000
+
+[app/launcher]
+version = 8.1.3
+modtime = 1635455781.518014000
+
+[views/home]
+version = 8.2.6
+modtime = 1686244315.536519000
+
+[views/stats]
+version = 8.2.6
+modtime = 1686244385.289577000
+
+[inputs/tcp%3A%2F%2F19998]
+version = 8.1.3
+modtime = 1635461099.129344000
+
+[views/audit]
+version = 8.2.6
+modtime = 1685720354.499783000
+
+[nav/default]
+version = 8.2.6
+modtime = 1685654561.244548000
+
+[]
+version = 8.2.6
+modtime = 1685370956.686623000
+
+[views/health_check]
+version = 8.2.6
+modtime = 1686604151.247012000
+
+[views/sizingcalculator_test]
+version = 8.2.6
+modtime = 1685396746.645372000
+
+[macros/set_cribl_internal_log_index]
+version = 8.2.6
+modtime = 1686669542.731766000
+
+[macros/set_cribl_log_sourcetype]
+version = 8.2.6
+modtime = 1685396790.307163000
+
+[macros/set_cribl_metrics_index]
+version = 8.2.6
+modtime = 1686669554.462069000
+
+[views/welcome]
+version = 8.2.6
+modtime = 1687370418.288353000
+owner = jwoger@cribl.io
+
+[views/thruput]
+version = 8.2.6
+modtime = 1685720278.164411000
+
+[views/cribl_thruput_introspection]
+version = 8.2.6
+modtime = 1686604540.141930000
+
+[views/auditlogs]
+version = 8.2.6
+modtime = 1686604780.518163000
+
+[views/commit_and_deploy_audit_logs]
+version = 8.2.6
+modtime = 1686604810.747168000
+
+[views/leader_performance_introspection]
+version = 8.2.6
+modtime = 1687386409.313408000
+owner = jwoger@cribl.io
+
+[views/sources_overview]
+version = 8.2.6
+modtime = 1686604332.011382000
+
+[views/destinations_overview]
+version = 8.2.6
+modtime = 1686604363.146194000
+
+[views/job_inspector]
+version = 8.2.6
+modtime = 1686604759.061640000
+
+[views/persistent_queue_analytics]
+version = 8.2.6
+modtime = 1687386652.299599000
+
+[views/known_issues]
+version = 8.2.6
+modtime = 1685648657.084209000
+
+[macros/set_cribl_metrics_prefix%281%29]
+version = 8.2.6
+modtime = 1685722123.168818000
+
+[views/sizingcalculator]
+version = 8.2.6
+modtime = 1686604388.081793000

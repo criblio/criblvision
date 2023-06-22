@@ -1,0 +1,30 @@
+<nav search_view="search">
+  <view name="welcome" default='true' />
+  <view name="health_check" />
+  <collection label="Analytics">
+  	<view name="home" />
+  	<view name="stats" />
+  </collection>
+  <collection label="Sources">
+    <view name="sources_overview" />
+  </collection>
+  <collection label="Destinations">
+    <view name="destinations_overview" />
+  </collection>
+  <collection label="Performance">
+    <view name="sizingcalculator" />
+    <view name="cribl_thruput_introspection" />
+    <view name="leader_performance_introspection" />
+    <view name="persistent_queue_analytics" />
+    <view name="job_inspector" />
+  </collection>
+  <collection label="Audit">
+    <view name="auditlogs" />
+    <view name="commit_and_deploy_audit_logs" />
+  </collection>
+  <collection label="Resources">
+    <view name="known_issues" />
+  </collection>
+  <view name="dashboards" />
+  <view name="search" />
+</nav>

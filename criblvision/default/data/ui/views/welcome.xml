@@ -1,0 +1,93 @@
+<dashboard  version="1.1">
+<label>Welcome</label>
+  <row>
+    <panel>
+      
+      <html>
+       <h2><span style="font-size:16pt"><span style="font-family:Arial"><span style="color:#000000">Getting started</span></span></span></h2>
+
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl support engineers to help customers troubleshoot their own cribl deployments. There are several troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own cribl deployment, this app will always be a continuous &#8221;work in progress&#8221; and should always be used in conjunction with the cribl monitoring console and associated views.&#160;</span></span></span></p>
+
+<p>&#160;</p>
+
+<h3><span style="font-size:13.999999999999998pt"><span style="font-family:Arial"><span style="color:#434343">Context is crucial</span></span></span></h3>
+
+<p><span style="color:#000000; font-family:Arial; font-size:11pt">In the ancient art of troubleshooting, context is key - whether the problem is of a technical nature, or merely one related to existence itself.</span></p>
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Without a clear understanding of the circumstances surrounding an issue, it becomes challenging to identify the root cause and provide an effective solution. Context provides valuable information about a specific environment, and every environment is unique; when using this app, it is wise to ask yourself the following questions:</span></span></span></p>
+
+<ul>
+	<li style="list-style-type:disc"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">What is the current issue you are attempting to troubleshoot?</span></span></span></li>
+	<li style="list-style-type:disc"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Are there any recent configuration changes that were made before the issue started?</span></span></span></li>
+	<li style="list-style-type:disc"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Were there any specific user interactions that may have contributed to the start of the issue? Example: Increase in data throughput, new sources or destinations, change in architecture, etc..&#160;</span></span></span></li>
+</ul>
+
+
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Answers to the above questions, and many others, will help narrow down the scope of the investigation, enabling you and your team to focus their efforts on the relevant areas. Additionally, context aids in replicating the problem, as it enables Support Engineers to understand the exact conditions under which the issue occurs. Knowledge of the environment, along with all of the context on use-cases and integrations, and ensure that the troubleshooting process is efficient and accurate.</span></span></span></p>
+
+<p>&#160;</p>
+
+<h3><span style="font-size:13.999999999999998pt"><span style="font-family:Arial"><span style="color:#434343">Configuration</span></span></span></h3>
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">This app and its associated dashboards rely on a few components which you must configure</span></span></span></p>
+
+<p>&#160;</p>
+
+<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Logs and Metrics</span></span></span></h4>
+
+<p>&#160;</p>
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Cribl internal logs and metrics must be enabled and forwarded to splunk in order for all of the panels to populate with events. Refer the documentation </span></span></span><a href="https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource" style="text-decoration:none"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#1155cc"><u>here</u></span></span></span></a><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000"> for instructions on configuring this source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index field for metrics.&#160;</span></span></span></p>
+
+<p>&#160;</p>
+
+<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Macros</span></span></span></h4>
+
+<p>&#160;</p>
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">This app ships with 4 macros which must be edited in accordance with your splunk index naming schema. For more info on configuring macros, reference Splunk&#8217;s Documentation </span></span></span><a href="https://docs.splunk.com/Documentation/SplunkCloud/9.0.2303/Knowledge/Definesearchmacros" style="text-decoration:none"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#1155cc"><u>here</u></span></span></span></a><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">.</span></span></span></p>
+
+<table border="1" cellpadding="1" cellspacing="1" style="width:686px">
+	<tbody>
+		<tr>
+			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_internal_log_index</span></span></span></td>
+			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set this macro definition to the index you configured cribl logs.</span></span></span></td>
+		</tr>
+		<tr>
+			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_log_sourcetype</span></span></span></td>
+			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set this macro definition to the sourcetype you configured for cribl logs.</span></span></span></td>
+		</tr>
+		<tr>
+			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_metrics_index</span></span></span></td>
+			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Macro definition for the index you configured for cribl metrics</span></span></span></td>
+		</tr>
+		<tr>
+			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_metrics_prefix(1)</span></span></span></td>
+			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">change the &quot;cribl.logstream&quot; value before .$metric_name$&#160;if you have changed the default namespace used for metrics on your cribl metrics internal source.&#160;</span></span></span></td>
+		</tr>
+	</tbody>
+</table>
+
+<p>&#160;</p>
+
+<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Leader logs</span></span></span></h4>
+
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">
+Some of the views in this app will require leader logs to be forwarded on to splunk. In distributed Cribl Stream environments, leader logs are currently NOT sent via our internal source. You will have to install an edge node on your leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to  /opt/cribl/log/*.log For more information on how to deploy an edge node, please refer to our documentation <a href="https://docs.cribl.io/edge/deploy-planning">here</a>. 
+</span></span></span></p>
+
+<p>&#160;</p>
+
+<h2><span style="font-size:16pt"><span style="font-family:Arial"><span style="color:#000000">Using this app</span></span></span></h2>
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a cribl deployment. Every view is equipped with a "how to use" button that reveals a description and instructions for that view when clicked. We recommend starting with the health check view and selecting a single worker node from the host dropdown.</span></span></span></p>
+
+
+
+     </html>
+    </panel>
+  </row>
+</dashboard>

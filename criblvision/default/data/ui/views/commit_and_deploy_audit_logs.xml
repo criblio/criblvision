@@ -1,0 +1,76 @@
+<form theme="dark" script="button_click.js" version="1.1">
+  <label>Commit and Deploy Audit Logs</label>
+      <row>
+    <panel>
+      
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This dashboard is designed to show a breakdown of commits and deploys from the leader node. You can select to have fils created, modified, or deleted shown. This is useful to audit what recent configurations changes might have been deployed before an issue started. </p>
+      </html>
+    </panel>
+  </row>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Timerange</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="leader">
+      <label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` AND source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log")
+| mvexpand host
+| sort host</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+    </input>
+    <input type="radio" token="FilesCreated" searchWhenChanged="true">
+      <label>Show Files Created</label>
+      <choice value="FilesCreated">Yes</choice>
+      <choice value="">No</choice>
+      <default></default>
+    </input>
+    <input type="radio" token="FilesModified" searchWhenChanged="true">
+      <label>Show Files Modified</label>
+      <choice value="FilesModified">Yes</choice>
+      <choice value="">No</choice>
+      <default></default>
+    </input>
+    <input type="radio" token="FilesDeleted" searchWhenChanged="true">
+      <label>Show Files Deleted</label>
+      <choice value="FilesDeleted">Yes</choice>
+      <choice value="">No</choice>
+      <default></default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index()` host=$leader$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") (action=commit AND type=git AND id!="") OR (action=deploy AND type=groups AND id!="") 
+| eval WorkerGroup=case(action="deploy", id), CommitVersion=case(action="deploy", version, action="commit", id), DeployTime=case(action="deploy", time), CommitTime=case(action="commit", time), isDeployed=if(action="deploy", "1", "0")
+| stats values(user) AS User values(WorkerGroup) AS WorkerGroup values(CommitTime) AS CommitTime values(files.created{}) AS FilesCreated values(files.modified{}) AS FilesModified values(files.deleted{}) AS FilesDeleted max(isDeployed) AS isDeployed values(DeployTime) AS DeployTime latest(_time) AS _time by CommitVersion
+| sort 0 - _time
+| table User WorkerGroup CommitVersion CommitTime $FilesCreated$ $FilesModified$ $FilesDeleted$ isDeployed DeployTime
+| fillnull value="-" User WorkerGroup CommitVersion CommitTime $FilesCreated$ $FilesModified$ $FilesDeleted$ isDeployed DeployTime</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

@@ -1,0 +1,111 @@
+<form theme="dark" script="button_click.js" version="1.1">
+  <label>Job Inspector</label>
+      <row>
+    <panel>
+      
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This is intended as a general use dashboard to help you troubleshoot any issues you may be having with jobs. You can use the dropdown to filter logs based on worker group, job name and job id. Improvements to our job logging will be made in future releases which will result in more useful job metrics. For now, we are providing you with just a list of logs. </p>
+      </html>
+    </panel>
+  </row>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Timerange</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="host" searchWhenChanged="true">&gt;<label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") | mvexpand host | sort host</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="workerGroup" searchWhenChanged="true">
+      <label>Worker Group</label>
+      <fieldForLabel>WorkerGroup</fieldForLabel>
+      <fieldForValue>WorkerGroup</fieldForValue>
+      <search>
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ | mvexpand source | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/" | stats values(WorkerGroup) AS WorkerGroup | mvexpand WorkerGroup</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="jobName" searchWhenChanged="true">
+      <label>Job Name</label>
+      <fieldForLabel>JobName</fieldForLabel>
+      <fieldForValue>JobName</fieldForValue>
+      <search>
+        <query>| tstats values(source) AS source WHERE`set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ 
+| mvexpand source 
+| rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
+| rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
+| search WorkerGroup=$workerGroup$
+| stats values(JobName) as JobName
+| mvexpand JobName</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="jobId" searchWhenChanged="true">
+      <label>Job Id</label>
+      <fieldForLabel>JobId</fieldForLabel>
+      <fieldForValue>JobId</fieldForValue>
+      <search>
+        <query>| tstats values(source) AS source WHERE`set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ 
+| mvexpand source
+| rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
+| rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
+| search WorkerGroup=$workerGroup$ AND JobName=$jobName$
+| stats values(JobId) as JobId
+| mvexpand JobId
+| sort 0 - JobId</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Information Panel</title>
+      <html>
+      <style>
+      #id_one .panel-body {
+        padding-bottom: 10px !important;
+        }
+      </style>
+      <b>For more information regarding Collector Jobs and the Stream Job Inspector, please visit our Documentation:</b> <a href="https://docs.cribl.io/stream/collectors/" target="_blank">Collector Sources</a>
+        <br/>
+      <b>For more information regarding Collector Jobs and Scheduling / Running, please visit our Documentation:</b> <a href="https://docs.cribl.io/stream/collectors-schedule-run" target="_blank">Scheduling and Running</a>
+        <br/>
+     </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <event>
+        <search>
+          <query>`set_cribl_internal_log_index` host=$host$ source=*state/jobs/$workerGroup$/$jobId$/*</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="list.drilldown">none</option>
+        <option name="raw.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="type">raw</option>
+      </event>
+    </panel>
+  </row>
+</form>

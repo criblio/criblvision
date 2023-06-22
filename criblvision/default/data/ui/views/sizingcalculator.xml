@@ -1,0 +1,249 @@
+<form theme="dark" script="button_click.js" version="1.1">
+  <label>Cribl Stream Sizing Calculator</label>
+      <row>
+    <panel>
+      
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This dashboard is intended to show if your current architecture is sufficient to handle the amount of data being processed by your deployment. After choosing a worker node host, cpu speed and cpu architecture, click submit. It will provide you with your current worker process count, estimated processing throughput per vcpu and total estimated processing throughput per worker node. To determine if you are currently undersized, examine the estimated worker processes required panel. If the estimated worker process count exceeds your currently available number, this is one indication of being undersized. The remaining panels will show you the amount of time in %, during the selected timerange, that the worker processes exceeded 90% cpu usage and eluPerc usage. If these numbers are at or above 90%, you should consider upsizing your deployment. </p>
+      </html>
+    </panel>
+  </row>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time">
+      <label>Timerange</label>
+      <default>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index()`| mvexpand host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="dropdown" token="cpuSpeed">
+      <label>CPU Speed</label>
+      <choice value="1.5">1.5GHz</choice>
+      <choice value="1.6">1.6GHz</choice>
+      <choice value="1.7">1.7GHz</choice>
+      <choice value="1.8">1.8GHz</choice>
+      <choice value="1.9">1.9GHz</choice>
+      <choice value="2.0">2.0GHz</choice>
+      <choice value="2.1">2.1GHz</choice>
+      <choice value="2.2">2.2GHz</choice>
+      <choice value="2.3">2.3GHz</choice>
+      <choice value="2.4">2.4GHz</choice>
+      <choice value="2.5">2.5GHz</choice>
+      <choice value="2.6">2.6GHz</choice>
+      <choice value="2.7">2.7GHz</choice>
+      <choice value="2.8">2.8GHz</choice>
+      <choice value="2.9">2.9GHz</choice>
+      <choice value="3.0">3.0GHz</choice>
+      <choice value="3.1">3.1GHz</choice>
+      <choice value="3.2">3.2GHz</choice>
+      <choice value="3.3">3.3GHz</choice>
+      <choice value="3.4">3.4GHz</choice>
+      <choice value="3.5">3.5GHz</choice>
+      <choice value="3.6">3.6GHz</choice>
+      <choice value="3.7">3.7GHz</choice>
+      <choice value="3.8">3.8GHz</choice>
+      <choice value="3.9">3.9GHz</choice>
+      <default>3.0</default>
+    </input>
+    <input type="radio" token="cpuType" searchWhenChanged="true">
+      <label>CPU Architecture</label>
+      <choice value="200">x64 (Hyperthreading)</choice>
+      <choice value="400">x64</choice>
+      <choice value="480">ARM64</choice>
+      <default>200</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Information Panel</title>
+      <html>
+      <style>
+      #id_one .panel-body {
+        padding-bottom: 10px !important;
+        }
+      </style>
+      <b>For more information regarding Sizing and Scaling, please visit our Documentation:</b> <a href="https://docs.cribl.io/stream/scaling/" target="_blank">Sizing and Scaling</a>
+        <br/>
+      <b>Please also see our Cribl Stream Sizing Calculator:</b> <a href="https://criblsizing.info/" target="_blank">Cribl Stream Sizing Calculator</a>
+        <br/>
+      <i>Please note that this doesn't take any Data Processing Requirements into consideration.</i>
+     </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Worker Process Count for $host$</title>
+      <single>
+        <search>
+          <done>
+            <set token="workerProcessCount">$result.WorkerProcessCount$</set>
+          </done>
+          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ channel="server" message="_raw stats"
+| stats dc(cid) AS WorkerProcessCount</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">Worker Process Count</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Estimated Processing Throughput per vCPU</title>
+      <single>
+        <search>
+          <done>
+            <set token="processingLimitPerCPU">$result.processingLimitPerCPU$</set>
+          </done>
+          <query>| makeresults | eval processingLimitPerCPU=(($cpuType$ * $cpuSpeed$) / 3)</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">GB/day</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Estimated Total Throughput per Worker Node</title>
+      <single>
+        <search>
+          <query>| makeresults | eval EstimatedLimit=($processingLimitPerCPU$ * $workerProcessCount$)</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">GB/day</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Total Throughput (inBytes + outBytes) in GB</title>
+      <chart>
+        <search>
+          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+| bin span=1d _time
+| stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
+| eval totalGB=round((('inBytes' + 'outBytes') / 1024 / 1024 / 1024), 0)
+| timechart span=1d max(totalGB) AS "Total Throughput (GB)"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Estimated Worker Processes Required</title>
+      <chart>
+        <search>
+          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+| bin span=1d _time
+| stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
+| eval inTB=round(('inBytes' / 1024 / 1024 / 1024 / 1024), 0)
+| eval outTB=round(('outBytes' / 1024 / 1024 / 1024 / 1024), 0)
+| eval calculation=(round(((('inTB' + 'outTB') * 1024) / $processingLimitPerCPU$), 0) + 1)
+| timechart span=1d max(calculation) AS "Estimated Worker Processes Required"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Estimated Worker Processes Required, based on DAILY throughput over the given TimeRange</title>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+| bin span=1d _time
+| stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
+| eval inGB=round(('inBytes' / 1024 / 1024 / 1024), 0)
+| eval outGB=round(('outBytes' / 1024 / 1024 / 1024), 0)
+| eval totalGB=('inGB' + 'outGB')
+| eval "Estimated Worker Processes Required"=(round(('totalGB' / $processingLimitPerCPU$), 0) + 1)
+| table _time inGB outGB totalGB "Estimated Worker Processes Required"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Percentage, over the provided timerange, that a Worker Process exceeded 90% cpuPerc usage</title>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+| bin span=1m _time
+| stats max(cpuPerc) AS cpuPerc by _time cid
+| eval Percentage=if(cpuPerc &gt;= 90, 1, 0)
+| stats sum(Percentage) AS Percentage count by cid
+| eval Percentage=round((('Percentage' * 100) / 'count'), 2)
+| eval workerProcess=ltrim('cid', "w")
+| sort 0 workerProcess
+| fields cid Percentage</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="count">25</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Percentage, over the provided timerange, that a Worker Process exceeded 90% eluPerc usage</title>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+| bin span=1m _time
+| stats max(eluPerc) AS eluPerc by _time cid
+| eval Percentage=if(eluPerc &gt;= 90, 1, 0)
+| stats sum(Percentage) AS Percentage count by cid
+| eval Percentage=round((('Percentage' * 100) / 'count'), 2)
+| eval workerProcess=ltrim('cid', "w")
+| sort 0 workerProcess
+| fields cid Percentage</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="count">25</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+      </table>
+    </panel>
+  </row>
+</form>

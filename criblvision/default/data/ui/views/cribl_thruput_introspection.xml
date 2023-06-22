@@ -1,0 +1,232 @@
+<form theme="dark" script="button_click.js" version="1.1">
+  <label>Cribl Thruput Introspection</label>
+  <description>Cribl Thruput Introspection</description>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" searchWhenChanged="true" token="global_time_tok">
+      <label>Time Range</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <choice value="*">All</choice>
+      <prefix>"</prefix>
+      <suffix>"</suffix>
+    </input>
+    <input type="dropdown" token="mstats_span" searchWhenChanged="true">
+      <label>Time Span</label>
+      <choice value="auto">auto</choice>
+      <choice value="5s@s">5s</choice>
+      <choice value="10s@s">10s</choice>
+      <choice value="30s@s">30s</choice>
+      <choice value="1m@m">1m</choice>
+      <choice value="5m@m">5m</choice>
+      <choice value="10m@m">10m</choice>
+      <choice value="30m@m">30m</choice>
+      <choice value="1h@h">1h</choice>
+      <choice value="1d@d">1d</choice>
+      <choice value="1w@w">1w</choice>
+      <choice value="1mon@mon">1mon</choice>
+      <default>auto</default>
+      <change>
+        <eval token="timechart_span">if($value$ == "auto", "", "span=".$value$)</eval>
+        <eval token="mstats_span">"span=".$value$</eval>
+      </change>
+      <prefix>span=</prefix>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This dashboard is intended to provide insight into thruput metrics from reported metrics events. Metrics on this dashboard are for your sources and destinations. For destinations, there are two panels which show total events and bytes out by destination. You can select all or just specific destinations. The sources panel will display events and total bytes in. However this dashboard has a few options to help troubleshoot issues specific to uneven distribution of events received by worker process which can be an indication of tcp pinning or other issues with the origin sending these events. When selecting the split by of Worker Process, a new panel showing cpu by worker process appears underneath the total events in panel. We recommend also setting the stack mode to 100% stacked. This mode will allow you to easily identify if there is one worker process that is accepting a significantly higher amount of events and also consuming more cpu than other workers. A single worker process with a high event in count and 100% cpu usage is usually indicative of TCP pinning. </p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Destinations</title>
+      <input type="multiselect" token="output_token" searchWhenChanged="true">
+        <label>Destinations</label>
+        <choice value="*">All</choice>
+        <prefix>output IN (</prefix>
+        <suffix>)</suffix>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+        <delimiter>, </delimiter>
+        <default>*</default>
+        <initialValue>*</initialValue>
+        <fieldForLabel>output</fieldForLabel>
+        <fieldForValue>output</fieldForValue>
+        <search>
+          <query>| mstats avg(`set_cribl_metrics_prefix("total.out_events")`) WHERE `set_cribl_metrics_index` BY output
+| table output</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+      </input>
+      <chart>
+        <title>Total events out</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` AND "host"=$host$ AND $output_token$ $mstats_span$ BY output
+| timechart sum("out_events") $timechart_span$ useother=false BY output WHERE max in top5
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+      <chart>
+        <title>Total bytes outs</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` AND "host"=$host$ AND $output_token$ $mstats_span$ BY output
+| timechart sum("out_bytes") $timechart_span$ useother=false BY output WHERE max in top5
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Sources</title>
+      <input type="multiselect" token="input_token" searchWhenChanged="true">
+        <label>Sources</label>
+        <choice value="*">All</choice>
+        <prefix>input IN (</prefix>
+        <suffix>)</suffix>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+        <delimiter>, </delimiter>
+        <fieldForLabel>input</fieldForLabel>
+        <fieldForValue>input</fieldForValue>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) WHERE `set_cribl_metrics_index` BY input</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <default>*</default>
+      </input>
+      <input type="dropdown" token="splitby" searchWhenChanged="true">
+        <label>Split by</label>
+        <choice value="input">Input</choice>
+        <choice value="cribl_wp">Worker Process</choice>
+        <default>input</default>
+        <initialValue>input</initialValue>
+        <change>
+          <condition value="input">
+            <unset token="show_cpu_chart"></unset>
+          </condition>
+          <condition value="cribl_wp">
+            <set token="show_cpu_chart">true</set>
+          </condition>
+        </change>
+      </input>
+      <input type="dropdown" token="stackmode" searchWhenChanged="true">
+        <label>Stack Mode</label>
+        <choice value="stacked">Stacked</choice>
+        <choice value="stacked100">100% Stacked</choice>
+        <default>stacked</default>
+        <initialValue>stacked</initialValue>
+      </input>
+      <input type="dropdown" token="limit" searchWhenChanged="true">
+        <label>Worker Process Limit</label>
+        <choice value="20">Top 20</choice>
+        <choice value="50">Top 50</choice>
+        <choice value="100">Top 100</choice>
+        <choice value="10000">Unlimited</choice>
+        <default>20</default>
+        <initialValue>20</initialValue>
+      </input>
+      <chart>
+        <title>Total events in</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events  WHERE `set_cribl_metrics_index` AND $input_token$ $mstats_span$ BY $splitby$
+| timechart sum("in_events") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">$stackmode$</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+      <chart depends="$show_cpu_chart$">
+        <title>Cpu Percentage by Worker Process</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc  WHERE `set_cribl_metrics_index` $mstats_span$ BY $splitby$
+| timechart sum("cpu_perc") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">$stackmode$</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+      <chart>
+        <title>Total bytes in</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` AND $input_token$ $mstats_span$ BY $splitby$
+| timechart sum("in_bytes") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">$stackmode$</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+</form>
