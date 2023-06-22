@@ -111,9 +111,13 @@ In addition to this overview page, this app provides several views intended to a
 
 #### **About**
 
-Author: Johan Woger
-Co-Authors: Jeremy Prescott, Martin Prado
-Honorable Mentions: 
-George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at https://github.com/arcsector)
-Ben Marcus - General Testing
-Brendan Dalpe - Guru of many things. 
+ \
+Author: Johan Woger 
+
+Co-Authors: Jeremy Prescott, Martin Prado 
+
+Honorable Mentions: George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at [https://github.com/arcsector](https://github.com/arcsector)) 
+
+Ben Marcus - General Testing 
+
+Brendan Dalpe - Guru of many things.
