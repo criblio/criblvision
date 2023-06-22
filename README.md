@@ -105,8 +105,15 @@ This app ships with 4 macros which must be edited in accordance with your splunk
 Some of the views in this app will require leader logs to be forwarded on to splunk. In distributed Cribl Stream environments, leader logs are currently NOT sent via our internal source. You will have to install an edge node on your leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to /opt/cribl/log/*.log For more information on how to deploy an edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning).
 
  
-
-
 ## Using this app
 
 In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a cribl deployment. Every view is equipped with a "how to use" button that reveals a description and instructions for that view when clicked. We recommend starting with the health check view and selecting a single worker node from the host dropdown.
+
+#### **About**
+
+Author: Johan Woger
+Co-Authors: Jeremy Prescott, Martin Prado
+Honorable Mentions: 
+George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at https://github.com/arcsector)
+Ben Marcus - General Testing
+Brendan Dalpe - Guru of many things. 
