@@ -118,6 +118,10 @@ Co-Authors: Jeremy Prescott, Martin Prado
 
 Honorable Mentions: George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at [https://github.com/arcsector](https://github.com/arcsector)) 
 
-Ben Marcus - General Testing 
+Ben Marcus - General Testing. 
 
 Brendan Dalpe - Guru of many things.
+
+Brandon McCombs - General Testing.
+
+Chris Owens - General testing and contributor. 
