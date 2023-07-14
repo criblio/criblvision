@@ -102,7 +102,7 @@ This app ships with 4 macros which must be edited in accordance with your splunk
 
 #### **Leader logs**
 
-Some of the views in this app will require leader logs to be forwarded on to splunk. In distributed Cribl Stream environments, leader logs are currently NOT sent via our internal source. You will have to install an edge node on your leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to /opt/cribl/log/*.log For more information on how to deploy an edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning).
+Some of the views in this app will require leader logs to be forwarded on to splunk. In distributed Cribl Stream environments, leader logs are currently NOT sent via our internal source. You will have to install an edge node on your leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to /opt/cribl/log/*.log For more information on how to deploy an edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning). Note: When deploying the edge node to your leader node, we recommend having a separate fleet just for this node. Be sure to disable all other inputs on that edge node except for file monitor inputs. 
 
  
 ## Using this app
