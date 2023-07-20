@@ -48,7 +48,7 @@ Answers to the above questions, and many others, will help narrow down the scope
 
 ### **Configuration**
 
-This app and its associated dashboards rely on a few components which you must configure
+This app and its associated dashboards rely on a few components which you must configure. Note: v.1.1.0 is intended only for Cribl Stream worker nodes and leaders. Future releases will add dashboards and functionality for Cribl Edge deployment troubleshooting and monitoring. 
 
  
 
