@@ -1,21 +1,5 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Stats</label>
-      <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        			<p style="list-style-type:square"><span style="font-size:11pt"><span style="font-family:Arial">This dashboard displays a series of panels with searches based off our minutely log stats. These stats are logged every minute by the api and worker processes. Displayed on this page are CPU and Memory usage, Active vs blocked EP (event processors), event stats, and persistent queue stats. Note: persistent queue on this dashboard can&#8217;t be split by output because, currently, our minutely stats do not include which output these pq events are associated with. For more detailed info on PQ, visit the persistent queue analytics dashboard.&#160;</span></span></p>
-      </html>
-    </panel>
-  </row>
   <description>Based off minutely log stats from the Server channel.</description>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="field1" searchWhenChanged="true">
@@ -54,8 +38,27 @@
   </fieldset>
   <row>
     <panel>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        			<p style="list-style-type:square">
+          <span style="font-size:11pt">
+            <span style="font-family:Arial">This dashboard displays a series of panels with searches based off our minutely log stats. These stats are logged every minute by the api and worker processes. Displayed on this page are CPU and Memory usage, Active vs blocked EP (event processors), event stats, and persistent queue stats. Note: persistent queue on this dashboard can’t be split by output because, currently, our minutely stats do not include which output these pq events are associated with. For more detailed info on PQ, visit the persistent queue analytics dashboard. </span>
+          </span>
+        </p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <chart>
-        <title>Cpu Usage</title>
+        <title>CPU Usage</title>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | timechart span=$span$ last(cpuPerc) as cpuPerc $splitby$</query>
           <earliest>$field1.earliest$</earliest>
@@ -71,14 +74,14 @@
   <row>
     <panel>
       <chart>
-        <title>Memory usage</title>
+        <title>Memory usage (MB)</title>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | timechart span=$span$ last(mem.ext) as memExt last(mem.heap) as memHeap last(mem.rss) as memRss $splitby$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
         <option name="charting.chart">area</option>
-        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.chart.stackMode">default</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>
@@ -108,7 +111,7 @@
           <latest>$field1.latest$</latest>
         </search>
         <option name="charting.chart">area</option>
-        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.chart.stackMode">default</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>
@@ -122,7 +125,7 @@
           <latest>$field1.latest$</latest>
         </search>
         <option name="charting.chart">area</option>
-        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.chart.stackMode">default</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>

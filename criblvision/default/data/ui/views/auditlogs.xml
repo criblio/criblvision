@@ -1,23 +1,7 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Cribl Leader Audit Logs</label>
-      <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This view will allow you to audit certain actions performed by users on the leader. Any updates to configuration changes will show up as events in the resulting panel. Note: Leader api log collection via edge must be configured in order for this view to populate. </p>
-      </html>
-    </panel>
-  </row>
   <fieldset submitButton="true" autoRun="true">
-    <input type="time" token="time" searchWhenChanged="true">
+    <input type="time" token="time" searchWhenChanged="false">
       <label>Timerange</label>
       <default>
         <earliest>-15m</earliest>
@@ -37,6 +21,21 @@
       </search>
     </input>
   </fieldset>
+  <row>
+    <panel>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This view will allow you to audit certain actions performed by users on the leader. Any updates to configuration changes will show up as events in the resulting panel. Note: Leader api log collection via edge must be configured in order for this view to populate. </p>
+      </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <table>

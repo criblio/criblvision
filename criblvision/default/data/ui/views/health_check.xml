@@ -1,23 +1,7 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Health Check</label>
-    <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This view is designed to provide an ”at a glance” overview of the health status of the selected worker node or leader (via the host dropdown). It displays key indicators for sources and destinations along with cpu and memory usage for the selected host. Note: This dashboard requires both logs and metrics for every panel to populate. </p>
-      </html>
-    </panel>
-  </row>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="true">
+    <input type="time" token="field1" searchWhenChanged="false">
       <label>Timerange</label>
       <default>
         <earliest>-15m</earliest>
@@ -38,7 +22,22 @@
   </fieldset>
   <row>
     <panel>
-      <title>Cpu Perc (Avg)</title>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This view is designed to provide an ”at a glance” overview of the health status of the selected worker node or leader (via the host dropdown). It displays key indicators for sources and destinations along with cpu and memory usage for the selected host. Note: This dashboard requires both logs and metrics for every panel to populate. </p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>CPU Perc (Avg)</title>
       <single>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | stats avg(cpuPerc) as cpuPerc</query>
@@ -70,8 +69,8 @@
       <single>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | stats avg(mem.rss) as memRss</query>
-          <earliest>-60m@m</earliest>
-          <latest>now</latest>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -149,12 +148,12 @@
       </single>
     </panel>
     <panel>
-      <title>Current Total PQ size</title>
+      <title>Current Total PQ size (bytes)</title>
       <single>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` AND "host"=$host$</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -184,8 +183,8 @@
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ channel=cribl* message="restarting worker process" 
 | stats count</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -236,14 +235,14 @@
       </single>
     </panel>
     <panel>
-      <title>Destinations with pq engaged</title>
+      <title>Destinations with PQ engaged</title>
       <single>
         <search>
           <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` AND "host"=$host$ BY output
 | search pq_engaged &gt; 0
 | stats count</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>

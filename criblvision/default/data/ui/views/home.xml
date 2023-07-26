@@ -1,25 +1,7 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Log Analytics</label>
-      <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-      		
-			<p style="list-style-type:square"><span style="font-size:11pt"><span style="font-family:Arial">This dashboard is interactive and intended for general troubleshooting. It displays a series of panels with log_level counts split by channel or message. You can refine the panel results further by limiting the log type which defaults to all. Clicking on any of the channel or message values in the panels will populate a results table below with the raw messages in syntax highlighted mode.&#160;</span></span></p>
-		
-      </html>
-    </panel>
-  </row>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="true">
+    <input type="time" token="field1" searchWhenChanged="false">
       <label>Timerange</label>
       <default>
         <earliest>-15m</earliest>
@@ -52,6 +34,27 @@
       </change>
     </input>
   </fieldset>
+  <row>
+    <panel>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+      		
+			<p style="list-style-type:square">
+          <span style="font-size:11pt">
+            <span style="font-family:Arial">This dashboard is interactive and intended for general troubleshooting. It displays a series of panels with log_level counts split by channel or message. You can refine the panel results further by limiting the log type which defaults to all. Clicking on any of the channel or message values in the panels will populate a results table below with the raw messages in syntax highlighted mode. </span>
+          </span>
+        </p>
+		
+      </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <title>ERRORS</title>

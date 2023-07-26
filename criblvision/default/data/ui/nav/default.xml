@@ -21,6 +21,7 @@
   <collection label="Audit">
     <view name="auditlogs" />
     <view name="commit_and_deploy_audit_logs" />
+    <view name="cribl_stream_license_metrics" />
   </collection>
   <collection label="Resources">
     <view name="known_issues" />

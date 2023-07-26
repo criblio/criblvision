@@ -1,21 +1,5 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Cribl Stream Sizing Calculator</label>
-      <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard is intended to show if your current architecture is sufficient to handle the amount of data being processed by your deployment. After choosing a worker node host, cpu speed and cpu architecture, click submit. It will provide you with your current worker process count, estimated processing throughput per vcpu and total estimated processing throughput per worker node. To determine if you are currently undersized, examine the estimated worker processes required panel. If the estimated worker process count exceeds your currently available number, this is one indication of being undersized. The remaining panels will show you the amount of time in %, during the selected timerange, that the worker processes exceeded 90% cpu usage and eluPerc usage. If these numbers are at or above 90%, you should consider upsizing your deployment. </p>
-      </html>
-    </panel>
-  </row>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time">
       <label>Timerange</label>
@@ -63,14 +47,28 @@
       <choice value="3.9">3.9GHz</choice>
       <default>3.0</default>
     </input>
-    <input type="radio" token="cpuType" searchWhenChanged="true">
+    <input type="radio" token="cpuType" searchWhenChanged="false">
       <label>CPU Architecture</label>
       <choice value="200">x64 (Hyperthreading)</choice>
       <choice value="400">x64</choice>
       <choice value="480">ARM64</choice>
-      <default>200</default>
     </input>
   </fieldset>
+  <row>
+    <panel>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This dashboard is intended to show if your current architecture is sufficient to handle the amount of data being processed by your deployment. After choosing a worker node host, cpu speed and cpu architecture, click submit. It will provide you with your current worker process count, estimated processing throughput per vcpu and total estimated processing throughput per worker node. To determine if you are currently undersized, examine the estimated worker processes required panel. If the estimated worker process count exceeds your currently available number, this is one indication of being undersized. The remaining panels will show you the amount of time in %, during the selected timerange, that the worker processes exceeded 90% cpu usage and eluPerc usage. If these numbers are at or above 90%, you should consider upsizing your deployment. </p>
+      </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <title>Information Panel</title>

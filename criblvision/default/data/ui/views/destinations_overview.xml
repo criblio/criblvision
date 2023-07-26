@@ -1,23 +1,7 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Destinations Overview</label>
-      <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard displays an overview of log based statistics for all of your configured destinations. It shows percentages, in relation to the total count of events, of error, warn, and info level events. The bottom panels split out the percentages by channel and display error counts by channel. Useful for getting a high level overview of the health of your destinations. </p>
-      </html>
-    </panel>
-  </row>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="true">
+    <input type="time" token="field1" searchWhenChanged="false">
       <label>Timerange</label>
       <default>
         <earliest>-15m</earliest>
@@ -36,6 +20,21 @@
       <choice value="*">All</choice>
     </input>
   </fieldset>
+  <row>
+    <panel>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This dashboard displays an overview of log based statistics for all of your configured destinations. It shows percentages, in relation to the total count of events, of error, warn, and info level events. The bottom panels split out the percentages by channel and display error counts by channel. Useful for getting a high level overview of the health of your destinations. </p>
+      </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <title>% Error Messages Across All Destinations</title>
@@ -61,7 +60,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">before</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
@@ -90,7 +89,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">before</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
@@ -119,7 +118,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">before</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>

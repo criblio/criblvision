@@ -1,23 +1,7 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Job Inspector</label>
-      <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This is intended as a general use dashboard to help you troubleshoot any issues you may be having with jobs. You can use the dropdown to filter logs based on worker group, job name and job id. Improvements to our job logging will be made in future releases which will result in more useful job metrics. For now, we are providing you with just a list of logs. </p>
-      </html>
-    </panel>
-  </row>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="time" searchWhenChanged="true">
+    <input type="time" token="time" searchWhenChanged="false">
       <label>Timerange</label>
       <default>
         <earliest>-15m</earliest>
@@ -38,7 +22,7 @@
       <fieldForLabel>WorkerGroup</fieldForLabel>
       <fieldForValue>WorkerGroup</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ | mvexpand source | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/" | stats values(WorkerGroup) AS WorkerGroup | mvexpand WorkerGroup</query>
+        <query>| tstats values(source) AS source WHERE  `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ | mvexpand source | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/" | stats values(WorkerGroup) AS WorkerGroup | mvexpand WorkerGroup</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -48,7 +32,7 @@
       <fieldForLabel>JobName</fieldForLabel>
       <fieldForValue>JobName</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE`set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ 
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ 
 | mvexpand source 
 | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
 | rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
@@ -64,7 +48,7 @@
       <fieldForLabel>JobId</fieldForLabel>
       <fieldForValue>JobId</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE`set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ 
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") AND host=$host$ 
 | mvexpand source
 | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
 | rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
@@ -77,6 +61,21 @@
       </search>
     </input>
   </fieldset>
+  <row>
+    <panel>
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        <p>This is intended as a general use dashboard to help you troubleshoot any issues you may be having with jobs. You can use the dropdown to filter logs based on worker group, job name and job id. Improvements to our job logging will be made in future releases which will result in more useful job metrics. For now, we are providing you with just a list of logs. </p>
+      </html>
+    </panel>
+  </row>
   <row>
     <panel>
       <title>Information Panel</title>

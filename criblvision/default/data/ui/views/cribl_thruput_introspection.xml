@@ -2,7 +2,7 @@
   <label>Cribl Thruput Introspection</label>
   <description>Cribl Thruput Introspection</description>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" searchWhenChanged="true" token="global_time_tok">
+    <input type="time" searchWhenChanged="false" token="global_time_tok">
       <label>Time Range</label>
       <default>
         <earliest>-15m</earliest>
@@ -193,7 +193,7 @@
         <title>Cpu Percentage by Worker Process</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc  WHERE `set_cribl_metrics_index` $mstats_span$ BY $splitby$
-| timechart sum("cpu_perc") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
+| timechart last("cpu_perc") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
