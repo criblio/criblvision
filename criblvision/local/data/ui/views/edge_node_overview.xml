@@ -40,7 +40,9 @@
   <row>
     <panel>
       <html>
-        <center><h1>CPU</h1></center>
+        <center>
+          <h1>CPU</h1>
+        </center>
       </html>
     </panel>
   </row>
@@ -82,7 +84,9 @@
   <row>
     <panel>
       <html>
-        <center><h1>Load Average</h1></center>
+        <center>
+          <h1>Load Average</h1>
+        </center>
       </html>
     </panel>
   </row>
@@ -139,7 +143,9 @@
   <row>
     <panel>
       <html>
-        <center><h1>Memory</h1></center>
+        <center>
+          <h1>Memory</h1>
+        </center>
       </html>
     </panel>
   </row>
@@ -202,7 +208,9 @@
   <row>
     <panel>
       <html>
-        <center><h1>FileSystem</h1></center>
+        <center>
+          <h1>FileSystem</h1>
+        </center>
       </html>
     </panel>
   </row>
@@ -255,6 +263,115 @@
         <option name="charting.chart">line</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <center>
+          <h1>Network</h1>
+        </center>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Packets received by device</title>
+        <search>
+          <query>| mstats rate_avg("node_network_receive_packets_total") chart=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  chart.useother=false chart.agg=max chart.limit=top5 BY device
+| fields - _span*
+| rename * AS "* /s"
+| rename "_time /s" AS _time</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Errors received by device</title>
+        <search>
+          <query>| mstats rate_avg("node_network_receive_errs_total") chart=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  chart.useother=false chart.agg=max chart.limit=top5 BY device
+| fields - _span*
+| rename * AS "* /s"
+| rename "_time /s" AS _time</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Bytes received by device</title>
+        <search>
+          <query>| mstats rate_avg("node_network_receive_bytes_total") chart=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  chart.useother=false chart.agg=max chart.limit=top5 BY device
+| fields - _span*
+| rename * AS "* /s"
+| rename "_time /s" AS _time</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Packets transmitted by device</title>
+        <search>
+          <query>| mstats rate_avg("node_network_transmit_packets_total") chart=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  chart.useother=false chart.agg=max chart.limit=top5 BY device
+| fields - _span*
+| rename * AS "* /s"
+| rename "_time /s" AS _time</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Errors transmitted by device</title>
+        <search>
+          <query>| mstats rate_avg("node_network_transmit_errs_total") chart=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  chart.useother=false chart.agg=max chart.limit=top5 BY device
+| fields - _span*
+| rename * AS "* /s"
+| rename "_time /s" AS _time</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Bytes transmitted by device</title>
+        <search>
+          <query>| mstats rate_avg("node_network_transmit_bytes_total") chart=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  chart.useother=false chart.agg=max chart.limit=top5 BY device
+| fields - _span*
+| rename * AS "* /s"
+| rename "_time /s" AS _time</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
