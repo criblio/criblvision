@@ -106,3 +106,10 @@ modtime = 1689197070.338914000
 [views/cribl_stream_license_metrics]
 version = 8.2.6
 modtime = 1689722699.832064000
+
+[views/edge_node_overview]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = admin
+version = 9.1.0.1
+modtime = 1690495263.412712000

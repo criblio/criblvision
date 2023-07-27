@@ -1,0 +1,262 @@
+<form version="1.1" theme="dark">
+  <label>Edge Node Overview</label>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="dropdown" token="tok_host">
+      <label>Choose Host</label>
+      <fieldForLabel>nodename</fieldForLabel>
+      <fieldForValue>nodename</fieldForValue>
+      <search>
+        <query>| mstats avg(node_cpu_count) WHERE index=edge_metrics by nodename</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <prefix>host=</prefix>
+    </input>
+    <input type="time" searchWhenChanged="true" token="global_time_tok">
+      <label>Time Range</label>
+      <default>
+        <earliest>-1h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown">
+      <label>Time Span</label>
+      <choice value="auto">auto</choice>
+      <choice value="5s">5s</choice>
+      <choice value="10s">10s</choice>
+      <choice value="30s">30s</choice>
+      <choice value="1m">1m</choice>
+      <choice value="5m">5m</choice>
+      <choice value="10m">10m</choice>
+      <choice value="30m">30m</choice>
+      <choice value="1h">1h</choice>
+      <default>auto</default>
+      <change>
+        <eval token="timechart_span">if($value$ == "auto", "", "span=".$value$)</eval>
+        <eval token="mstats_span">"span=".$value$</eval>
+      </change>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+        <center><h1>CPU</h1></center>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>CPU Count</title>
+        <search>
+          <query>| mstats max("node_cpu_count") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| stats max("node_cpu_count") 
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <chart>
+        <title>CPU Usage (avg)</title>
+        <search>
+          <query>| mstats avg("node_cpu_percent") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart avg("node_cpu_percent") as cpu_perc
+| eval cpu_perc = round(cpu_perc,3)
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <center><h1>Load Average</h1></center>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>1 min</title>
+        <search>
+          <query>| mstats avg("node_load1") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart avg("node_load1") AS Avg 
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>5 min</title>
+        <search>
+          <query>| mstats avg("node_load5") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart avg("node_load5") AS Avg 
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>15 min</title>
+        <search>
+          <query>| mstats avg("node_load15") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart avg("node_load15") AS Avg 
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <center><h1>Memory</h1></center>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total Available Memory</title>
+        <search>
+          <query>| mstats max("node_memory_MemTotal_bytes") as yes prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart eval(max(node_memory_MemTotal_bytes)/1024/1024/1024) as yes
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">0</option>
+        <option name="showTrendIndicator">0</option>
+        <option name="unit">GB</option>
+      </single>
+    </panel>
+    <panel>
+      <chart>
+        <title>Memory Used (avg)</title>
+        <search>
+          <query>| mstats avg("node_memory_Used_percent") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart avg("node_memory_Used_percent") as mem_used_perc
+| eval mem_used_perc = round(mem_used_perc, 2)
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Free Memory (GB)</title>
+        <search>
+          <query>| mstats avg("node_memory_MemFree_bytes") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart eval(avg(node_memory_MemFree_bytes)/1024/1024/1024) as mem_free
+| eval mem_free = round(mem_free, 2)
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <center><h1>FileSystem</h1></center>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total Available Filesystem</title>
+        <search>
+          <query>| mstats max("node_filesystem_size_bytes_all") as yes prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
+| timechart eval(max(node_filesystem_size_bytes_all)/1024/1024/1024) as yes
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">0</option>
+        <option name="showTrendIndicator">0</option>
+        <option name="unit">GB</option>
+      </single>
+    </panel>
+    <panel>
+      <chart>
+        <title>Filesystem Used by Mountpoint (GB)</title>
+        <search>
+          <query>| mstats avg("node_filesystem_used_bytes") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  BY mountpoint
+| timechart eval(avg(node_filesystem_used_bytes)/1024/1024/1024) as yes  BY mountpoint 
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Filesystem Available by Mountpoint (GB)</title>
+        <search>
+          <query>| mstats avg("node_filesystem_avail_bytes") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$  BY mountpoint
+| timechart eval(avg(node_filesystem_avail_bytes)/1024/1024/1024) as yes  BY mountpoint 
+| fields - _span*</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+</form>
