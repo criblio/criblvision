@@ -96,7 +96,7 @@
         <title>1 min</title>
         <search>
           <query>| mstats avg("node_load1") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
-| timechart avg("node_load1") AS Avg 
+| timechart avg("node_load1") AS Avg cont=false
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
@@ -112,7 +112,7 @@
         <title>5 min</title>
         <search>
           <query>| mstats avg("node_load5") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
-| timechart avg("node_load5") AS Avg 
+| timechart avg("node_load5") AS Avg cont=false
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
@@ -128,7 +128,7 @@
         <title>15 min</title>
         <search>
           <query>| mstats avg("node_load15") prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
-| timechart avg("node_load15") AS Avg 
+| timechart avg("node_load15") AS Avg cont=false
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
@@ -155,7 +155,7 @@
         <title>Total Available Memory</title>
         <search>
           <query>| mstats max("node_memory_MemTotal_bytes") as yes prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
-| timechart eval(max(node_memory_MemTotal_bytes)/1024/1024/1024) as yes
+| timechart eval(max(node_memory_MemTotal_bytes)/1024/1024/1024) as yes cont=false
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
@@ -220,7 +220,7 @@
         <title>Total Available Filesystem</title>
         <search>
           <query>| mstats max("node_filesystem_size_bytes_all") as yes prestats=true WHERE "index"="edge_metrics" $tok_host$ $mstats_span$ 
-| timechart eval(max(node_filesystem_size_bytes_all)/1024/1024/1024) as yes
+| timechart eval(max(node_filesystem_size_bytes_all)/1024/1024/1024) as yes cont=false
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
