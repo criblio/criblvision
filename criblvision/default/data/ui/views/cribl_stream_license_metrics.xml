@@ -39,7 +39,7 @@
       <title>Cribl Stream $unit$_in</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.in_bytes") prestats=true WHERE index=cribl_metrics span=1h
+          <query>| mstats sum("cribl.logstream.route.in_bytes") prestats=true WHERE `set_cribl_internal_log_index` span=1h
 | stats sum("cribl.logstream.route.in_bytes") AS bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
@@ -64,7 +64,7 @@
       <title>Cribl Stream $unit$_out</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") prestats=true WHERE index=cribl_metrics span=1h
+          <query>| mstats sum("cribl.logstream.route.out_bytes") prestats=true WHERE `set_cribl_internal_log_index` span=1h
 | stats sum("cribl.logstream.route.out_bytes") AS bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
@@ -88,7 +88,7 @@
       <title>Cribl Stream $unit$ Volume Reduction</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") as bytes_out sum("cribl.logstream.route.in_bytes") as bytes_in WHERE index=cribl_metrics
+          <query>| mstats sum("cribl.logstream.route.out_bytes") as bytes_out sum("cribl.logstream.route.in_bytes") as bytes_in WHERE `set_cribl_internal_log_index`
 | eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
 | eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
 | eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
@@ -117,7 +117,7 @@
       <title>Cribl Stream $unit$ Volume Reduction %</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") as bytes_out sum("cribl.logstream.route.in_bytes") as bytes_in WHERE index=cribl_metrics
+          <query>| mstats sum("cribl.logstream.route.out_bytes") as bytes_out sum("cribl.logstream.route.in_bytes") as bytes_in WHERE `set_cribl_internal_log_index`
 |eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
 | eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
 | eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
@@ -146,7 +146,7 @@
       <title>Cribl Stream $unit$_in</title>
       <chart>
         <search>
-          <query>| mstats sum("cribl.logstream.route.in_bytes") prestats=true WHERE index=cribl_metrics span=15m
+          <query>| mstats sum("cribl.logstream.route.in_bytes") prestats=true WHERE `set_cribl_internal_log_index` span=15m
 | timechart sum("cribl.logstream.route.in_bytes") AS bytes span=15m
 | table _time bytes
 | eval KB=round(bytes/1024, 4)
@@ -199,7 +199,7 @@
       <title>Cribl Stream $unit$_out</title>
       <chart>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") prestats=true WHERE index=cribl_metrics span=15m
+          <query>| mstats sum("cribl.logstream.route.out_bytes") prestats=true WHERE `set_cribl_internal_log_index` span=15m
 | timechart sum("cribl.logstream.route.out_bytes") AS bytes span=15m
 | table _time bytes
 | eval KB=round(bytes/1024, 4)
