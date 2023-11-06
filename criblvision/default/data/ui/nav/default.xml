@@ -23,6 +23,9 @@
     <view name="commit_and_deploy_audit_logs" />
     <view name="cribl_stream_license_metrics" />
   </collection>
+  <collection label="Edge Nodes">
+    <view name="edge_node_overview" />
+  </collection>
   <collection label="Resources">
     <view name="known_issues" />
   </collection>
