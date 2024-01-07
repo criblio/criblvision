@@ -8,6 +8,18 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
     <input type="dropdown" token="host">
       <label>Host</label>
       <fieldForLabel>host</fieldForLabel>
