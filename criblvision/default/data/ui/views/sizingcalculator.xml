@@ -8,15 +8,30 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
     <input type="dropdown" token="host">
       <label>Host</label>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index()`| mvexpand host</query>
+        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index()`| mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>0</earliest>
         <latest></latest>
       </search>
+      <choice value="*">All Workers</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
     <input type="dropdown" token="cpuSpeed">
       <label>CPU Speed</label>
@@ -47,11 +62,12 @@
       <choice value="3.9">3.9GHz</choice>
       <default>3.0</default>
     </input>
-    <input type="radio" token="cpuType" searchWhenChanged="false">
+    <input type="radio" token="cpuType" searchWhenChanged="true">
       <label>CPU Architecture</label>
       <choice value="200">x64 (Hyperthreading)</choice>
       <choice value="400">x64</choice>
       <choice value="480">ARM64</choice>
+      <default>200</default>
     </input>
   </fieldset>
   <row>
@@ -94,8 +110,9 @@
           <done>
             <set token="workerProcessCount">$result.WorkerProcessCount$</set>
           </done>
-          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ channel="server" message="_raw stats"
-| stats dc(cid) AS WorkerProcessCount</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
+| stats dc(cid) AS WorkerProcessCount BY host
+| stats sum(WorkerProcessCount) AS WorkerProcessCount</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -142,7 +159,7 @@
       <title>Total Throughput (inBytes + outBytes) in GB</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
 | eval totalGB=round((('inBytes' + 'outBytes') / 1024 / 1024 / 1024), 0)
@@ -159,12 +176,12 @@
       <title>Estimated Worker Processes Required</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
-| eval inTB=round(('inBytes' / 1024 / 1024 / 1024 / 1024), 0)
-| eval outTB=round(('outBytes' / 1024 / 1024 / 1024 / 1024), 0)
-| eval calculation=(round(((('inTB' + 'outTB') * 1024) / $processingLimitPerCPU$), 0) + 1)
+| eval inGB=round(('inBytes' / 1024 / 1024 / 1024), 0)
+| eval outGB=round(('outBytes' / 1024 / 1024 / 1024), 0)
+| eval calculation=(round(((('inGB' + 'outGB') * 1024) / $processingLimitPerCPU$), 0) + 1)
 | timechart span=1d max(calculation) AS "Estimated Worker Processes Required"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -180,7 +197,7 @@
       <title>Estimated Worker Processes Required, based on DAILY throughput over the given TimeRange</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
 | eval inGB=round(('inBytes' / 1024 / 1024 / 1024), 0)
@@ -201,7 +218,7 @@
       <title>Percentage, over the provided timerange, that a Worker Process exceeded 90% cpuPerc usage</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
 | bin span=1m _time
 | stats max(cpuPerc) AS cpuPerc by _time cid
 | eval Percentage=if(cpuPerc &gt;= 90, 1, 0)
@@ -224,7 +241,7 @@
       <title>Percentage, over the provided timerange, that a Worker Process exceeded 90% eluPerc usage</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index()` `set_cribl_log_sourcetype()` host=$host$ AND channel="server" AND message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
 | bin span=1m _time
 | stats max(eluPerc) AS eluPerc by _time cid
 | eval Percentage=if(eluPerc &gt;= 90, 1, 0)
