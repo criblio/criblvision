@@ -2,25 +2,37 @@
   <label>Cribl Thruput Introspection</label>
   <description>Cribl Thruput Introspection</description>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" searchWhenChanged="false" token="global_time_tok">
+    <input type="time" searchWhenChanged="true" token="global_time_tok">
       <label>Time Range</label>
       <default>
         <earliest>-15m</earliest>
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
     <input type="dropdown" token="host">
       <label>Host</label>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
-      <choice value="*">All</choice>
-      <prefix>"</prefix>
-      <suffix>"</suffix>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
     <input type="dropdown" token="mstats_span" searchWhenChanged="true">
       <label>Time Span</label>
@@ -75,7 +87,7 @@
         <fieldForLabel>output</fieldForLabel>
         <fieldForValue>output</fieldForValue>
         <search>
-          <query>| mstats avg(`set_cribl_metrics_prefix("total.out_events")`) WHERE `set_cribl_metrics_index` BY output
+          <query>| mstats avg(`set_cribl_metrics_prefix("total.out_events")`) WHERE `set_cribl_metrics_index` group=$worker_group$ BY output
 | table output</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
@@ -84,7 +96,7 @@
       <chart>
         <title>Total events out</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` AND "host"=$host$ AND $output_token$ $mstats_span$ BY output
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ $output_token$ $mstats_span$ BY output
 | timechart sum("out_events") $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
@@ -102,7 +114,7 @@
       <chart>
         <title>Total bytes outs</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` AND "host"=$host$ AND $output_token$ $mstats_span$ BY output
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ $output_token$ $mstats_span$ BY output
 | timechart sum("out_bytes") $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
@@ -133,7 +145,7 @@
         <fieldForLabel>input</fieldForLabel>
         <fieldForValue>input</fieldForValue>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) WHERE `set_cribl_metrics_index` BY input</query>
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) WHERE `set_cribl_metrics_index` group=$worker_group$ BY input</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
         </search>
@@ -173,7 +185,7 @@
       <chart>
         <title>Total events in</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events  WHERE `set_cribl_metrics_index` AND $input_token$ $mstats_span$ BY $splitby$
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events  WHERE `set_cribl_metrics_index` group=$worker_group$ $input_token$ $mstats_span$ BY $splitby$
 | timechart sum("in_events") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
@@ -192,8 +204,8 @@
       <chart depends="$show_cpu_chart$">
         <title>Cpu Percentage by Worker Process</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc  WHERE `set_cribl_metrics_index` $mstats_span$ BY $splitby$
-| timechart last("cpu_perc") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
+          <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc WHERE `set_cribl_metrics_index` group=$worker_group$ $mstats_span$ BY $splitby$
+| timechart sum("cpu_perc") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
@@ -211,7 +223,7 @@
       <chart>
         <title>Total bytes in</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` AND $input_token$ $mstats_span$ BY $splitby$
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` group=$worker_group$ $input_token$ $mstats_span$ BY $splitby$
 | timechart sum("in_bytes") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
           <earliest>$global_time_tok.earliest$</earliest>
