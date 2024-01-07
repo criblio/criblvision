@@ -25,11 +25,11 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index()`| mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>0</earliest>
-        <latest></latest>
+        <latest>now</latest>
       </search>
-      <choice value="*">All Workers</choice>
+      <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
     </input>
