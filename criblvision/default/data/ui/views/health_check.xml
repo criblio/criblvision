@@ -25,7 +25,7 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
@@ -52,7 +52,7 @@
       <title>CPU Perc (Avg)</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | stats avg(cpuPerc) as cpuPerc</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | stats avg(cpuPerc) as cpuPerc</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -80,7 +80,7 @@
       <title>Memory Usage (avg)</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | stats avg(mem.rss) as memRss</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | stats avg(mem.rss) as memRss</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -111,7 +111,7 @@
       <title>Unhealthy Sources</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS Status prestats=true WHERE `set_cribl_metrics_index` AND "host"=$host$ span=30s BY input
+          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS Status prestats=true WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ span=30s BY input
 | stats max(Status) as Status BY input
 | eval Status=round(Status, 0)
 | where Status!=0
@@ -130,7 +130,7 @@
       <title>Unhealthy Destinations</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS Status prestats=true WHERE `set_cribl_metrics_index` AND "host"=$host$ span=30s BY output
+          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS Status prestats=true WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ span=30s BY output
 | stats max(Status)  as Status BY output
 | eval Status=round(Status, 0)
 | where Status!=0
@@ -148,7 +148,7 @@
       <title>Cluster Communication Errors</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=clustercomm level=warn OR level=error NOT message=metric*
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=clustercomm level=warn OR level=error NOT message=metric*
 | stats count 
 | rename count as "cluster communication errors"</query>
           <earliest>$field1.earliest$</earliest>
@@ -163,7 +163,7 @@
       <title>Current Total PQ size (bytes)</title>
       <single>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` AND "host"=$host$</query>
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -193,7 +193,7 @@
       <title>Worker Process Restarts</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=cribl* message="restarting worker process" 
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=cribl* message="restarting worker process" 
 | stats count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
@@ -222,7 +222,7 @@
       <title>Destinations with Backpressure</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) as back_pressured WHERE `set_cribl_metrics_index` AND "host"=$host$ BY output
+          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) as back_pressured WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output
 | search back_pressured &gt; 0
 | stats count</query>
           <earliest>$field1.earliest$</earliest>
@@ -236,7 +236,7 @@
       <title>Blocked Destinations</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) as back_pressured WHERE `set_cribl_metrics_index` AND "host"=$host$ BY output
+          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) as back_pressured WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output
 | search back_pressured &gt; 0
 | stats count</query>
           <earliest>$field1.earliest$</earliest>
@@ -250,7 +250,7 @@
       <title>Destinations with PQ engaged</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` AND "host"=$host$ BY output
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output
 | search pq_engaged &gt; 0
 | stats count</query>
           <earliest>$field1.earliest$</earliest>
