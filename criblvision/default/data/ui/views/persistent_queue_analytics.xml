@@ -1,23 +1,37 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Persistent Queue Analytics</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="false">
+    <input type="time" token="field1" searchWhenChanged="true">
       <label>Timerange</label>
       <default>
         <earliest>-60m@m</earliest>
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
     <input type="dropdown" token="host">
       <label>Host</label>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
-      <choice value="*">All</choice>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
   </fieldset>
   <row>
@@ -40,11 +54,11 @@
       <title>Count of Destinations with PQ engaged</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` AND "host"=$host$ BY output
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output
 | search pq_engaged &gt; 0
 | stats count</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -70,9 +84,9 @@
       <title>Current PQ size</title>
       <single>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` AND "host"=$host$</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -98,11 +112,11 @@
       <title>Outputs with pq engaged</title>
       <table>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` AND "host"=$host$ BY output
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output
 | search pq_engaged &gt; 0 
 | stats values(output) as "outputs with pq engaged"</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
@@ -121,11 +135,11 @@
       <title>PQ size by destination</title>
       <chart>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS ps_size WHERE `set_cribl_metrics_index` AND "host"=$host$ span=10s BY output
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS ps_size WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ span=10s BY output
 | timechart sum("pq_size") span=10s useother=false BY output WHERE max in top100
 | fields - _span*</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -173,7 +187,7 @@
       </input>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel="IPersistentQueue"</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel="IPersistentQueue"</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
