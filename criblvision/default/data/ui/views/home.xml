@@ -1,23 +1,37 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Log Analytics</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="false">
+    <input type="time" token="field1" searchWhenChanged="true">
       <label>Timerange</label>
       <default>
         <earliest>-15m</earliest>
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
     <input type="dropdown" token="host">
       <label>Host</label>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
-      <choice value="*">All</choice>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
     <input type="dropdown" token="debug">
       <label>Show Debug?</label>
@@ -75,7 +89,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -111,7 +125,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -145,7 +159,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -179,7 +193,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index`  host=$host$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count</query>
+          <query>`set_cribl_internal_log_index`  host=$host$ worker_group=$worker_group$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -200,14 +214,14 @@
     <panel>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ $name$=$value|s$ level=$level$</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ $name$=$value|s$ level=$level$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
         <option name="list.drilldown">full</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20%20source%3D*.log%20$name$%3D$value|s$%20level%3D$level$&amp;earliest=$field1.earliest$&amp;latest=$field1.latest$</link>
+          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20source%3D*.log%20$name$%3D$value|s$%20level%3D$level$&amp;earliest=$field1.earliest$&amp;latest=$field1.latest$</link>
         </drilldown>
       </event>
     </panel>
