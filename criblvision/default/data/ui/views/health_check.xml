@@ -29,7 +29,9 @@
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
-      <choice value="*">All</choice>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
   </fieldset>
   <row>
