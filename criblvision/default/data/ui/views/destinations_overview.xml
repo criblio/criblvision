@@ -1,24 +1,8 @@
-<form theme="dark" script="button_click.js" version="1.1">
+<form theme="dark" version="1.1">
   <label>Destinations Overview</label>
-      <row>
-    <panel>
-      
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard displays an overview of log based statistics for all of your configured destinations. It shows percentages, in relation to the total count of events, of error, warn, and info level events. The bottom panels split out the percentages by channel and display error counts by channel. Useful for getting a high level overview of the health of your destinations. </p>
-      </html>
-    </panel>
-  </row>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="true">
-      <label>Timerange</label>
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
       <default>
         <earliest>-15m</earliest>
         <latest>now</latest>
@@ -42,22 +26,46 @@
       <fieldForValue>host</fieldForValue>
       <search>
         <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
-        <earliest>-24h@h</earliest>
-        <latest>now</latest>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
       </search>
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
     </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
   </fieldset>
   <row>
+    <panel depends="$show_details$">
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard displays an overview of log based statistics for all of your configured Destinations. It shows percentages in relation to the total count of events, of <code>error</code>, <code>warn</code>, and <code>info</code> level events. The bottom panels split out the percentages by <code>channel</code> and display <code>error</code> counts by <code>channel</code>. It is useful for getting a high level overview of the health of your Destinations.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
     <panel>
-      <title>% Error Messages Across All Destinations</title>
+      <title>% of Error Messages Across all Destinations</title>
       <single>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"error"))) AS errorcount | eval error_percentage=(errorcount/Total)*100| table error_percentage</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -75,18 +83,18 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">before</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
     </panel>
     <panel>
-      <title>% of Warn messages across all Destinations</title>
+      <title>% of Warn Messages Across all Destinations</title>
       <single>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"warn"))) AS warncount | eval warn_percentage=(warncount/Total)*100| table warn_percentage</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -104,18 +112,18 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">before</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
     </panel>
     <panel>
-      <title>%of info messages across all Destinations</title>
+      <title>% of Info Messages Across all Destinations</title>
       <single>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"info"))) AS infocount | eval info_percentage=(infocount/Total)*100| table info_percentage</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -133,7 +141,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">before</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
@@ -141,7 +149,7 @@
   </row>
   <row>
     <panel>
-      <title>$loglevel1$ log level percentage counts by channel</title>
+      <title>"$loglevel1$" Log Level Percentage counts by Channel</title>
       <input type="dropdown" token="loglevel1">
         <label>Log Level</label>
         <choice value="error">Error</choice>
@@ -153,23 +161,25 @@
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"$loglevel1$"))) AS $loglevel1$count by channel | eval $loglevel1$_percentage=($loglevel1$count/Total)*100| eval $loglevel1$_percentage=round($loglevel1$_percentage,2) 
 | table $loglevel1$_percentage channel 
-| sort -error_percentage</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+| sort -error_percentage | rename error_percentage AS "Error %" channel AS Channel</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
+        <format type="number" field="Error %">
+          <option name="unit">%</option>
+        </format>
       </table>
     </panel>
     <panel>
-      <title>$loglevel2$ counts by channel</title>
+      <title>"$loglevel2$" Counts by Channel</title>
       <input type="dropdown" token="loglevel2" searchWhenChanged="true">
         <label>Log Level</label>
         <choice value="error">Error</choice>
@@ -179,9 +189,9 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ level=$loglevel2$ cid=* channel=output* | chart count sparkline by channel | sort -count</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <query>`set_cribl_internal_log_index` host=$host$ level=$loglevel2$ cid=* channel=output* | chart count sparkline by channel | sort -count | rename channel AS Channel count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
@@ -192,6 +202,9 @@
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
       </table>
     </panel>
   </row>
