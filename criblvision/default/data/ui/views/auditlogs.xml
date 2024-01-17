@@ -1,15 +1,15 @@
-<form theme="dark" script="button_click.js" version="1.1">
+<form theme="dark" version="1.1">
   <label>Cribl Leader Audit Logs</label>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="time" searchWhenChanged="true">
-      <label>Timerange</label>
+      <label>Time Range</label>
       <default>
         <earliest>-15m</earliest>
         <latest>now</latest>
       </default>
     </input>
     <input type="dropdown" token="host">
-      <label>Host</label>
+      <label>Leader Host</label>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
@@ -19,20 +19,33 @@
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
     </input>
   </fieldset>
   <row>
-    <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
     <panel depends="$show_details$">
       <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This view will allow you to audit certain actions performed by users on the leader. Any updates to configuration changes will show up as events in the resulting panel. Note: Leader api log collection via edge must be configured in order for this view to populate. </p>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This view will allow you to audit certain actions performed by users on the Leader. Any updates to configuration changes will show up as events in the resulting panel.</p>
+          <p><b>Note:</b> Leader API log collection via edge must be configured in order for this view to populate.</p>  
+        </div>
       </html>
     </panel>
   </row>

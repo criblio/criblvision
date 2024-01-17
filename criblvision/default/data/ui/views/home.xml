@@ -1,8 +1,8 @@
-<form theme="dark" script="button_click.js" version="1.1">
+<form theme="dark" version="1.1">
   <label>Log Analytics</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="true">
-      <label>Timerange</label>
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
       <default>
         <earliest>-15m</earliest>
         <latest>now</latest>
@@ -26,8 +26,8 @@
       <fieldForValue>host</fieldForValue>
       <search>
         <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
-        <earliest>-24h@h</earliest>
-        <latest>now</latest>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
       </search>
       <choice value="*">All Hosts</choice>
       <default>*</default>
@@ -47,25 +47,28 @@
         </condition>
       </change>
     </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
   </fieldset>
-  <row>
-    <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
   <row>
     <panel depends="$show_details$">
       <html>
-        <button id="hideButton" class="btn">Close</button>
-      		
-			<p style="list-style-type:square">
-          <span style="font-size:11pt">
-            <span style="font-family:Arial">This dashboard is interactive and intended for general troubleshooting. It displays a series of panels with log_level counts split by channel or message. You can refine the panel results further by limiting the log type which defaults to all. Clicking on any of the channel or message values in the panels will populate a results table below with the raw messages in syntax highlighted mode. </span>
-          </span>
-        </p>
-		
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard is interactive and intended for general troubleshooting. It displays a series of panels with <code>log_level</code> counts split by <code>channel</code> or <code>message</code>. You can refine the panel results further by limiting the log type, which defaults to <code>All</code>. Clicking on any of the <code>channel</code> or <code>message</code> values in the panels will populate a results table below with the raw messages in syntax highlighted mode.</p>
+        </div>
       </html>
     </panel>
   </row>
@@ -73,29 +76,33 @@
     <panel>
       <title>ERRORS</title>
       <input type="dropdown" token="messagesplit" searchWhenChanged="true">
-        <label>Split by</label>
+        <label>Split By</label>
         <choice value="channel">Channel</choice>
         <choice value="message">Message</choice>
         <default>channel</default>
         <initialValue>channel</initialValue>
       </input>
-      <input type="dropdown" token="logtype">
+      <input type="dropdown" token="logtype" searchWhenChanged="true">
         <label>Log Type</label>
         <choice value="api">Api</choice>
         <choice value="w*">Worker</choice>
         <choice value="*">All</choice>
         <choice value="cfg*">Config events</choice>
         <default>*</default>
+        <initialValue>*</initialValue>
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="percentagesRow">false</option>
         <option name="refresh.display">progressbar</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
         <drilldown>
           <set token="channel">$row.channel$</set>
           <set token="level">ERROR</set>
@@ -109,28 +116,32 @@
     <panel>
       <title>WARNS</title>
       <input type="dropdown" token="messagesplit1" searchWhenChanged="true">
-        <label>Split by</label>
+        <label>Split By</label>
         <choice value="channel">Channel</choice>
         <choice value="message">Message</choice>
         <default>channel</default>
         <initialValue>channel</initialValue>
       </input>
-      <input type="dropdown" token="logtype1">
+      <input type="dropdown" token="logtype1" searchWhenChanged="true">
         <label>Log Type</label>
         <choice value="api">Api</choice>
         <choice value="w*">Worker</choice>
         <choice value="*">All</choice>
         <choice value="cfg*">Config events</choice>
         <default>*</default>
+        <initialValue>*</initialValue>
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
         <drilldown>
           <set token="channel">$row.channel$</set>
           <set token="level">WARN</set>
@@ -143,28 +154,32 @@
     <panel>
       <title>INFO</title>
       <input type="dropdown" token="messagesplit2" searchWhenChanged="true">
-        <label>Split by</label>
+        <label>Split By</label>
         <choice value="channel">Channel</choice>
         <choice value="message">Message</choice>
         <default>channel</default>
         <initialValue>channel</initialValue>
       </input>
-      <input type="dropdown" token="logtype2">
+      <input type="dropdown" token="logtype2" searchWhenChanged="true">
         <label>Log Type</label>
         <choice value="api">Api</choice>
         <choice value="w*">Worker</choice>
         <choice value="*">All</choice>
         <choice value="cfg*">Config events</choice>
         <default>*</default>
+        <initialValue>*</initialValue>
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
         <drilldown>
           <set token="channel">$row.channel$</set>
           <set token="level">INFO</set>
@@ -177,29 +192,33 @@
     <panel depends="$show_debug$">
       <title>DEBUG</title>
       <input type="dropdown" token="messagesplit3" searchWhenChanged="true">
-        <label>Split by</label>
+        <label>Split By</label>
         <choice value="channel">Channel</choice>
         <choice value="message">Message</choice>
         <default>channel</default>
         <initialValue>channel</initialValue>
       </input>
-      <input type="dropdown" token="logtype3">
+      <input type="dropdown" token="logtype3" searchWhenChanged="true">
         <label>Log Type</label>
         <choice value="api">Api</choice>
         <choice value="w*">Worker</choice>
         <choice value="*">All</choice>
         <choice value="cfg*">Config events</choice>
         <default>*</default>
+        <initialValue>*</initialValue>
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index`  host=$host$ worker_group=$worker_group$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <query>`set_cribl_internal_log_index`  host=$host$ worker_group=$worker_group$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="percentagesRow">false</option>
         <option name="refresh.display">progressbar</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
         <drilldown>
           <set token="channel">$row.channel$</set>
           <set token="level">DEBUG</set>
@@ -215,13 +234,13 @@
       <event>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ $name$=$value|s$ level=$level$</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="list.drilldown">full</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20source%3D*.log%20$name$%3D$value|s$%20level%3D$level$&amp;earliest=$field1.earliest$&amp;latest=$field1.latest$</link>
+          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20source%3D*.log%20$name$%3D$value|s$%20level%3D$level$&amp;earliest=$time.earliest$&amp;latest=$time.latest$</link>
         </drilldown>
       </event>
     </panel>
