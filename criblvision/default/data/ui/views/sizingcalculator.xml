@@ -1,8 +1,8 @@
-<form theme="dark" script="button_click.js" version="1.1">
+<form theme="dark" version="1.1">
   <label>Cribl Stream Sizing Calculator</label>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time">
-      <label>Timerange</label>
+      <label>Time Range</label>
       <default>
         <earliest>-7d@h</earliest>
         <latest>now</latest>
@@ -25,11 +25,11 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
+        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index()`| mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>0</earliest>
-        <latest>now</latest>
+        <latest></latest>
       </search>
-      <choice value="*">All Hosts</choice>
+      <choice value="*">All Workers</choice>
       <default>*</default>
       <initialValue>*</initialValue>
     </input>
@@ -69,37 +69,39 @@
       <choice value="480">ARM64</choice>
       <default>200</default>
     </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
   </fieldset>
-  <row>
-    <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
   <row>
     <panel depends="$show_details$">
       <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard is intended to show if your current architecture is sufficient to handle the amount of data being processed by your deployment. After choosing a worker node host, cpu speed and cpu architecture, click submit. It will provide you with your current worker process count, estimated processing throughput per vcpu and total estimated processing throughput per worker node. To determine if you are currently undersized, examine the estimated worker processes required panel. If the estimated worker process count exceeds your currently available number, this is one indication of being undersized. The remaining panels will show you the amount of time in %, during the selected timerange, that the worker processes exceeded 90% cpu usage and eluPerc usage. If these numbers are at or above 90%, you should consider upsizing your deployment. </p>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard is intended to show if your current architecture is sufficient to handle the amount of data being processed by your deployment. After choosing a Worker Node host, CPU speed and CPU architecture, click the <code>Submit</code> button. It will provide you with your current Worker Process count, estimated processing throughput per vCPU and total estimated processing throughput per Worker Node. To determine if you are currently undersized, examine the estimated Worker Processes required panel. If the estimated Worker Process count exceeds your currently available number, this is one indication of being undersized. The remaining panels will show you the amount of time in %, during the selected time range, that the Worker Processes exceeded 90% <code>cpuPerc</code> usage and <code>eluPerc</code> usage. If these numbers are at or above 90%, you should consider upsizing your deployment.</p>
+          <br/>
+          <p>
+            <b>For more information regarding Sizing and Scaling, please visit our Documentation:</b> <a href="https://docs.cribl.io/stream/scaling/" target="_blank">Sizing and Scaling</a>
+          </p>
+          <p>
+            <b>Please also see our Cribl Stream Sizing Calculator:</b> <a href="https://criblsizing.info/" target="_blank">Cribl Stream Sizing Calculator</a>
+          </p>
+          <p>
+            <i>Please note that this doesn't take any Data Processing Requirements into consideration.</i>
+          </p>
+        </div>
       </html>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Information Panel</title>
-      <html>
-      <style>
-      #id_one .panel-body {
-        padding-bottom: 10px !important;
-        }
-      </style>
-      <b>For more information regarding Sizing and Scaling, please visit our Documentation:</b> <a href="https://docs.cribl.io/stream/scaling/" target="_blank">Sizing and Scaling</a>
-        <br/>
-      <b>Please also see our Cribl Stream Sizing Calculator:</b> <a href="https://criblsizing.info/" target="_blank">Cribl Stream Sizing Calculator</a>
-        <br/>
-      <i>Please note that this doesn't take any Data Processing Requirements into consideration.</i>
-     </html>
     </panel>
   </row>
   <row>
@@ -167,8 +169,11 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
@@ -186,47 +191,67 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Estimated Worker Processes Required, based on DAILY throughput over the given TimeRange</title>
+      <title>Estimated Worker Processes Required, Based on DAILY Throughput over the Selected Time Range</title>
       <table>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
-| eval inGB=round(('inBytes' / 1024 / 1024 / 1024), 0)
-| eval outGB=round(('outBytes' / 1024 / 1024 / 1024), 0)
-| eval totalGB=('inGB' + 'outGB')
-| eval "Estimated Worker Processes Required"=(round(('totalGB' / $processingLimitPerCPU$), 0) + 1)
-| table _time inGB outGB totalGB "Estimated Worker Processes Required"</query>
+| eval date = strftime(_time, "%Y-%m-%d")
+| eval inGB = round((inBytes / 1024 / 1024 / 1024), 0)
+| eval outGB = round((outBytes / 1024 / 1024 / 1024), 0)
+| eval totalGB = (inGB + outGB)
+| eval wpRequired = (round(('totalGB' / $processingLimitPerCPU$), 0) + 1)
+| table date inGB outGB totalGB wpRequired
+| rename date AS Date inGB AS "GB In" outGB AS "GB Out" totalGB AS "Total GB" wpRequired AS "Estimated Worker Processes Required"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
+        <format type="number" field="GB In">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="GB Out">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="Total GB">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="Estimated Worker Processes Required">
+          <option name="precision">0</option>
+        </format>
       </table>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Percentage, over the provided timerange, that a Worker Process exceeded 90% cpuPerc usage</title>
+      <title>Percentage, over the Selected Time Range, that a Worker Process Exceeded 90%  cpuPerc Usage</title>
       <table>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
 | bin span=1m _time
-| stats max(cpuPerc) AS cpuPerc by _time cid
-| eval Percentage=if(cpuPerc &gt;= 90, 1, 0)
-| stats sum(Percentage) AS Percentage count by cid
-| eval Percentage=round((('Percentage' * 100) / 'count'), 2)
-| eval workerProcess=ltrim('cid', "w")
+| stats max(cpuPerc) AS cpuPerc BY _time cid
+| eval percentage=if(cpuPerc &gt;= 90, 1, 0)
+| stats sum(percentage) AS percentage count BY cid
+| eval percentage=round(((percentage * 100) / count), 2)
+| eval workerProcess=ltrim(cid, "w")
 | sort 0 workerProcess
-| fields cid Percentage</query>
+| fields cid percentage
+| rename cid AS CID percentage AS Percentage</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -235,21 +260,25 @@
         <option name="percentagesRow">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
+        <format type="number" field="Percentage">
+          <option name="unit">%</option>
+        </format>
       </table>
     </panel>
     <panel>
-      <title>Percentage, over the provided timerange, that a Worker Process exceeded 90% eluPerc usage</title>
+      <title>Percentage, over the Selected Time Range, that a Worker Process exceeded 90% eluPerc Usage</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats"
-| bin span=1m _time
-| stats max(eluPerc) AS eluPerc by _time cid
-| eval Percentage=if(eluPerc &gt;= 90, 1, 0)
-| stats sum(Percentage) AS Percentage count by cid
-| eval Percentage=round((('Percentage' * 100) / 'count'), 2)
-| eval workerProcess=ltrim('cid', "w")
-| sort 0 workerProcess
-| fields cid Percentage</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="server" message="_raw stats" 
+| bin span=1m _time 
+| stats max(eluPerc) AS eluPerc BY _time cid 
+| eval percentage = if(eluPerc &gt;= 90, 1, 0) 
+| stats sum(percentage) AS percentage count BY cid 
+| eval percentage = round(((percentage * 100) / count), 2) 
+| eval workerProcess = ltrim(cid, "w") 
+| sort 0 workerProcess 
+| fields cid percentage 
+| rename cid AS CID percentage AS Percentage</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -258,6 +287,9 @@
         <option name="percentagesRow">false</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">false</option>
+        <format type="number" field="Percentage">
+          <option name="unit">%</option>
+        </format>
       </table>
     </panel>
   </row>
