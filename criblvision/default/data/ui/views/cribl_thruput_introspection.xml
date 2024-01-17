@@ -1,4 +1,4 @@
-<form theme="dark" script="button_click.js" version="1.1">
+<form theme="dark" version="1.1">
   <label>Cribl Thruput Introspection</label>
   <description>Cribl Thruput Introspection</description>
   <fieldset submitButton="true" autoRun="false">
@@ -55,19 +55,28 @@
       </change>
       <prefix>span=</prefix>
     </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
   </fieldset>
-  <row>
-    <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
   <row>
     <panel depends="$show_details$">
       <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard is intended to provide insight into thruput metrics from reported metrics events. Metrics on this dashboard are for your sources and destinations. For destinations, there are two panels which show total events and bytes out by destination. You can select all or just specific destinations. The sources panel will display events and total bytes in. However this dashboard has a few options to help troubleshoot issues specific to uneven distribution of events received by worker process which can be an indication of tcp pinning or other issues with the origin sending these events. When selecting the split by of Worker Process, a new panel showing cpu by worker process appears underneath the total events in panel. We recommend also setting the stack mode to 100% stacked. This mode will allow you to easily identify if there is one worker process that is accepting a significantly higher amount of events and also consuming more cpu than other workers. A single worker process with a high event in count and 100% cpu usage is usually indicative of TCP pinning. </p>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard is intended to provide insight into thruput metrics from reported metrics events. Metrics on this dashboard are for your Sources and Destinations. For Destinations, there are two panels which show total events and bytes out by Destination. You can select all or just specific Destinations. The Sources panel will display events and total bytes in. However this dashboard has a few options to help troubleshoot issues specific to uneven distribution of events received by Worker Process which can be an indication of TCP pinning or other issues with the origin sending these events. When selecting the split by of Worker Process, a new panel showing CPU by Worker Process appears underneath the total events in panel. We recommend also setting the stack mode to 100% stacked. This mode will allow you to easily identify if there is one Worker Process that is accepting a significantly higher amount of events and also consuming more CPU than other Workers. A single Worker Process with a high event in count and 100% CPU usage is usually indicative of TCP pinning. </p>
+        </div>
       </html>
     </panel>
   </row>
@@ -94,7 +103,7 @@
         </search>
       </input>
       <chart>
-        <title>Total events out</title>
+        <title>Total Events Out</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ $output_token$ $mstats_span$ BY output
 | timechart sum("out_events") $timechart_span$ useother=false BY output WHERE max in top5
@@ -102,6 +111,7 @@
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisY.abbreviation">auto</option>
         <option name="charting.chart">line</option>
         <option name="charting.chart.nullValueMode">connect</option>
@@ -112,7 +122,7 @@
         <option name="refresh.display">progressbar</option>
       </chart>
       <chart>
-        <title>Total bytes outs</title>
+        <title>Total Bytes Out</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ $output_token$ $mstats_span$ BY output
 | timechart sum("out_bytes") $timechart_span$ useother=false BY output WHERE max in top5
@@ -120,6 +130,7 @@
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisY.abbreviation">auto</option>
         <option name="charting.chart">line</option>
         <option name="charting.chart.nullValueMode">connect</option>
@@ -152,7 +163,7 @@
         <default>*</default>
       </input>
       <input type="dropdown" token="splitby" searchWhenChanged="true">
-        <label>Split by</label>
+        <label>Split By</label>
         <choice value="input">Input</choice>
         <choice value="cribl_wp">Worker Process</choice>
         <default>input</default>
@@ -183,7 +194,7 @@
         <initialValue>20</initialValue>
       </input>
       <chart>
-        <title>Total events in</title>
+        <title>Total Events In</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events  WHERE `set_cribl_metrics_index` group=$worker_group$ $input_token$ $mstats_span$ BY $splitby$
 | timechart sum("in_events") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
@@ -191,6 +202,7 @@
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisY.abbreviation">auto</option>
         <option name="charting.chart">area</option>
         <option name="charting.chart.nullValueMode">connect</option>
@@ -202,7 +214,7 @@
         <option name="refresh.display">progressbar</option>
       </chart>
       <chart depends="$show_cpu_chart$">
-        <title>Cpu Percentage by Worker Process</title>
+        <title>CPU Percentage by Worker Process</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc WHERE `set_cribl_metrics_index` group=$worker_group$ $mstats_span$ BY $splitby$
 | timechart sum("cpu_perc") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
@@ -210,6 +222,7 @@
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisY.abbreviation">auto</option>
         <option name="charting.chart">area</option>
         <option name="charting.chart.nullValueMode">connect</option>
@@ -221,7 +234,7 @@
         <option name="refresh.display">progressbar</option>
       </chart>
       <chart>
-        <title>Total bytes in</title>
+        <title>Total Bytes In</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` group=$worker_group$ $input_token$ $mstats_span$ BY $splitby$
 | timechart sum("in_bytes") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
@@ -229,6 +242,7 @@
           <earliest>$global_time_tok.earliest$</earliest>
           <latest>$global_time_tok.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisY.abbreviation">auto</option>
         <option name="charting.chart">area</option>
         <option name="charting.chart.nullValueMode">connect</option>
