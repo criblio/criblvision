@@ -1,7 +1,7 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Commit and Deploy Audit Logs</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="time" searchWhenChanged="false">
+    <input type="time" token="time" searchWhenChanged="true">
       <label>Timerange</label>
       <default>
         <earliest>-15m</earliest>
@@ -13,7 +13,7 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` AND source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log")
+        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") NOT [| inputlookup cribl_stream_workers | rename worker AS host | table host ]
 | mvexpand host
 | sort host</query>
         <earliest>$time.earliest$</earliest>

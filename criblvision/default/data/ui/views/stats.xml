@@ -1,5 +1,21 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Stats</label>
+      <row>
+    <panel>
+      
+      <html rejects="$show_details$">
+        <button id="showButton" class="btn">How to Use</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <button id="hideButton" class="btn">Close</button>
+        			<p style="list-style-type:square"><span style="font-size:11pt"><span style="font-family:Arial">This dashboard displays a series of panels with searches based off our minutely log stats. These stats are logged every minute by the api and worker processes. Displayed on this page are CPU and Memory usage, Active vs blocked EP (event processors), event stats, and persistent queue stats. Note: persistent queue on this dashboard can&#8217;t be split by output because, currently, our minutely stats do not include which output these pq events are associated with. For more detailed info on PQ, visit the persistent queue analytics dashboard.&#160;</span></span></p>
+      </html>
+    </panel>
+  </row>
   <description>Based off minutely log stats from the Server channel.</description>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="field1" searchWhenChanged="true">
@@ -9,15 +25,30 @@
         <latest>now</latest>
       </default>
     </input>
-    <input type="dropdown" token="host" searchWhenChanged="false">
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="host">
       <label>Host</label>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort -host</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
     <input type="dropdown" token="span">
       <label>span</label>
@@ -38,29 +69,10 @@
   </fieldset>
   <row>
     <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel depends="$show_details$">
-      <html>
-        <button id="hideButton" class="btn">Close</button>
-        			<p style="list-style-type:square">
-          <span style="font-size:11pt">
-            <span style="font-family:Arial">This dashboard displays a series of panels with searches based off our minutely log stats. These stats are logged every minute by the api and worker processes. Displayed on this page are CPU and Memory usage, Active vs blocked EP (event processors), event stats, and persistent queue stats. Note: persistent queue on this dashboard can’t be split by output because, currently, our minutely stats do not include which output these pq events are associated with. For more detailed info on PQ, visit the persistent queue analytics dashboard. </span>
-          </span>
-        </p>
-      </html>
-    </panel>
-  </row>
-  <row>
-    <panel>
       <chart>
-        <title>CPU Usage</title>
+        <title>Cpu Usage</title>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | timechart span=$span$ last(cpuPerc) as cpuPerc $splitby$</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart span=$span$ last(cpuPerc) as cpuPerc $splitby$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -74,14 +86,14 @@
   <row>
     <panel>
       <chart>
-        <title>Memory usage (MB)</title>
+        <title>Memory usage</title>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | timechart span=$span$ last(mem.ext) as memExt last(mem.heap) as memHeap last(mem.rss) as memRss $splitby$</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart span=$span$ last(mem.ext) as memExt last(mem.heap) as memHeap last(mem.rss) as memRss $splitby$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
         <option name="charting.chart">area</option>
-        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.stackMode">stacked</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>
@@ -90,7 +102,7 @@
       <chart>
         <title>Active vs blocked EP</title>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | timechart span=$span$ last(activeEP) as activeEP last(blockedEP) as blockedEP $splitby$</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart span=$span$ last(activeEP) as activeEP last(blockedEP) as blockedEP $splitby$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -106,12 +118,12 @@
       <chart>
         <title>Event Stats</title>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | timechart span=$span$ last(droppedEvents) as DroppedEvents last(outEvents) as outEvents last(inEvents) as inEvents $splitby$</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart span=$span$ last(droppedEvents) as DroppedEvents last(outEvents) as outEvents last(inEvents) as inEvents $splitby$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
         <option name="charting.chart">area</option>
-        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.stackMode">stacked</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>
@@ -120,12 +132,12 @@
       <chart>
         <title>Persistent Queue stats</title>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=server message="_raw stats" | timechart span=$span$ last(pqInBytes) as pqInBytes last(pqOutBytes) as pqOutBytes last(pqTotalBytes) as pqTotalBytes $splitby$</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart span=$span$ last(pqInBytes) as pqInBytes last(pqOutBytes) as pqOutBytes last(pqTotalBytes) as pqTotalBytes $splitby$</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
         <option name="charting.chart">area</option>
-        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.stackMode">stacked</option>
         <option name="charting.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </chart>

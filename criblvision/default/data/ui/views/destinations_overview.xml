@@ -1,27 +1,8 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Destinations Overview</label>
-  <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="false">
-      <label>Timerange</label>
-      <default>
-        <earliest>-15m</earliest>
-        <latest>now</latest>
-      </default>
-    </input>
-    <input type="dropdown" token="host">
-      <label>Host</label>
-      <fieldForLabel>host</fieldForLabel>
-      <fieldForValue>host</fieldForValue>
-      <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
-        <earliest>-24h@h</earliest>
-        <latest>now</latest>
-      </search>
-      <choice value="*">All</choice>
-    </input>
-  </fieldset>
-  <row>
+      <row>
     <panel>
+      
       <html rejects="$show_details$">
         <button id="showButton" class="btn">How to Use</button>
       </html>
@@ -35,12 +16,46 @@
       </html>
     </panel>
   </row>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="field1" searchWhenChanged="true">
+      <label>Timerange</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+  </fieldset>
   <row>
     <panel>
       <title>% Error Messages Across All Destinations</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"error"))) AS errorcount | eval error_percentage=(errorcount/Total)*100| table error_percentage</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"error"))) AS errorcount | eval error_percentage=(errorcount/Total)*100| table error_percentage</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -60,7 +75,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">after</option>
+        <option name="unitPosition">before</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
@@ -69,7 +84,7 @@
       <title>% of Warn messages across all Destinations</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"warn"))) AS warncount | eval warn_percentage=(warncount/Total)*100| table warn_percentage</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"warn"))) AS warncount | eval warn_percentage=(warncount/Total)*100| table warn_percentage</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -89,7 +104,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">after</option>
+        <option name="unitPosition">before</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
@@ -98,7 +113,7 @@
       <title>%of info messages across all Destinations</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` cid=* host=$host$ channel=output* | stats count AS "Total", count(eval(match(level,"info"))) AS infocount | eval info_percentage=(infocount/Total)*100| table info_percentage</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"info"))) AS infocount | eval info_percentage=(infocount/Total)*100| table info_percentage</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -118,7 +133,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="unit">%</option>
-        <option name="unitPosition">after</option>
+        <option name="unitPosition">before</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
@@ -136,7 +151,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"$loglevel1$"))) AS $loglevel1$count by channel | eval $loglevel1$_percentage=($loglevel1$count/Total)*100| eval $loglevel1$_percentage=round($loglevel1$_percentage,2) 
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ cid=* channel=output* | stats count AS "Total", count(eval(match(level,"$loglevel1$"))) AS $loglevel1$count by channel | eval $loglevel1$_percentage=($loglevel1$count/Total)*100| eval $loglevel1$_percentage=round($loglevel1$_percentage,2) 
 | table $loglevel1$_percentage channel 
 | sort -error_percentage</query>
           <earliest>$field1.earliest$</earliest>

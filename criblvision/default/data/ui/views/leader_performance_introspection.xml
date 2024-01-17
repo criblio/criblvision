@@ -1,7 +1,7 @@
 <form theme="dark" script="button_click.js" version="1.1">
   <label>Leader Performance Introspection</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="false">
+    <input type="time" token="field1" searchWhenChanged="true">
       <label>Timerange</label>
       <default>
         <earliest>-60m@m</earliest>
@@ -13,7 +13,7 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` NOT [| inputlookup cribl_stream_workers | rename worker AS host | table host ] | mvexpand host | sort host</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
