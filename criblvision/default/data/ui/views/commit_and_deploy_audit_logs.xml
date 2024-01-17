@@ -1,15 +1,15 @@
-<form theme="dark" script="button_click.js" version="1.1">
+<form theme="dark" version="1.1">
   <label>Commit and Deploy Audit Logs</label>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
-      <label>Timerange</label>
+      <label>Time Range</label>
       <default>
         <earliest>-15m</earliest>
         <latest>now</latest>
       </default>
     </input>
     <input type="dropdown" token="leader">
-      <label>Host</label>
+      <label>Leader Host</label>
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
@@ -19,6 +19,9 @@
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
     <input type="radio" token="FilesCreated" searchWhenChanged="true">
       <label>Show Files Created</label>
@@ -38,19 +41,28 @@
       <choice value="">No</choice>
       <default></default>
     </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
   </fieldset>
-  <row>
-    <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
   <row>
     <panel depends="$show_details$">
       <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard is designed to show a breakdown of commits and deploys from the leader node. You can select to have fils created, modified, or deleted shown. This is useful to audit what recent configurations changes might have been deployed before an issue started. </p>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard is designed to show a breakdown of commits and deploys from the Leader Node. You can select to have files created, modified, or deleted shown. This is useful to audit what recent configuration changes might have been deployed before an issue started. </p>
+        </div>
       </html>
     </panel>
   </row>

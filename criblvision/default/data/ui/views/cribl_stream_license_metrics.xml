@@ -1,8 +1,8 @@
-<form version="1.1" script="button_click.js" theme="dark">
+<form version="1.1" theme="dark">
   <label>Cribl Stream License Metrics</label>
   <description></description>
   <fieldset submitButton="true" autoRun="true">
-    <input type="time" searchWhenChanged="false" token="global_time_tok">
+    <input type="time" searchWhenChanged="false" token="time">
       <label>Time Range</label>
       <default>
         <earliest>@d</earliest>
@@ -18,35 +18,45 @@
       <default>GB</default>
       <initialValue>GB</initialValue>
     </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
   </fieldset>
-  <row>
-    <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
   <row>
     <panel depends="$show_details$">
       <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard will show you some basic license usage stats based off Cribl Stream metrics. Please note that the bottom two panels related to splunk license usage will not populate if your search head(s) don't have access to Splunk's license_usage.log</p>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard will show you some basic license usage stats based off Cribl Stream metrics. Please note that the bottom two panels related to Splunk license usage will not populate if your Search Head(s) don't have access to Splunk's <code>license_usage.log</code>
+          </p>
+        </div>
       </html>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Cribl Stream $unit$_in</title>
+      <title>Cribl Stream $unit$ In</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.in_bytes") prestats=true WHERE index=cribl_metrics span=1h
-| stats sum("cribl.logstream.route.in_bytes") AS bytes
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=1h
+| stats sum(`set_cribl_metrics_prefix(route.in_bytes)`) AS bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
 | eval GB=round(bytes/1024/1024/1024, 4)
 | fields $unit$</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorMode">none</option>
@@ -61,17 +71,17 @@
       </single>
     </panel>
     <panel>
-      <title>Cribl Stream $unit$_out</title>
+      <title>Cribl Stream $unit$ Out</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") prestats=true WHERE index=cribl_metrics span=1h
-| stats sum("cribl.logstream.route.out_bytes") AS bytes
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=1h
+| stats sum(`set_cribl_metrics_prefix(route.out_bytes)`) AS bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
 | eval GB=round(bytes/1024/1024/1024, 4)
 | fields $unit$</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="drilldown">none</option>
@@ -88,15 +98,15 @@
       <title>Cribl Stream $unit$ Volume Reduction</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") as bytes_out sum("cribl.logstream.route.in_bytes") as bytes_in WHERE index=cribl_metrics
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index`
 | eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
 | eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
 | eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
 | fields $unit$_in $unit$_out
 | eval Volume_Reduction = $unit$_out - $unit$_in
 | fields Volume_Reduction</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorMode">block</option>
@@ -117,16 +127,16 @@
       <title>Cribl Stream $unit$ Volume Reduction %</title>
       <single>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") as bytes_out sum("cribl.logstream.route.in_bytes") as bytes_in WHERE index=cribl_metrics
-|eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index`
+| eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
 | eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
 | eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
 | fields $unit$_in $unit$_out
 | eval Volume_Reduction = ($unit$_in - $unit$_out)
 | eval Volume_Reduction_perc = (Volume_Reduction / $unit$_in)*100
 | fields Volume_Reduction_perc</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorMode">block</option>
@@ -143,93 +153,64 @@
   </row>
   <row>
     <panel>
-      <title>Cribl Stream $unit$_in</title>
+      <title>Cribl Stream $unit$ In</title>
       <chart>
         <search>
-          <query>| mstats sum("cribl.logstream.route.in_bytes") prestats=true WHERE index=cribl_metrics span=15m
-| timechart sum("cribl.logstream.route.in_bytes") AS bytes span=15m
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=15m
+| timechart sum(`set_cribl_metrics_prefix(route.in_bytes)`) AS bytes span=15m
 | table _time bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
 | eval GB=round(bytes/1024/1024/1024, 4)
 | chart list($unit$) as $unit$_in over _time</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
-          <sampleRatio>1</sampleRatio>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.abbreviation">none</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.abbreviation">auto</option>
-        <option name="charting.axisY.includeZero">1</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.abbreviation">none</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">column</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">connect</option>
-        <option name="charting.chart.showDataLabels">minmax</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">stacked</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">none</option>
-        <option name="charting.fieldColors">{"Sum":"#1e93c6","datagen:smallDataGen":"#1e93c6","DataGenTest":"#1e93c6","wnGeh6":"#1e93c6","cribl":"#1e93c6","w0":"#1e93c6","w1":"#f2b827","w2":"#d6563c","w3":"#6a5c9e","pop-os":"#1e93c6"}</option>
-        <option name="charting.fieldDashStyles">{"Sum":"Solid","datagen:smallDataGen":"Solid","DataGenTest":"Solid","wnGeh6":"Solid","cribl":"Solid","w0":"Solid","w1":"Solid","w2":"Solid","w3":"Solid","pop-os":"Solid"}</option>
-        <option name="charting.gridLinesX.showMajorLines">1</option>
-        <option name="charting.layout.splitSeries">0</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.mode">seriesCompare</option>
-        <option name="charting.legend.placement">right</option>
-        <option name="charting.lineWidth">2</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="trellis.enabled">0</option>
-        <option name="trellis.scales.shared">1</option>
-        <option name="trellis.size">medium</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
     </panel>
     <panel>
-      <title>Cribl Stream $unit$_out</title>
+      <title>Cribl Stream $unit$ Out</title>
       <chart>
         <search>
-          <query>| mstats sum("cribl.logstream.route.out_bytes") prestats=true WHERE index=cribl_metrics span=15m
-| timechart sum("cribl.logstream.route.out_bytes") AS bytes span=15m
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=15m
+| timechart sum(`set_cribl_metrics_prefix(route.out_bytes)`) AS bytes span=15m
 | table _time bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
 | eval GB=round(bytes/1024/1024/1024, 4)
 | chart list($unit$) as $unit$_out over _time</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <option name="charting.chart">column</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.chart">area</option>
         <option name="charting.chart.showDataLabels">minmax</option>
         <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Splunk License $unit$ used</title>
+      <title>Splunk License $unit$ Used</title>
       <input type="dropdown" token="idx_select" searchWhenChanged="true">
         <label>Include/Exclude Cribl_Stream_Metrics Index</label>
-        <choice value="idx=*">Include</choice>
-        <choice value="idx!=cribl_metrics">Exclude</choice>
-        <default>idx!=cribl_metrics</default>
-        <initialValue>idx!=cribl_metrics</initialValue>
+        <choice value="index=*">Include</choice>
+        <choice value="`set_cribl_metrics_index`">Exclude</choice>
+        <default>index=*</default>
+        <initialValue>index=*</initialValue>
       </input>
       <chart>
         <search>
-          <query>index=_internal source=*license_usage.log type=Usage pool=* $idx_select$
+          <query>index=_internal source=*license_usage.log type=Usage pool=*
+| rename idx AS index
+| search $idx_select$
 | stats sum(b) as bytes_used by pool poolsz
 | rename poolsz as bytes_poolsz
 | eval KB_used=round(bytes_used/1024, 4), MB_used=round(bytes_used/1024/1024, 4), GB_used=round(bytes_used/1024/1024/1024, 4)
@@ -237,8 +218,8 @@
 | rename pool as Pool $unit$_used as "$unit$ license used" $unit$_poolsz as "$unit$ License Capacity"
 | fields Pool "$unit$ license used" "$unit$ License Capacity"
 | sort Pool</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.chart">bar</option>
@@ -247,19 +228,21 @@
       </chart>
     </panel>
     <panel>
-      <title>Splunk License $unit$ used by Index</title>
+      <title>Splunk License $unit$ Used by Index</title>
       <table>
         <search>
-          <query>index=_internal source=*license_usage.log type=Usage pool=* $idx_select$
-| stats sum(b) as b by pool idx
+          <query>index=_internal source=*license_usage.log type=Usage pool=*
+| rename idx AS index
+| search $idx_select$
+| stats sum(b) as b by pool index
 | eval KB_used=round(b/1024, 4), MB_used=round(b/1024/1024, 4), GB_used=round(b/1024/1024/1024, 4)
 | rename b as bytes_used
-| addcoltotals $unit$_used labelfield=idx label="TOTAL $unit$'s USED:"
-| rename idx as Index pool as "License Pool" $unit$_used as "$unit$'s Used"
+| addcoltotals $unit$_used labelfield=index label="TOTAL $unit$'s USED:"
+| rename index as Index pool as "License Pool" $unit$_used as "$unit$'s Used"
 | fields "License Pool" Index "$unit$'s Used"
 | sort - "$unit$'s Used"</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
