@@ -1,8 +1,8 @@
-<form theme="dark" script="button_click.js" version="1.1">
+<form theme="dark" version="1.1">
   <label>Persistent Queue Analytics</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="true">
-      <label>Timerange</label>
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
       <default>
         <earliest>-60m@m</earliest>
         <latest>now</latest>
@@ -33,32 +33,41 @@
       <default>*</default>
       <initialValue>*</initialValue>
     </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details" />
+        </condition>
+      </change>
+    </input>
   </fieldset>
-  <row>
-    <panel>
-      <html rejects="$show_details$">
-        <button id="showButton" class="btn">How to Use</button>
-      </html>
-    </panel>
-  </row>
   <row>
     <panel depends="$show_details$">
       <html>
-        <button id="hideButton" class="btn">Close</button>
-        <p>This dashboard shows persistent queue statistics. It is intended to assess the number of destinations with pq engaged, current pq size and pq size by destination as well as a list of outputs with pq engaged. It will also show a panel with persistent queue log messages to aid in troubleshooting. In general, if pqsize is increasing over time, it means that your destination is not able to ingest data fast enough and is resulting int he worker nodes having to queue up data. If you discover this to be the issue, please assess the health of your destination and/or engage that vendor’s support team to help troubleshoot that destination.</p>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard shows persistent queue (PQ) statistics. It is intended to assess the number of Destinations with PQ engaged, current PQ size, and PQ size by Destination, as well as a list of Destinations with PQ engaged. It will also show a panel with persistent queue log messages to aid in troubleshooting. In general, if PQ size is increasing over time, it means that your Destination is not able to ingest data fast enough and is resulting in the Worker Nodes having to queue up data. If you discover this to be the issue, please assess the health of your Destination and/or engage that vendor’s support team to help troubleshoot that Destination.</p>
+        </div>
       </html>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Count of Destinations with PQ engaged</title>
+      <title>Count of Destinations with PQ Engaged</title>
       <single>
         <search>
           <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output
 | search pq_engaged &gt; 0
 | stats count</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -81,19 +90,19 @@
       </single>
     </panel>
     <panel>
-      <title>Current PQ size</title>
+      <title>Latest PQ Size</title>
       <single>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
         <option name="numberPrecision">0</option>
-        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
         <option name="refresh.display">progressbar</option>
         <option name="showSparkline">1</option>
@@ -103,20 +112,23 @@
         <option name="trellis.size">medium</option>
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
+        <option name="unit">B</option>
         <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
       </single>
     </panel>
     <panel>
-      <title>Outputs with pq engaged</title>
+      <title>Destinations with PQ Engaged</title>
       <table>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output
-| search pq_engaged &gt; 0 
-| stats values(output) as "outputs with pq engaged"</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ BY output 
+| where pq_engaged &gt; 0 
+| dedup output
+| fields - pq_engaged
+| rename output AS Destination</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
@@ -132,19 +144,21 @@
   </row>
   <row>
     <panel>
-      <title>PQ size by destination</title>
+      <title>PQ Size by Destination</title>
       <chart>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS ps_size WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ span=10s BY output
-| timechart sum("pq_size") span=10s useother=false BY output WHERE max in top100
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ span=auto BY output prestats=true
+| timechart sum(`set_cribl_metrics_prefix("pq.queue_size")`) useother=false BY output WHERE max in top100
 | fields - _span*</query>
-          <earliest>-24h@h</earliest>
-          <latest>now</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">PQ Size (B)</option>
         <option name="charting.axisTitleY.visibility">visible</option>
         <option name="charting.axisTitleY2.visibility">visible</option>
         <option name="charting.axisX.abbreviation">none</option>
@@ -158,7 +172,7 @@
         <option name="charting.chart.bubbleMaximumSize">50</option>
         <option name="charting.chart.bubbleMinimumSize">10</option>
         <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.chart.showDataLabels">none</option>
         <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
         <option name="charting.chart.stackMode">default</option>
@@ -168,7 +182,7 @@
         <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
         <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
         <option name="charting.legend.mode">standard</option>
-        <option name="charting.legend.placement">right</option>
+        <option name="charting.legend.placement">bottom</option>
         <option name="charting.lineWidth">2</option>
         <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
@@ -180,20 +194,22 @@
   <row>
     <panel>
       <title>Persistent Queue Logs</title>
-      <input type="dropdown" token="display">
+      <input type="dropdown" token="display" searchWhenChanged="true">
         <label>Display</label>
         <choice value="raw">Raw</choice>
         <choice value="list">List</choice>
+        <default>raw</default>
+        <initialValue>raw</initialValue>
       </input>
       <event>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel="IPersistentQueue"</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
-        <option name="list.drilldown">none</option>
+        <option name="list.drilldown">full</option>
         <option name="list.wrap">1</option>
         <option name="maxLines">5</option>
         <option name="raw.drilldown">none</option>
