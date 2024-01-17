@@ -1,8 +1,8 @@
 <form theme="dark" version="1.1">
   <label>Auditing</label>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" token="field1" searchWhenChanged="true">
-      <label>Timerange</label>
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
       <default>
         <earliest>-60m@m</earliest>
         <latest>now</latest>
@@ -26,8 +26,8 @@
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` channel=auth message="Successful login" 
 | timechart count limit=100 by user</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="charting.chart">column</option>
         <option name="charting.drilldown">none</option>
@@ -41,8 +41,8 @@
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` message="finished config update" 
 | table _time worker version</query>
-          <earliest>$field1.earliest$</earliest>
-          <latest>$field1.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
       </table>
