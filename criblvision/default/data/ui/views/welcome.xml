@@ -43,6 +43,14 @@
 
 <p>&#160;</p>
 
+<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Populate Cribl Stream Worker Lookup Report</span></span></span></h4>
+
+<p>&#160;</p>
+
+<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">After installing or upgrading the CriblVision application, run the Populate Cribl Stream Worker Lookup report to repopulate the cribl_stream_workers lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</span></span></span></p>
+
+<p>&#160;</p>
+
 <h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Macros</span></span></span></h4>
 
 <p>&#160;</p>
