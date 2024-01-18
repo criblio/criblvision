@@ -28,4 +28,5 @@
   </collection>
   <view name="dashboards" />
   <view name="search" />
+  <saved name="Populate Cribl Stream Worker Lookup" />
 </nav>
