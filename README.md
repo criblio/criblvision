@@ -117,7 +117,7 @@ In addition to this overview page, this app provides several views intended to a
  \
 Author: Johan Woger 
 
-Co-Authors: Jeremy Prescott, Martin Prado 
+Co-Authors: Jeremy Prescott, Martin Prado, David Sheridan, Christopher Owen 
 
 Honorable Mentions: George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at [https://github.com/arcsector](https://github.com/arcsector)) 
 
