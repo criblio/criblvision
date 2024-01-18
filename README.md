@@ -24,7 +24,7 @@ Conversion notes:
 
 ## Getting started
 
-This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl support engineers to help customers troubleshoot their own cribl deployments. There are several troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own cribl deployment, this app will always be a continuous ”work in progress” and should always be used in conjunction with the cribl monitoring console and associated views. 
+This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl Support Engineers to help customers troubleshoot their own Cribl deployments. There are several troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own Cribl deployment, this app will always be a continuous ”work in progress” and should always be used in conjunction with the Cribl monitoring console and associated views. 
 
  
 
@@ -48,7 +48,7 @@ Answers to the above questions, and many others, will help narrow down the scope
 
 ### **Configuration**
 
-This app and its associated dashboards rely on a few components which you must configure. Note: v.1.1.0 is intended only for Cribl Stream worker nodes and leaders. Future releases will add dashboards and functionality for Cribl Edge deployment troubleshooting and monitoring. 
+This app and its associated dashboards rely on a few components which you must configure. Note: v.2.0.0 is intended only for Cribl Stream Worker nodes and Leaders. Future releases will add dashboards and functionality for Cribl Edge deployment troubleshooting and monitoring. 
 
  
 
@@ -57,9 +57,12 @@ This app and its associated dashboards rely on a few components which you must c
 
  
 
-Cribl internal logs and metrics must be enabled and forwarded to splunk in order for all of the panels to populate with events. Refer the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index field for metrics. 
+Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics. 
 
  
+#### **Populate Cribl Stream Worker Lookup**
+
+After installing or upgrading the CriblVision application, run the Populate Cribl Stream Worker Lookup report to repopulate the cribl_stream_workers lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.
 
 
 #### **Macros**
@@ -102,12 +105,12 @@ This app ships with 4 macros which must be edited in accordance with your splunk
 
 #### **Leader logs**
 
-Some of the views in this app will require leader logs to be forwarded on to splunk. In distributed Cribl Stream environments, leader logs are currently NOT sent via our internal source. You will have to install an edge node on your leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to /opt/cribl/log/*.log For more information on how to deploy an edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning). Note: When deploying the edge node to your leader node, we recommend having a separate fleet just for this node. Be sure to disable all other inputs on that edge node except for file monitor inputs. 
+Some of the views in this app will require Leader logs to be forwarded on to Splunk. In distributed Cribl Stream environments, Leader logs are currently NOT sent via our internal source. You will have to install an Edge node on your Leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to `/opt/cribl/log/*.log`. For more information on how to deploy an Edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning). Note: When deploying the Edge node to your Leader node, we recommend having a separate fleet just for this node. Be sure to disable all other inputs on that Edge node except for file monitor inputs. 
 
  
 ## Using this app
 
-In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a cribl deployment. Every view is equipped with a "how to use" button that reveals a description and instructions for that view when clicked. We recommend starting with the health check view and selecting a single worker node from the host dropdown.
+In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "how to use" button that reveals a description and instructions for that view when clicked. We recommend starting with the health check view and selecting a single worker node from the host dropdown.
 
 #### **About**
 
