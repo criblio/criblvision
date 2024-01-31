@@ -1,8 +1,12 @@
 <form theme="dark" version="1.1">
   <label>Cribl Thruput Introspection</label>
   <description>Cribl Thruput Introspection</description>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
-    <input type="time" searchWhenChanged="true" token="global_time_tok">
+    <input type="time" searchWhenChanged="true" token="time">
       <label>Time Range</label>
       <default>
         <earliest>-15m</earliest>
@@ -76,6 +80,7 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard is intended to provide insight into thruput metrics from reported metrics events. Metrics on this dashboard are for your Sources and Destinations. For Destinations, there are two panels which show total events and bytes out by Destination. You can select all or just specific Destinations. The Sources panel will display events and total bytes in. However this dashboard has a few options to help troubleshoot issues specific to uneven distribution of events received by Worker Process which can be an indication of TCP pinning or other issues with the origin sending these events. When selecting the split by of Worker Process, a new panel showing CPU by Worker Process appears underneath the total events in panel. We recommend also setting the stack mode to 100% stacked. This mode will allow you to easily identify if there is one Worker Process that is accepting a significantly higher amount of events and also consuming more CPU than other Workers. A single Worker Process with a high event in count and 100% CPU usage is usually indicative of TCP pinning. </p>
+          <p><b>Note:</b> The <code>CPU Percentage by Worker Process</code> panel search only populates when the Source split by input is set to <code>Worker Process</code></p>
         </div>
       </html>
     </panel>
@@ -95,50 +100,47 @@
         <initialValue>*</initialValue>
         <fieldForLabel>output</fieldForLabel>
         <fieldForValue>output</fieldForValue>
-        <search>
-          <query>| mstats avg(`set_cribl_metrics_prefix("total.out_events")`) WHERE `set_cribl_metrics_index` group=$worker_group$ BY output
-| table output</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
-        </search>
       </input>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <chart>
         <title>Total Events Out</title>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ $output_token$ $mstats_span$ BY output
 | timechart sum("out_events") $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.axisTitleY.text">Event Count</option>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.nullValueMode">connect</option>
-        <option name="charting.chart.showDataLabels">none</option>
         <option name="charting.drilldown">none</option>
-        <option name="charting.gridLinesX.showMajorLines">1</option>
-        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
       </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <chart>
         <title>Total Bytes Out</title>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ $output_token$ $mstats_span$ BY output
 | timechart sum("out_bytes") $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.axisTitleY.text">Bytes</option>
         <option name="charting.chart">line</option>
-        <option name="charting.chart.nullValueMode">connect</option>
-        <option name="charting.chart.showDataLabels">none</option>
         <option name="charting.drilldown">none</option>
-        <option name="charting.gridLinesX.showMajorLines">1</option>
-        <option name="charting.legend.mode">seriesCompare</option>
-        <option name="refresh.display">progressbar</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
     </panel>
   </row>
@@ -193,65 +195,65 @@
         <default>20</default>
         <initialValue>20</initialValue>
       </input>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <chart>
         <title>Total Events In</title>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events  WHERE `set_cribl_metrics_index` group=$worker_group$ $input_token$ $mstats_span$ BY $splitby$
 | timechart sum("in_events") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisY.abbreviation">auto</option>
-        <option name="charting.chart">area</option>
-        <option name="charting.chart.nullValueMode">connect</option>
-        <option name="charting.chart.showDataLabels">none</option>
-        <option name="charting.chart.stackMode">$stackmode$</option>
+        <option name="charting.axisTitleY.text">Event Count</option>
+        <option name="charting.chart">line</option>
         <option name="charting.drilldown">none</option>
-        <option name="charting.gridLinesX.showMajorLines">1</option>
-        <option name="charting.legend.mode">seriesCompare</option>
-        <option name="refresh.display">progressbar</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
-      <chart depends="$show_cpu_chart$">
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
         <title>CPU Percentage by Worker Process</title>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc WHERE `set_cribl_metrics_index` group=$worker_group$ $mstats_span$ BY $splitby$
 | timechart sum("cpu_perc") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisY.abbreviation">auto</option>
-        <option name="charting.chart">area</option>
-        <option name="charting.chart.nullValueMode">connect</option>
-        <option name="charting.chart.showDataLabels">none</option>
-        <option name="charting.chart.stackMode">$stackmode$</option>
+        <option name="charting.axisTitleY.text">CPU %</option>
+        <option name="charting.chart">line</option>
         <option name="charting.drilldown">none</option>
-        <option name="charting.gridLinesX.showMajorLines">1</option>
-        <option name="charting.legend.mode">seriesCompare</option>
-        <option name="refresh.display">progressbar</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
       <chart>
         <title>Total Bytes In</title>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` group=$worker_group$ $input_token$ $mstats_span$ BY $splitby$
 | timechart sum("in_bytes") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
-          <earliest>$global_time_tok.earliest$</earliest>
-          <latest>$global_time_tok.latest$</latest>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisY.abbreviation">auto</option>
-        <option name="charting.chart">area</option>
-        <option name="charting.chart.nullValueMode">connect</option>
-        <option name="charting.chart.showDataLabels">none</option>
-        <option name="charting.chart.stackMode">$stackmode$</option>
+        <option name="charting.axisTitleY.text">Bytes</option>
+        <option name="charting.chart">line</option>
         <option name="charting.drilldown">none</option>
-        <option name="charting.gridLinesX.showMajorLines">1</option>
-        <option name="charting.legend.mode">seriesCompare</option>
-        <option name="refresh.display">progressbar</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
     </panel>
   </row>
