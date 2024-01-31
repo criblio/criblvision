@@ -1,9 +1,7 @@
 <form theme="dark" version="1.1">
   <label>Cribl Thruput Introspection</label>
   <description>Cribl Thruput Introspection</description>
-  <search id="annotation_search">
-    <query>`set_cribl_internal_log_index` source!=cribl action=deploy source="*audit.log*" 
-| eval annotation_category = "deploy", annotation_label = "worker_group=".id.", commit=".version.", user=".user</query>
+  <search id="annotation_search" ref="Deployment Annotations">
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
