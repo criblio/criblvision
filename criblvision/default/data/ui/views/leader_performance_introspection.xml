@@ -1,5 +1,11 @@
 <form theme="dark" version="1.1">
   <label>Leader Performance Introspection</label>
+  <search id="annotation_search">
+    <query>`set_cribl_internal_log_index` source!=cribl action=deploy source="*audit.log*" 
+| eval annotation_category = "deploy", annotation_label = "worker_group=".id.", commit=".version.", user=".user</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -114,6 +120,7 @@
     <panel>
       <title>Leader CPU by API Process</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ channel=ProcessMetrics cid IN ("api", "service:*")
 | timechart limit=1000 useother=f max(cpuPerc) AS max_cpuPerc by cid</query>
@@ -172,6 +179,7 @@
         <default></default>
       </input>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>`set_cribl_internal_log_index` host=$host$ source IN ("*/access.log", "*/access1.log", "*/access2.log", "*/access3.log", "*/access4.log") response_time=*
 | timechart limit=1000 useother=f sum(response_time) AS sum_response_time $splitby$</query>
