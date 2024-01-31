@@ -1,5 +1,11 @@
 <form theme="dark" version="1.1">
   <label>Persistent Queue Analytics</label>
+  <search id="annotation_search">
+    <query>`set_cribl_internal_log_index` source!=cribl action=deploy source="*audit.log*" 
+| eval annotation_category = "deploy", annotation_label = "worker_group=".id.", commit=".version.", user=".user</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -146,6 +152,7 @@
     <panel>
       <title>PQ Size by Destination</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) WHERE `set_cribl_metrics_index` "host"=$host$ group=$worker_group$ span=auto BY output prestats=true
 | timechart sum(`set_cribl_metrics_prefix("pq.queue_size")`) useother=false BY output WHERE max in top100
