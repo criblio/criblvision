@@ -98,6 +98,8 @@ definition = cribl.logstream.$metric_name$ </code></pre>
               <p>For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to <code>$SPLUNK_HOME/etc/apps/criblvision/local/props.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
               <pre><code>[your_sourcetype]
 LOOKUP-cribl_stream_workers = cribl_stream_workers worker AS host OUTPUTNEW worker_group AS worker_group</code></pre>
+              <p>If you are using multiple sourcetypes for your internal Cribl logs and would like to use a wildcarded props definition over configuring multiple automated lookups, you can use the following stanza template:</p>
+              <pre><code>[(?::){0}your_wildcarded_sourcetype]</code></pre>
             </div>
             <div>
               <h2><b>Using This App</b></h2>
