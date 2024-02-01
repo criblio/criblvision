@@ -1,101 +1,111 @@
-<dashboard  version="1.1">
-<label>Welcome</label>
+<dashboard version="1.1">
+  <label>Welcome</label>
   <row>
     <panel>
-      
       <html>
-       <h2><span style="font-size:16pt"><span style="font-family:Arial"><span style="color:#000000">Getting started</span></span></span></h2>
+        <style>
+          #container {
+            font-family: Arial;
+            font-size: 11pt;
+            list-style-type: square;
+          }
+          table, th, td {
+            border: 2px solid black;
+          }
+        </style>
+        <div id="container">
+          <div>
+            <h1 class="header">Getting Started</h1>
+            <p>This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl Support Engineers to help customers troubleshoot their own Cribl deployments. There are serveral troubleshooting dashboards tailored to certain product areas in whcih support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own Cribl deployment, this app will always be a continual "work in progress" and should always be used in conjunction with the Cribl Monitoring Console and associated views</p>
+          </div>
+          <div>
+            <h2 class="header"><b>Context is Crucial</b></h2>
+            <p>In the ancient art of troubleshooting, context is key - whether the problem is of a technical nature, or merely one related to existence itself.</p>
+            <p>Without a clear understanding of the circumstances surrounding an issue, it becomes challenging to identify the root cause and provide an effective solution. Context provides valuable information about a specific environment, and every environment is unique; when using this app, it is wise to ask yourself the following questions:</p>
+            <ul>
+              <li><i>What is the current issue you are attempting to troubleshoot?</i></li>
+              <li><i>Are there any recent configuration changes that were made before the issue started?</i></li>
+              <li><i>Were there any specific user interactions that may have contributed to the start of the issue? <b>Example:</b> Increase in data throughput, new Sources or Destinations, change in architecture, etc.</i></li>
+            </ul>
+            <p>Answers to the above questions, and many others, will help narrow down the scope of the investigation, enabling you and your team to focus their efforts on the relevant areas. Additionally, contexts aids in replicating the problem, as it enables Support Engineers to understand the exact conditions under which the issue occurs. Knowledge of the environment, along with the context of use-cases and integrations, and ensure that the troubleshooting process is efficient and accurate.</p>
+          </div>
+          <div>
+            <h2><b>Configuration</b></h2>
+            <p>This app and its associated dashboards rely on a few components which you must configure.</p>
+            <p><b>Note:</b> On your inital entry into the application after it has been installed, you should be prompted to navigate to the setup page which will guide you through configuring the required macros. Once the <code>Save Configuration</code> button is pressed, the macro definitions will be saved, and automatic lookups will be created off the back of the provided sourcetype(s) to automatically enrich events with the Worker Group of the Worker Node from which that event came. If you are wanting to manually configure these (or you run into errors executing the setup page), the following instructions can be followed. You may experience errors when deploying this app within a Search Head Cluster or when changing the name of the app from <code>criblvision</code> to something else.</p>
+            <div>
+              <h3>Logs and Metrics</h3>
+              <p>Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer to the documentation <a target="_blank" href="https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource">here</a> for instructions on configuring this Source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics.</p>
+            </div>
+            <div>
+              <h3>Macros</h3>
+              <p>This app ships with 4 macros which must be edited in accordance with your Splunk index naming schema. For more info on configuring macros, reference Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/SplunkCloud/9.0.2303/Knowledge/Definesearchmacros">here</a>.</p>
+              <table>
+                <tr>
+                  <th>Macro Name</th>
+                  <th>Macro Description</th>
+                </tr>
+                <tr>
+                  <td><code>set_cribl_internal_log_index</code></td>
+                  <td>Set this macro definition to the index you configured for your Cribl logs.</td>
+                </tr>
+                <tr>
+                  <td><code>set_cribl_log_sourcetype</code></td>
+                  <td>Set this macro definition to the sourcetype you configured for Cribl logs.</td>
+                </tr>
+                <tr>
+                  <td><code>set_cribl_metrics_index</code></td>
+                  <td>Set this macro definition to the index your configured for Cribl metrics.</td>
+                </tr>
+                <tr>
+                  <td><code>set_cribl_metrics_prefix(1)</code></td>
+                  <td>Change the <code>cribl.logstream</code> value before <code>.$metric_name$</code> if you have changed the default namespace used for your Cribl metrics internal Source.</td>
+                </tr>
+              </table>
+              <p>For manual configuration of the macro definitons through the CLI, append and update the following to <code>$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
+              <pre><code>[set_cribl_internal_log_index]
+definition = index=cribl_logs
 
+[set_cribl_log_sourcetype]
+definition = sourcetype IN (cribl)
 
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl support engineers to help customers troubleshoot their own Cribl deployments. There are several troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own cribl deployment, this app will always be a continuous &#8221;work in progress&#8221; and should always be used in conjunction with the Cribl monitoring console and associated views.&#160;</span></span></span></p>
+[set_cribl_metrics_index]
+definition = index=cribl_metrics
 
-<p>&#160;</p>
-
-<h3><span style="font-size:13.999999999999998pt"><span style="font-family:Arial"><span style="color:#434343">Context is crucial</span></span></span></h3>
-
-<p><span style="color:#000000; font-family:Arial; font-size:11pt">In the ancient art of troubleshooting, context is key - whether the problem is of a technical nature, or merely one related to existence itself.</span></p>
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Without a clear understanding of the circumstances surrounding an issue, it becomes challenging to identify the root cause and provide an effective solution. Context provides valuable information about a specific environment, and every environment is unique; when using this app, it is wise to ask yourself the following questions:</span></span></span></p>
-
-<ul>
-	<li style="list-style-type:disc"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">What is the current issue you are attempting to troubleshoot?</span></span></span></li>
-	<li style="list-style-type:disc"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Are there any recent configuration changes that were made before the issue started?</span></span></span></li>
-	<li style="list-style-type:disc"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Were there any specific user interactions that may have contributed to the start of the issue? Example: Increase in data throughput, new sources or destinations, change in architecture, etc..&#160;</span></span></span></li>
-</ul>
-
-
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Answers to the above questions, and many others, will help narrow down the scope of the investigation, enabling you and your team to focus their efforts on the relevant areas. Additionally, context aids in replicating the problem, as it enables Support Engineers to understand the exact conditions under which the issue occurs. Knowledge of the environment, along with all of the context on use-cases and integrations, and ensure that the troubleshooting process is efficient and accurate.</span></span></span></p>
-
-<p>&#160;</p>
-
-<h3><span style="font-size:13.999999999999998pt"><span style="font-family:Arial"><span style="color:#434343">Configuration</span></span></span></h3>
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">This app and its associated dashboards rely on a few components which you must configure</span></span></span></p>
-
-<p>&#160;</p>
-
-<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Logs and Metrics</span></span></span></h4>
-
-<p>&#160;</p>
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Cribl internal logs and metrics must be enabled and forwarded to splunk in order for all of the panels to populate with events. Refer the documentation </span></span></span><a href="https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource" style="text-decoration:none"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#1155cc"><u>here</u></span></span></span></a><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000"> for instructions on configuring this source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index field for metrics.&#160;</span></span></span></p>
-
-<p>&#160;</p>
-
-<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Populate Cribl Stream Worker Lookup Report</span></span></span></h4>
-
-<p>&#160;</p>
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">After installing or upgrading the CriblVision application, run the Populate Cribl Stream Worker Lookup report to repopulate the cribl_stream_workers lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</span></span></span></p>
-
-<p>&#160;</p>
-
-<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Macros</span></span></span></h4>
-
-<p>&#160;</p>
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">This app ships with 4 macros which must be edited in accordance with your splunk index naming schema. For more info on configuring macros, reference Splunk&#8217;s Documentation </span></span></span><a href="https://docs.splunk.com/Documentation/SplunkCloud/9.0.2303/Knowledge/Definesearchmacros" style="text-decoration:none"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#1155cc"><u>here</u></span></span></span></a><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">.</span></span></span></p>
-
-<table border="1" cellpadding="1" cellspacing="1" style="width:686px">
-	<tbody>
-		<tr>
-			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_internal_log_index</span></span></span></td>
-			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set this macro definition to the index you configured Cribl logs.</span></span></span></td>
-		</tr>
-		<tr>
-			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_log_sourcetype</span></span></span></td>
-			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set this macro definition to the sourcetype you configured for Cribl logs.</span></span></span></td>
-		</tr>
-		<tr>
-			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_metrics_index</span></span></span></td>
-			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Macro definition for the index you configured for Cribl metrics</span></span></span></td>
-		</tr>
-		<tr>
-			<td><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">Set_cribl_metrics_prefix(1)</span></span></span></td>
-			<td style="width:482px"><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">change the &quot;cribl.logstream&quot; value before .$metric_name$&#160;if you have changed the default namespace used for metrics on your Cribl metrics internal source.&#160;</span></span></span></td>
-		</tr>
-	</tbody>
-</table>
-
-<p>&#160;</p>
-
-<h4><span style="font-size:12pt"><span style="font-family:Arial"><span style="color:#666666">Leader logs</span></span></span></h4>
-
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">
-Some of the views in this app will require leader logs to be forwarded on to splunk. In distributed Cribl Stream environments, leader logs are currently NOT sent via our internal source. You will have to install a cribl edge node on your leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to  /opt/cribl/log/*.log For more information on how to deploy a cribl edge node, please refer to our documentation <a href="https://docs.cribl.io/edge/deploy-planning">here</a>. 
-</span></span></span></p>
-
-<p>&#160;</p>
-
-<h2><span style="font-size:16pt"><span style="font-family:Arial"><span style="color:#000000">Using this app</span></span></span></h2>
-
-<p><span style="font-size:11pt"><span style="font-family:Arial"><span style="color:#000000">In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "how to use" button that reveals a description and instructions for that view when clicked. We recommend starting with the health check view and selecting a single worker node from the host dropdown.</span></span></span></p>
-
-
-
-     </html>
+[set_cribl_metrics_prefix(1)]
+definition = cribl.logstream.$metric_name$ </code></pre>
+            </div>
+            <div>
+              <h3>Leader Logs</h3>
+              <p>Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently <b>NOT</b> sent via our internal Source. You will ahve to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to <code>/opt/cribl/log/*</code>. For more information on how to deploy a Cribl Edge Node, please refer to our documentation <a target="_blank" href="https://docs.cribl.io/edge/deploy-planning">here</a>.</p>
+            </div>
+            <div>
+              <h3>Populate Cribl Stream Worker Lookup Report</h3>
+              <p>After installing or upgrading the CriblVision application, run the <a target="_blank" href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Worker%2520Lookup">Populate Cribl Stream Worker Lookup</a> Report to repopulate the <code>cribl_stream_workers</code> lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</p>
+              <p><b>Note:</b> When the report is initially run, you may see an error stating that the <code>cribl_stream_workers.csv</code> lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.</p>
+            </div>
+            <div>
+              <h3>Automatic Lookups</h3>
+              <p>This app uses an automatic lookup to enrich events with the Worker Group (the <code>worker_group</code> field) on events from a Worker Node in a distributed environment. For more on automatic lookups, see Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/DefineanautomaticlookupinSplunkWeb">here</a>.</p>
+              <p>When configuring an automatic lookup from the Splunk UI, ensure that the following values are set before clicking the <code>Save</code> button:</p>
+              <ul>
+                <li><b>Lookup table</b>: <code>cribl_stream_workers</code></li>
+                <li><b>Apply to:</b> <code>sourcetype</code></li>
+                <li><b>named:</b> <i>Your Cribl log sourcetype <b>Note: </b> You cannot use wildcards in this definition</i></li>
+                <li><b>Lookup input fields:</b> <code>worker</code> = <code>host</code></li>
+                <li><b>Lookup output fields:</b> <code>worker_group</code> = <code>worker_group</code></li>
+              </ul>
+              <p>For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to <code>$SPLUNK_HOME/etc/apps/criblvision/local/props.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
+              <pre><code>[your_sourcetype]
+LOOKUP-cribl_stream_workers = cribl_stream_workers worker AS host OUTPUTNEW worker_group AS worker_group</code></pre>
+            </div>
+            <div>
+              <h2><b>Using This App</b></h2>
+              <p>In addition to this overview page, this app provdes several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "How to Use" toggle that reveals a description and instructions for that view. We recommend starting with the <a target="_blank" href="/app/criblvision/health_check">Health Check</a> view and selecting a single Worker Group or Worker Node from the provided filters.</p>
+            </div>
+          </div>
+        </div>
+      </html>
     </panel>
   </row>
 </dashboard>
