@@ -1,4 +1,7 @@
 <form version="1.1" theme="dark">
+  <init>
+    <eval token="full_selected">if(isnull($form.full_selected$),"*",$form.full_selected$</eval>
+  </init>
   <label>Sources/Destinations Overview</label>
   <search id="annotation_search" ref="Deployment Annotations">
     <earliest>$time.earliest$</earliest>
