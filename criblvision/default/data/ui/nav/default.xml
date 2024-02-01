@@ -5,11 +5,8 @@
   	<view name="home" />
   	<view name="stats" />
   </collection>
-  <collection label="Sources">
-    <view name="sources_overview" />
-  </collection>
-  <collection label="Destinations">
-    <view name="destinations_overview" />
+  <collection label="Configuration">
+    <view name="sources_and_destinations_overview" />
   </collection>
   <collection label="Performance">
     <view name="sizingcalculator" />
