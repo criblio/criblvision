@@ -1,6 +1,10 @@
 <form version="1.1" theme="dark">
   <label>Cribl Stream License Metrics</label>
   <description></description>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" searchWhenChanged="false" token="time">
       <label>Time Range</label>
@@ -155,6 +159,7 @@
     <panel>
       <title>Cribl Stream $unit$ In</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=15m
 | timechart sum(`set_cribl_metrics_prefix(route.in_bytes)`) AS bytes span=15m
@@ -175,6 +180,7 @@
     <panel>
       <title>Cribl Stream $unit$ Out</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=15m
 | timechart sum(`set_cribl_metrics_prefix(route.out_bytes)`) AS bytes span=15m

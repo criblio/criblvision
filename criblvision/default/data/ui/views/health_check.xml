@@ -1,5 +1,9 @@
 <form theme="dark" version="1.1">
   <label>Health Check</label>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -156,13 +160,13 @@
     <panel id="cpu_perc_timeline">
       <title>CPU Perc (Avg) Breakdown by Host over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_cpu_perc$">
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" 
 | timechart avg(cpuPerc) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Avg CPU (%)</option>
         <option name="charting.chart">area</option>
@@ -201,13 +205,13 @@
     <panel id="mem_usage_timeline">
       <title>Memory Usage (Avg) Breakdown by Host over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_mem_usage$">
           <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" 
 | timechart avg(mem.rss) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Avg Memory Usage (MB)</option>
         <option name="charting.chart">area</option>
@@ -374,13 +378,13 @@
     <panel>
       <title>Unhealthy Sources over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_sources$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ $unhealthy_sources$ span=auto BY input
 | timechart max(health) BY input</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsY.majorUnit">1</option>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Status</option>
@@ -405,9 +409,8 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;name=channel&amp;value=input:$row.Source$&amp;level=warn%20OR%20level=error</link>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;form.selected=$row.Source$&amp;form.full_selected=$row.Technology$:$row.Source$&amp;form.type=in&amp;type_printable=In</link>
         </drilldown>
       </table>
     </panel>
@@ -429,13 +432,13 @@
     <panel>
       <title>Unhealthy Destinations over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ $unhealthy_destinations$ span=auto BY output
 | timechart max(health) BY output</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsY.majorUnit">1</option>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Status</option>
@@ -460,9 +463,8 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;name=channel&amp;value=output:$row.Destination$&amp;level=warn%20OR%20level=error</link>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>
@@ -500,13 +502,13 @@
     <panel id="total_pq_size_timeline">
       <title>PQ Size by Host (Last 15 Minutes)</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_total_pq_size$">
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ span=auto BY host prestats=true
 | timechart sum(`set_cribl_metrics_prefix("pq.queue_size")`) BY host</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">PQ Size (B)</option>
         <option name="charting.chart">line</option>
@@ -658,13 +660,13 @@
     <panel id="worker_process_reset_timeline">
       <title>Worker Process Restarts by Host over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_worker_process_restarts$">
           <query>`set_cribl_internal_log_index` host=* channel=cribl* message="restarting worker process" 
 | timechart count BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Worker Process Restarts</option>
         <option name="charting.chart">area</option>
@@ -694,7 +696,6 @@
     <panel id="backpressured_destinations_timeline">
       <title>Destinations with Backpressure over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_backpressured_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` host=$host$ AND group=$worker_group$ BY output span=auto
 | where back_pressured != 0
@@ -702,6 +703,7 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Back Pressure</option>
         <option name="charting.axisY.minimumNumber">0</option>
@@ -728,7 +730,7 @@
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;name=channel&amp;value=output:$row.Destination$&amp;level=*</link>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>
@@ -737,7 +739,6 @@
     <panel id="blocked_destinations_timeline">
       <title>Blocked Destinations over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_blocked_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` host=$host$ AND group=$worker_group$ BY output span=auto
 | where blocked != 0
@@ -745,6 +746,7 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Back Pressure</option>
         <option name="charting.axisY.abbreviation">none</option>
@@ -772,7 +774,7 @@
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;name=channel&amp;value=output:$row.Destination$&amp;level=*</link>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>
@@ -781,7 +783,6 @@
     <panel id="pq_engaged_timeline">
       <title>Destinations with PQ Engaged over Time (Last 15 Minutes)</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_pq_engaged$">
           <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ BY output host group span=auto
 | eval pq_engaged = min(pq_engaged, 1)
@@ -789,6 +790,7 @@
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">PQs Engaged</option>
         <option name="charting.chart">area</option>
@@ -813,7 +815,7 @@
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;name=channel&amp;value=output:$row.Destination$&amp;level=*</link>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>
