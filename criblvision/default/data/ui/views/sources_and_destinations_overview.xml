@@ -1,0 +1,284 @@
+<form version="1.1" theme="dark">
+  <init>
+    <eval token="full_selected">if(isnull($form.full_selected$),"*",$form.full_selected$</eval>
+  </init>
+  <label>Sources/Destinations Overview</label>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="messages_base_search">
+    <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel="$type$put:$selected$" level=* 
+| stats count sparkline(count) AS sparkline BY channel message level
+| sort - count
+| rename channel AS Channel message AS Messages count AS Count sparkline AS Sparkline</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="worker_group">
+      <label>Worker Group</label>
+      <choice value="*">All Worker Groups</choice>
+      <initialValue>*</initialValue>
+      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="link" token="type" searchWhenChanged="true">
+      <label>Show Sources or Destinations</label>
+      <choice value="in">Sources</choice>
+      <choice value="out">Destinations</choice>
+      <change>
+        <eval token="type_printable">if(value == "in", "In", "Out")</eval>
+        <set token="selected">*</set>
+        <set token="full_selected">*</set>
+      </change>
+      <default>in</default>
+      <initialValue>in</initialValue>
+    </input>
+    <input type="dropdown" token="selected" searchWhenChanged="true">
+      <label>Source/Destination</label>
+      <choice value="*">All</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>$type$put</fieldForLabel>
+      <fieldForValue>selected</fieldForValue>
+      <search>
+        <query>| mstats sum(`set_cribl_metrics_prefix(health.$type$puts)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ BY $type$put 
+| rex field=$type$put "[^:]+:(?&lt;selected&gt;.*)" 
+| stats count BY $type$put selected</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+      <change>
+        <eval token="full_selected">if($label$ == "All" OR isnull($label$), "*", $label$)</eval>
+      </change>
+    </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
+  </fieldset>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard displays an overview of log based statistics for all of your configured Sources and Destinations. It shows a breakdown of the bytes/event throughputs and the health of the selected Sources/Destinations. It also contains a breakdown of the <code>error</code>, <code>warn</code>, and <code>info</code> messages as well as filtering the full list of events for the selected Sources/Destinations presented in reverse chronological order. It is useful for getting a high level overview of the health of your Sources/Destinations.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total Bytes $type_printable$</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">B</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Events $type_printable$</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Total Bytes $type_printable$ over Time</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ $type$put="$full_selected$" span=auto BY $type$put prestats=true
+| timechart  sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) BY $type$put</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Bytes</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Total Events $type_printable$ over Time</title>
+        <search>
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ $type$put="$full_selected$" span=auto BY $type$put prestats=true
+| timechart  sum(`set_cribl_metrics_prefix(total.$type$_events)`) BY $type$put</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Event Count</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row depends="$show_details$">
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>
+            <b>Note:</b> Hover over individual Sources/Destinations in the legend to highlight them on the graph. The status values represent the health of a Source/Destination as documented in the <a href="https://docs.cribl.io/stream/internal-metrics/#health">System Health Metrics</a> section of the Cribl Docs:</p>
+            <p>0 = Healthy</p>
+            <p>1 = Warning</p>
+            <p>2 = Trouble</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Health of $type_printable$puts over Time</title>
+        <search>
+          <query>| mstats max(`set_cribl_metrics_prefix(health.$type$puts)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ $type$put="$full_selected$" span=auto BY $type$put prestats=true
+| timechart max(`set_cribl_metrics_prefix(health.$type$puts)`) BY $type$put</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Status</option>
+        <option name="charting.axisY.maximumNumber">2</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Error Messages for Channel "$type$put:$selected$"</title>
+        <search base="messages_base_search">
+          <query>
+| where level == "error"
+| fields - level</query>
+        </search>
+        <option name="drilldown">none</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Warning Messages for Channel "$type$put:$selected$"</title>
+        <search base="messages_base_search">
+          <query>
+| where level == "warn"
+| fields - level</query>
+        </search>
+        <option name="drilldown">none</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Info Messages for Channel "$type$put:$selected$"</title>
+        <search base="messages_base_search">
+          <query>
+| where level == "info"
+| fields - level</query>
+        </search>
+        <option name="drilldown">none</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="multiselect" token="levels" searchWhenChanged="true">
+        <label>Levels</label>
+        <choice value="debug">Debug</choice>
+        <choice value="info">Info</choice>
+        <choice value="warn">Warn</choice>
+        <choice value="error">Error</choice>
+        <default>error,warn</default>
+        <prefix>level IN (</prefix>
+        <suffix>)</suffix>
+        <initialValue>error,warn</initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+        <delimiter>, </delimiter>
+      </input>
+      <event>
+        <title>Events for Channel "$type$put:$selected$"</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ worker_group=$worker_group$ channel=$type$put:$selected$ $levels$</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="list.drilldown">none</option>
+      </event>
+    </panel>
+  </row>
+</form>
