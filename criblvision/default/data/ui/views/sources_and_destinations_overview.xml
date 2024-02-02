@@ -108,7 +108,7 @@
       <single>
         <title>Total Bytes $type_printable$</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$</query>
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ $type$put="$full_selected$"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -122,7 +122,7 @@
       <single>
         <title>Total Events $type_printable$</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$</query>
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) WHERE `set_cribl_metrics_index` host=$host$ group=$worker_group$ $type$put="$full_selected$"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
