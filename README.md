@@ -62,7 +62,7 @@ After installing or upgrading the CriblVision application, run the `Populate Cri
             
 #### Automatic Lookups
 
-This app uses an automatic lookup to enrich events with the Worker Group (the `worker_group` field) on events from a Worker Node in a distributed environment. For more on automatic lookups, see Splunk's documentation [here[(https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/DefineanautomaticlookupinSplunkWeb).
+This app uses an automatic lookup to enrich events with the Worker Group (the `worker_group` field) on events from a Worker Node in a distributed environment. For more on automatic lookups, see Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/DefineanautomaticlookupinSplunkWeb).
 
 When configuring an automatic lookup from the Splunk UI, ensure that the following values are set before clicking the `Save` button:
 
