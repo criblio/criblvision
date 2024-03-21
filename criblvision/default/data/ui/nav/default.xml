@@ -21,7 +21,7 @@
     <view name="cribl_stream_license_metrics" />
   </collection>
   <collection label="Resources">
-    <view name="known_issues" />
+    <a href="https://docs.cribl.io/stream/known-issues" target="_blank">Known Issues</a>
   </collection>
   <view name="dashboards" />
   <view name="search" />
