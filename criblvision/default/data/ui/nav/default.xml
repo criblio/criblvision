@@ -23,6 +23,30 @@
   <collection label="Resources">
     <a href="https://docs.cribl.io/stream/known-issues" target="_blank">Known Issues</a>
   </collection>
+  <collection label="Alerts">
+    <view name="alerts" />
+    <collection label="Sources">
+      <saved name="CriblVision Alert - No Input from Sources" />
+      <saved name="CriblVision Alert - Unhealthy Sources" />
+    </collection>
+    <collection label="Destinations">
+      <saved name="CriblVision Alert - Blocked Destinations" />
+      <saved name="CriblVision Alert - Destinations Experiencing Backpressure" />
+      <saved name="CriblVision Alert - No Output from Destinations" />
+      <saved name="CriblVision Alert - Unhealthy Destinations" />
+    </collection>
+    <collection label="Persistent Queue">
+      <saved name="CriblVision Alert - Persistent Queue Initialized" />
+    </collection>
+    <collection label="Distributed Environment">
+      <saved name="CriblVision Alert - Cluster Communication Errors" />
+    </collection>
+    <collection label="System">
+      <saved name="CriblVision Alert - CPU Usage Over Threshold" />
+      <saved name="CriblVision Alert - RSS Memory Usage Within Threshold" />
+      <saved name="CriblVision Alert - Worker Process Restarted" />
+    </collection>
+  </collection>
   <view name="dashboards" />
   <view name="search" />
   <saved name="Populate Cribl Stream Worker Lookup" />
