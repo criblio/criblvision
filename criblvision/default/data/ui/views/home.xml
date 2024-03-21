@@ -99,15 +99,12 @@
         </search>
         <option name="drilldown">cell</option>
         <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
         <format type="number" field="Count">
           <option name="precision">0</option>
         </format>
         <drilldown>
-          <set token="channel">$row.channel$</set>
           <set token="level">ERROR</set>
-          <set token="message">$row.message$</set>
-          <set token="name">$click.name$</set>
+          <set token="name">$messagesplit$</set>
           <set token="value">$click.value$</set>
           <set token="cid">$logtype$</set>
         </drilldown>
@@ -138,14 +135,12 @@
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
-        <option name="refresh.display">progressbar</option>
         <format type="number" field="Count">
           <option name="precision">0</option>
         </format>
         <drilldown>
-          <set token="channel">$row.channel$</set>
           <set token="level">WARN</set>
-          <set token="name">$click.name$</set>
+          <set token="name">$messagesplit$</set>
           <set token="value">$click.value$</set>
           <set token="cid">$logtype1$</set>
         </drilldown>
@@ -176,14 +171,12 @@
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
-        <option name="refresh.display">progressbar</option>
         <format type="number" field="Count">
           <option name="precision">0</option>
         </format>
         <drilldown>
-          <set token="channel">$row.channel$</set>
           <set token="level">INFO</set>
-          <set token="name">$click.name$</set>
+          <set token="name">$messagesplit2$</set>
           <set token="value">$click.value$</set>
           <set token="cid">$logtype2$</set>
         </drilldown>
@@ -215,14 +208,12 @@
         </search>
         <option name="drilldown">cell</option>
         <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
         <format type="number" field="Count">
           <option name="precision">0</option>
         </format>
         <drilldown>
-          <set token="channel">$row.channel$</set>
           <set token="level">DEBUG</set>
-          <set token="name">$click.name$</set>
+          <set token="name">$messagesplit3$</set>
           <set token="value">$click.value$</set>
           <set token="cid">$logtype3$</set>
         </drilldown>
@@ -233,7 +224,7 @@
     <panel>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ $name$=$value|s$ level=$level$</query>
+          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ $name$=$value|s$ cid=$cid$ level=$level$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
