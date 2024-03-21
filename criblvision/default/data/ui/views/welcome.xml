@@ -80,8 +80,8 @@ definition = cribl.logstream.$metric_name$ </code></pre>
               <p>Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently <b>NOT</b> sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to <code>/opt/cribl/log/*</code>. For more information on how to deploy a Cribl Edge Node, please refer to our documentation <a target="_blank" href="https://docs.cribl.io/edge/deploy-planning">here</a>.</p>
             </div>
             <div>
-              <h3>Populate Cribl Stream Asset Lookup Report</h3>
-              <p>After installing or upgrading the CriblVision application, run the <a target="_blank" href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Asset%2520Lookup">Populate Cribl Stream Asset Lookup</a> Report to repopulate the <code>cribl_stream_workers</code> lookup. This can be done by selecting "Populate Cribl Stream Asset Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</p>
+              <h3>Populate Cribl Stream Worker Lookup Report</h3>
+              <p>After installing or upgrading the CriblVision application, run the <a target="_blank" href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Worker%2520Lookup">Populate Cribl Stream Worker Lookup</a> Report to repopulate the <code>cribl_stream_workers</code> lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</p>
               <p><b>Note:</b> When the report is initially run, you may see an error stating that the <code>cribl_stream_workers.csv</code> lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.</p>
             </div>
             <div>
@@ -100,6 +100,92 @@ definition = cribl.logstream.$metric_name$ </code></pre>
 LOOKUP-cribl_stream_workers = cribl_stream_workers worker AS host OUTPUTNEW worker_group AS worker_group</code></pre>
               <p>If you are using multiple sourcetypes for your internal Cribl logs and would like to use a wildcarded props definition over configuring multiple automated lookups, you can use the following stanza template:</p>
               <pre><code>[(?::){0}your_wildcarded_sourcetype]</code></pre>
+            </div>
+            <div>
+              <h3>Alerts</h3>
+              <p>This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment.</p>
+              <table>
+                <tr>
+                  <th>Macro Name</th>
+                  <th>Related Alert(s)</th>
+                  <th>Description</th>
+                </tr>
+                <tr>
+                  <td><code>set_alert_ignored_destinations</code></td>
+                  <td>No Output From Destinations, Unhealthy Destinations</td>
+                  <td>A list of Destinations that should not trigger alerts</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_ignored_sources</code></td>
+                  <td>No Input From Sources, Unhealthy Sources</td>
+                  <td>A list of Sources that should not trigger alerts</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_lower_limit_unhealthy_memory_usage_mb</code></td>
+                  <td>RSS Memory Usage Within Threshold</td>
+                  <td>The lower limit of the threshold when alerts for memory usage (in MB) should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_backpressure</code></td>
+                  <td>Destinations Experiencing Backpressure</td>
+                  <td>The threshold of backpressure messages received (for a Worker Group + Worker) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_blocked_destinations</code></td>
+                  <td>Blocked Destinations</td>
+                  <td>The threshold of blocked Destination messages received (for a Worker Group + Destination) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_cluster_communication_errors</code></td>
+                  <td>Blocked Destinations</td>
+                  <td>The threshold of cluster communcation error messages received (for a Worker Group + Worker) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_no_destination_thruput_pct</code></td>
+                  <td>No Output From Destinations</td>
+                  <td>The threshold of times a Destination has not sent any events (for a Worker Group + Destination) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_no_source_thruput_pct</code></td>
+                  <td>No Input From Sources</td>
+                  <td>The threshold of times a Source has not received any events (for a Worker Group + Source) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_unhealthy_cpu_usage_pct</code></td>
+                  <td>CPU Usage Over Threshold</td>
+                  <td>The threshold of times a host has reported above the unhealthy CPU percentage threshold (for a Worker Group + Worker) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_unhealthy_destinations_pct</code></td>
+                  <td>Unhealthy Destinations</td>
+                  <td>The threshold of times a Destination has reported as being unhealthy (for a Worker Group + Destination) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_unhealthy_memory_usage_mb_pct</code></td>
+                  <td>RSS Memory Usage Within Threshold</td>
+                  <td>The threshold of times a host has reported memory usage within the unhealthy threshold (for a Worker Group + host) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_unhealthy_sources_pct</code></td>
+                  <td>Unhealthy Sources</td>
+                  <td>The threshold of times a Source has reported as being unhealthy (for a Worker Group + Source) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_threshold_worker_process_restarts</code></td>
+                  <td>Worker Proces Restarted</td>
+                  <td>The threshold of times a host has reported Worker Process restarts (for a Worker Group + host) before the alert should trigger</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_unhealthy_cpu_usage_pct</code></td>
+                  <td>CPU Usage Over Threshold</td>
+                  <td>The threshold at which a host's CPU usage is deemed to be unhealthy</td>
+                </tr>
+                <tr>
+                  <td><code>set_alert_upper_limit_unhealthy_memory_usage_mb</code></td>
+                  <td>RSS Memory Usage Within Threshold</td>
+                  <td>The upper limit of the threshold when alerts for memory usage (in MB) should trigger</td>
+                </tr>
+              </table>
             </div>
             <div>
               <h2><b>Using This App</b></h2>
