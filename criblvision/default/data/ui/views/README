@@ -54,9 +54,9 @@ definition = cribl.logstream.$metric_name$
 
 Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently *NOT* sent via our internal Source. You will ahve to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to `/opt/cribl/log/*`. For more information on how to deploy a Cribl Edge Node, please refer to our documentation [here](href="https://docs.cribl.io/edge/deploy-planning">).
 
-#### Populate Cribl Stream Worker Lookup Report
+#### Populate Cribl Stream Asset Lookup Report
 
-After installing or upgrading the CriblVision application, run the `Populate Cribl Stream Worker Lookup` Report to repopulate the `cribl_stream_workers` lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.
+After installing or upgrading the CriblVision application, run the `Populate Cribl Stream Asset Lookup` Report to repopulate the `cribl_stream_workers` lookup. This can be done by selecting "Populate Cribl Stream Asset Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.
 
 **Note:** When the report is initially run, you may see an error stating that the `cribl_stream_workers.csv` lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.
             
