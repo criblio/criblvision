@@ -26,13 +26,13 @@
   <collection label="Alerts">
     <view name="alerts" />
     <collection label="Sources">
-      <saved name="CriblVision Alert - No Input from Sources" />
+      <saved name="CriblVision Alert - No Input From Sources" />
       <saved name="CriblVision Alert - Unhealthy Sources" />
     </collection>
     <collection label="Destinations">
       <saved name="CriblVision Alert - Blocked Destinations" />
       <saved name="CriblVision Alert - Destinations Experiencing Backpressure" />
-      <saved name="CriblVision Alert - No Output from Destinations" />
+      <saved name="CriblVision Alert - No Output From Destinations" />
       <saved name="CriblVision Alert - Unhealthy Destinations" />
     </collection>
     <collection label="Persistent Queue">
