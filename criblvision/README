@@ -65,7 +65,7 @@ Some of the views in this app will require Leader logs to be forwarded on to Spl
 
 ### **Alerts**
 
-This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment.
+This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment. The alerts all come with default Splunk's default scheduling configured and no alert actions. The scheduling should be configured for each alert you plan to enable. For more on scheduling alerts, please reference Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/latest/Alert/Definescheduledalerts). Fore more on configuring alert actions, please reference Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/9.2.0/Alert/Setupalertactions).
 
 <table>
   <tr>
