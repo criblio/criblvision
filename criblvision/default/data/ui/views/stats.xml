@@ -20,7 +20,7 @@
       <fieldForLabel>worker_group</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query>| inputlookup cribl_stream_workers | stats count BY worker_group</query>
+        <query> |`dashboard_worker_group_filter`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>

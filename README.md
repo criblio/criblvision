@@ -1,6 +1,6 @@
 ## Getting Started
 
-This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl Support Engineers to help customers troubleshoot their own Cribl deployments. There are serveral troubleshooting dashboards tailored to certain product areas in whcih support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own Cribl deployment, this app will always be a continual "work in progress" and should always be used in conjunction with the Cribl Monitoring Console and associated views.
+This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl Support Engineers to help customers troubleshoot their own Cribl deployments. There are several troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own Cribl deployment, this app will always be a continual "work in progress" and should always be used in conjunction with the Cribl Monitoring Console and associated views.
 
 ### Context is Crucial
 
@@ -17,7 +17,7 @@ Answers to the above questions, and many others, will help narrow down the scope
 
 This app and its associated dashboards rely on a few components which you must configure.
 
-*Note:* On your inital entry into the application after it has been installed, you should be prompted to navigate to the setup page which will guide you through configuring the required macros. Once the `Save Configuration` button is pressed, the macro definitions will be saved, and automatic lookups will be created off the back of the provided sourcetype(s) to automatically enrich events with the Worker Group of the Worker Node from which that event came. If you are wanting to manually configure these (or you run into errors executing the setup page), the following instructions can be followed. You may experience errors when deploying this app within a Search Head Cluster or when changing the name of the app from `criblvision` to something else. For information on deploying to a Search Head Cluster, refer to Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/9.2.0/DistSearch/PropagateSHCconfigurationchanges#Deploy_a_configuration_bundle).
+*Note:* On your initial entry into the application after it has been installed, you should be prompted to navigate to the setup page which will guide you through configuring the required macros. Once the `Save Configuration` button is pressed, the macro definitions will be saved, and automatic lookups will be created off the back of the provided sourcetype(s) to automatically enrich events with the Worker Group of the Worker Node from which that event came. If you are wanting to manually configure these (or you run into errors executing the setup page), the following instructions can be followed. You may experience errors when deploying this app within a Search Head Cluster or when changing the name of the app from `criblvision` to something else. For information on deploying to a Search Head Cluster, refer to Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/9.2.0/DistSearch/PropagateSHCconfigurationchanges#Deploy_a_configuration_bundle).
 
 #### Logs and Metrics
 
@@ -34,7 +34,7 @@ This app ships with 4 macros which must be edited in accordance with your Splunk
 |`set_cribl_metrics_index`|Set this macro definition to the index your configured for Cribl metrics.|
 |`set_cribl_metrics_prefix(1)`|Change the `cribl.logstream` value before `.$metric_name$` if you have changed the default namespace used for your Cribl metrics internal Source.|
 
-For manual configuration of the macro definitons through the CLI, append and update the following to `$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf` on Search Head Deployers for a Search Head Cluster:
+For manual configuration of the macro definitions through the CLI, append and update the following to `$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf` on Search Head Deployers for a Search Head Cluster:
 
 ```
 [set_cribl_internal_log_index]
@@ -52,7 +52,7 @@ definition = cribl.logstream.$metric_name$
 
 #### Leader Logs
 
-Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently *NOT* sent via our internal Source. You will ahve to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to `/opt/cribl/log/*`. For more information on how to deploy a Cribl Edge Node, please refer to our documentation [here](href="https://docs.cribl.io/edge/deploy-planning">).
+Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently *NOT* sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to `/opt/cribl/log/*`. For more information on how to deploy a Cribl Edge Node, please refer to our documentation [here](href="https://docs.cribl.io/edge/deploy-planning">).
 
 #### Populate Cribl Stream Worker Lookup Report
 
@@ -70,7 +70,7 @@ When configuring an automatic lookup from the Splunk UI, ensure that the followi
  * **Apply to:** `sourcetype`
  * **named:** Your Cribl log sourcetype *Note:* You cannot use wildcards in this definition
  * **Lookup input fields:** `worker` = `host`
- * **Lookup output fields:** `worker_group` = `worker_group`<
+ * **Lookup output fields:** `worker_group` = `worker_group`
 
  For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to `$SPLUNK_HOME/etc/apps/criblvision/local/props.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf` on Search Head Deployers for a Search Head Cluster:
 
@@ -84,9 +84,34 @@ If you are using multiple sourcetypes for your internal Cribl logs and would lik
 ```
 [(?::){0}your_wildcarded_sourcetype]
 ```
+
+### Alerts
+
+This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment. The alerts all come with default Splunk's default scheduling configured and no alert actions. The scheduling should be configured for each alert you plan to enable. For more on scheduling alerts, please reference Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/latest/Alert/Definescheduledalerts). Fore more on configuring alert actions, please reference Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/9.2.0/Alert/Setupalertactions).
+
+|Macro Name|Related Alert(s)|Description|
+|----------|----------------|-----------|
+|set_alert_ignored_destinations|No Output From Destinations, Unhealthy Destinations|A list of Destinations that should not trigger alerts|
+|set_alert_ignored_sources|No Input From Sources, Unhealthy Sources|A list of Sources that should not trigger alerts|
+|set_alert_lower_limit_unhealthy_memory_usage_mb|RSS Memory Usage Within Threshold|The lower limit of the threshold when alerts for memory usage (in MB) should trigger|
+|set_alert_threshold_backpressure|Destinations Experiencing Backpressure|The threshold of backpressure messages received (for a Worker Group + Worker) before the alert should trigger|
+|set_alert_threshold_blocked_destinations|Blocked Destinations|The threshold of blocked Destination messages received (for a Worker Group + Destination) before the alert should trigger|
+|set_alert_threshold_cluster_communication_errors|Blocked Destinations|The threshold of cluster communcation error messages received (for a Worker Group + Worker) before the alert should trigger|
+|set_alert_threshold_no_destination_thruput_pct|No Output From Destinations|The threshold of times a Destination has not sent any events (for a Worker Group + Destination) before the alert should trigger|
+|set_alert_threshold_no_source_thruput_pct|No Input From Sources|The threshold of times a Source has not received any events (for a Worker Group + Source) before the alert should trigger|
+|set_alert_threshold_unhealthy_cpu_usage_pct|CPU Usage Over Threshold|The threshold of times a host has reported above the unhealthy CPU percentage threshold (for a Worker Group + Worker) before the alert should trigger|
+|set_alert_threshold_unhealthy_destinations_pct|Unhealthy Destinations|The threshold of times a Destination has reported as being unhealthy (for a Worker Group + Destination) before the alert should trigger|
+|set_alert_threshold_unhealthy_memory_usage_mb_pct|RSS Memory Usage Within Threshold|The threshold of times a host has reported memory usage within the unhealthy threshold (for a Worker Group + host) before the alert should trigger|
+|set_alert_threshold_unhealthy_sources_pct|Unhealthy Sources|The threshold of times a Source has reported as being unhealthy (for a Worker Group + Source) before the alert should trigger|
+|set_alert_threshold_worker_process_restarts|Worker Proces Restarted|The threshold of times a host has reported Worker Process restarts (for a Worker Group + host) before the alert should trigger|
+|set_alert_unhealthy_cpu_usage_pct|CPU Usage Over Threshold|The threshold at which a host's CPU usage is deemed to be unhealthy|
+|set_alert_upper_limit_unhealthy_memory_usage_mb|RSS Memory Usage Within Threshold|The upper limit of the threshold when alerts for memory usage (in MB) should trigger|
+
+</table>
+
 ### Using This App
 
-In addition to this overview page, this app provdes several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "How to Use" toggle that reveals a description and instructions for that view. We recommend starting with the Health Check view and selecting a single Worker Group or Worker Node from the provided filters.
+In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "How to Use" toggle that reveals a description and instructions for that view. We recommend starting with the Health Check view and selecting a single Worker Group or Worker Node from the provided filters.
             
 ## About
 
