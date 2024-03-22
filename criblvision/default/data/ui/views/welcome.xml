@@ -103,7 +103,7 @@ LOOKUP-cribl_stream_workers = cribl_stream_workers worker AS host OUTPUTNEW work
             </div>
             <div>
               <h3>Alerts</h3>
-              <p>This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment.</p>
+              <p>This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment. For more on scheduling alerts, please reference Splunk's documentation <a href="https://docs.splunk.com/Documentation/Splunk/latest/Alert/Definescheduledalerts" target="_blank">here</a>. Fore more on configuring alert actions, please reference Splunk's documentation <a href="https://docs.splunk.com/Documentation/Splunk/9.2.0/Alert/Setupalertactions" target="_blank">here</a>.</p> 
               <table>
                 <tr>
                   <th>Macro Name</th>
