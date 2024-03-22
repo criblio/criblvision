@@ -30,7 +30,7 @@
       <fieldForLabel>worker_group</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query>`dashboard_worker_group_filter`</query>
+        <query>| `dashboard_worker_group_filter`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
