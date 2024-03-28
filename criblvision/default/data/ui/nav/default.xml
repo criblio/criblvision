@@ -43,6 +43,7 @@
     </collection>
     <collection label="System">
       <saved name="CriblVision Alert - CPU Usage Over Threshold" />
+      <saved name="CriblVision Alert - Opened Connections Over Threshold" />
       <saved name="CriblVision Alert - RSS Memory Usage Within Threshold" />
       <saved name="CriblVision Alert - Worker Process Restarted" />
     </collection>
