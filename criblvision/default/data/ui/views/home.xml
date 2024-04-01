@@ -25,7 +25,7 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` `set_cribl_log_sourcetype` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>

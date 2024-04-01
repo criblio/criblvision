@@ -12,7 +12,7 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") | mvexpand host | sort host</query>
+        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` `set_cribl_log_sourcetype` AND source IN ("*state/jobs/*") | mvexpand host | sort host</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
