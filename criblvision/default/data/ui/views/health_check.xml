@@ -29,7 +29,7 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` 
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` `set_cribl_log_sourcetype`
 | mvexpand host 
 | sort host
 | lookup cribl_stream_workers worker AS host

@@ -13,7 +13,7 @@
       <fieldForLabel>host</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort -host</query>
+        <query>| tstats values(host) as host where `set_cribl_internal_log_index` `set_cribl_log_sourcetype` | mvexpand host | sort -host</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
