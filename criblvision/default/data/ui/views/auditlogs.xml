@@ -10,12 +10,10 @@
     </input>
     <input type="dropdown" token="host">
       <label>Leader Host</label>
-      <fieldForLabel>host</fieldForLabel>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") NOT [| inputlookup cribl_stream_workers | rename worker AS host | table host ]
-| mvexpand host
-| sort host</query>
+        <query>| `dashboard_host_filter("instance_type=leader")`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -44,7 +42,8 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This view will allow you to audit certain actions performed by users on the Leader. Any updates to configuration changes will show up as events in the resulting panel.</p>
-          <p><b>Note:</b> Leader API log collection via edge must be configured in order for this view to populate.</p>  
+          <p>
+            <b>Note:</b> Leader API log collection via edge must be configured in order for this view to populate.</p>  
         </div>
       </html>
     </panel>
@@ -53,7 +52,7 @@
     <panel>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index()` host=$host$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") type!="expression" action!="commit" action!="deploy"
+          <query>`set_cribl_internal_log_index` host=$host$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") type!="expression" action!="commit" action!="deploy"
 | stats values("caseNumber") AS caseNumber values("email") AS email values("filename") AS filename values("group") AS group values("guids") AS guids values("id") AS id values("path") AS path values("rows") AS rows values("size") AS size values("type") AS type by _time action user delim=", "
 | eval id=if(type="system-info", path, id)
 | eval id=if((action="send" AND type="system-info"), caseNumber, id)
