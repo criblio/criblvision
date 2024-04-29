@@ -14,10 +14,10 @@
     </input>
     <input type="dropdown" token="host" searchWhenChanged="false">
       <label>Leader Host</label>
-      <fieldForLabel>host</fieldForLabel>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` NOT [| inputlookup cribl_stream_workers | rename worker AS host | table host ] | mvexpand host | sort host</query>
+        <query>| `dashboard_host_filter("instance_type=leader")`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -55,7 +55,7 @@
       <title>Leader CPU Usage</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=ProcessMetrics cid IN ("api")
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader channel=ProcessMetrics cid IN ("api")
 | stats avg(cpuPerc) as cpuPerc</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -86,7 +86,7 @@
       <title>Leader Memory Usage</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=ProcessMetrics cid IN ("api")
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader channel=ProcessMetrics cid IN ("api")
 | stats avg(mem.rss) as memRss</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -118,14 +118,14 @@
     <panel>
       <title>Leader CPU by API Process</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ channel=ProcessMetrics cid IN ("api", "service:*")
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader channel=ProcessMetrics cid IN ("api", "service:*")
 | timechart limit=1000 useother=f max(cpuPerc) AS max_cpuPerc by cid</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
         <option name="charting.axisTitleX.text">Time</option>
@@ -177,14 +177,14 @@
         <default></default>
       </input>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ source IN ("*/access.log", "*/access1.log", "*/access2.log", "*/access3.log", "*/access4.log") response_time=*
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader source IN ("*/access.log", "*/access1.log", "*/access2.log", "*/access3.log", "*/access4.log") response_time=*
 | timechart limit=1000 useother=f sum(response_time) AS sum_response_time $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
         <option name="charting.axisTitleX.text">Time</option>
