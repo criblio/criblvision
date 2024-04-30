@@ -19,6 +19,8 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="dropdown" token="worker_group">
       <label>Worker Group</label>
@@ -37,7 +39,7 @@
       <fieldForLabel>JobName</fieldForLabel>
       <fieldForValue>JobName</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") host=$host$ 
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") $host$ 
 | mvexpand source 
 | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
 | rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
@@ -53,7 +55,7 @@
       <fieldForLabel>JobId</fieldForLabel>
       <fieldForValue>JobId</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") host=$host$ 
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") $host$ 
 | mvexpand source
 | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
 | rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
@@ -100,7 +102,7 @@
     <panel>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ source=*state/jobs/$worker_group$/$jobId$/*</query>
+          <query>`set_cribl_internal_log_index` $host$ source=*state/jobs/$worker_group$/$jobId$/*</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
