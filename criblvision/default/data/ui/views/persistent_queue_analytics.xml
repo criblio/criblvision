@@ -61,6 +61,8 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -236,7 +238,7 @@
       </input>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ $worker_group_event_filter$ channel="IPersistentQueue"</query>
+          <query>`set_cribl_internal_log_index` $host$ $worker_group_event_filter$ channel="IPersistentQueue"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
