@@ -13,24 +13,41 @@
         <latest>now</latest>
       </default>
     </input>
-    <input type="dropdown" token="worker_group">
-      <label>Worker Group</label>
-      <choice value="*">All Worker Groups</choice>
-      <initialValue>*</initialValue>
-      <fieldForLabel>worker_group</fieldForLabel>
+    <input type="dropdown" token="worker_group" searchWhenChanged="true">
+      <label>Worker Group / Standalone</label>
+      <choice value="all_instances">All Instances</choice>
+      <choice value="all_worker_groups">All Worker Groups</choice>
+      <choice value="all_standalone">All Standalone Instances</choice>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query> |`dashboard_worker_group_filter`</query>
+        <query>| `dashboard_worker_group_filter`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
+      <change>
+        <condition label="All Instances">
+          <set token="worker_group_event_filter">instance_type IN (worker, standalone)</set>
+        </condition>
+        <condition label="All Worker Groups">
+          <set token="worker_group_event_filter">instance_type=worker</set>
+        </condition>
+        <condition label="All Standalone Instances">
+          <set token="worker_group_event_filter">instance_type=standalone</set>
+        </condition>
+        <condition>
+          <set token="worker_group_event_filter">instance_type=worker worker_group="$worker_group$"</set>
+        </condition>
+      </change>
+      <default>all_instances</default>
+      <initialValue>all_instances</initialValue>
     </input>
     <input type="dropdown" token="host">
       <label>Host</label>
-      <fieldForLabel>host</fieldForLabel>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort host | lookup cribl_stream_workers worker AS host | search worker_group=$worker_group$</query>
+        <query>| `dashboard_host_filter($worker_group_event_filter|s$)`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -93,18 +110,19 @@
     <panel>
       <chart>
         <title>CPU Usage</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart $span$ last(cpuPerc) as cpuPerc $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(cpuPerc) as cpuPerc $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">CPU Usage (%)</option>
         <option name="charting.chart">area</option>
         <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.chart.stackMode">stacked</option>
         <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
@@ -113,12 +131,12 @@
     <panel>
       <chart>
         <title>Memory Usage</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart $span$ last(mem.ext) as memExt last(mem.heap) as memHeap last(mem.rss) as memRss $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(mem.ext) as memExt last(mem.heap) as memHeap last(mem.rss) as memRss $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Memory Usage (MB)</option>
         <option name="charting.chart">area</option>
@@ -132,12 +150,12 @@
     <panel>
       <chart>
         <title>Active vs Blocked Event Processors</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart $span$ last(activeEP) as activeEP last(blockedEP) as blockedEP $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(activeEP) as activeEP last(blockedEP) as blockedEP $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Count</option>
         <option name="charting.chart">area</option>
@@ -153,12 +171,12 @@
     <panel>
       <chart>
         <title>Event Stats</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart $span$ last(droppedEvents) as DroppedEvents last(outEvents) as outEvents last(inEvents) as inEvents $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(droppedEvents) as DroppedEvents last(outEvents) as outEvents last(inEvents) as inEvents $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Count</option>
         <option name="charting.chart">area</option>
@@ -172,12 +190,12 @@
     <panel>
       <chart>
         <title>Persistent Queue Stats</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ worker_group=$worker_group$ channel=server message="_raw stats" | timechart $span$ last(pqInBytes) as pqInBytes last(pqOutBytes) as pqOutBytes last(pqTotalBytes) as pqTotalBytes $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(pqInBytes) as pqInBytes last(pqOutBytes) as pqOutBytes last(pqTotalBytes) as pqTotalBytes $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Size (B)</option>
         <option name="charting.chart">area</option>
