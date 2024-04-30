@@ -72,6 +72,8 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="link" token="type" searchWhenChanged="true">
       <label>Show Sources or Destinations</label>
