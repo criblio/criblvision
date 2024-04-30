@@ -49,6 +49,8 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="dropdown" token="debug">
       <label>Show Debug?</label>
@@ -110,7 +112,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -148,7 +150,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -185,7 +187,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -222,7 +224,7 @@
       </input>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -245,7 +247,7 @@
     <panel>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ $worker_group_event_filter$ $name$=$value|s$ cid=$cid$ level=$level$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ $name$=$value|s$ cid=$cid$ level=$level$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
