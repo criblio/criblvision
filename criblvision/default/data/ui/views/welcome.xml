@@ -81,7 +81,7 @@ definition = cribl.logstream.$metric_name$ </code></pre>
             </div>
             <div>
               <h3>Populate Cribl Stream Worker Lookup Report</h3>
-              <p>After installing or upgrading the CriblVision application, run the <a target="_blank" href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Worker%2520Lookup">Populate Cribl Stream Worker Lookup</a> Report to repopulate the <code>cribl_stream_workers</code> lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</p>
+              <p>After installing or upgrading the CriblVision application, run the <a target="_blank" href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Asset%2520Lookup">Populate Cribl Stream Asset Lookup</a> Report to repopulate the <code>cribl_stream_workers</code> lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</p>
               <p><b>Note:</b> When the report is initially run, you may see an error stating that the <code>cribl_stream_workers.csv</code> lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.</p>
             </div>
             <div>
