@@ -62,6 +62,8 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="dropdown" token="mstats_span" searchWhenChanged="true">
       <label>Time Span</label>
@@ -140,7 +142,7 @@
       <chart>
         <title>Total Events Out</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` host=$host$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum("out_events") $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
