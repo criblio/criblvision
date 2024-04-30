@@ -51,7 +51,7 @@
     </input>
     <input type="dropdown" token="host">
       <label>Host</label>
-      <fieldForLabel>host</fieldForLabel>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
         <query>| `dashboard_host_filter($worker_group_event_filter|s$)`</query>
