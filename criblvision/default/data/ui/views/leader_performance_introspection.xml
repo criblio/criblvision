@@ -24,6 +24,8 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -55,7 +57,7 @@
       <title>Leader CPU Usage</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader channel=ProcessMetrics cid IN ("api")
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ instance_type=leader channel=ProcessMetrics cid IN ("api")
 | stats avg(cpuPerc) as cpuPerc</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -86,7 +88,7 @@
       <title>Leader Memory Usage</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader channel=ProcessMetrics cid IN ("api")
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ instance_type=leader channel=ProcessMetrics cid IN ("api")
 | stats avg(mem.rss) as memRss</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -119,7 +121,7 @@
       <title>Leader CPU by API Process</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader channel=ProcessMetrics cid IN ("api", "service:*")
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ instance_type=leader channel=ProcessMetrics cid IN ("api", "service:*")
 | timechart limit=1000 useother=f max(cpuPerc) AS max_cpuPerc by cid</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -178,7 +180,7 @@
       </input>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` host=$host$ instance_type=leader source IN ("*/access.log", "*/access1.log", "*/access2.log", "*/access3.log", "*/access4.log") response_time=*
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ instance_type=leader source IN ("*/access.log", "*/access1.log", "*/access2.log", "*/access3.log", "*/access4.log") response_time=*
 | timechart limit=1000 useother=f sum(response_time) AS sum_response_time $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
