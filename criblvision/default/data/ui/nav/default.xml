@@ -28,6 +28,9 @@
   </collection>
   <collection label="Alerts">
     <view name="alerts" />
+    <collection label="Assets">
+      <saved name="CriblVision Alert - Missing Cribl Stream Assets" />
+    </collection>
     <collection label="Sources">
       <saved name="CriblVision Alert - No Input From Sources" />
       <saved name="CriblVision Alert - Unhealthy Sources" />
