@@ -5,6 +5,9 @@
   	<view name="home" />
   	<view name="stats" />
   </collection>
+  <collection label="Assets">
+    <view name="cribl_vision_assets" />
+  </collection>
   <collection label="Configuration">
     <view name="sources_and_destinations_overview" />
   </collection>
