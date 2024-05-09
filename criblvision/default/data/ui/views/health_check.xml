@@ -13,10 +13,10 @@
       </default>
     </input>
     <input type="dropdown" token="worker_group" searchWhenChanged="true">
-      <label>Worker Group / Standalone</label>
+      <label>Worker Group / Single</label>
       <choice value="all_instances">All Instances</choice>
       <choice value="all_worker_groups">All Worker Groups</choice>
-      <choice value="all_standalone">All Standalone Instances</choice>
+      <choice value="all_single">All Single Instances</choice>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
@@ -26,7 +26,7 @@
       </search>
       <change>
         <condition label="All Instances">
-          <set token="worker_group_event_filter">instance_type IN (worker, standalone)</set>
+          <set token="worker_group_event_filter">instance_type IN (worker, single)</set>
           <set token="worker_group_metric_pre_filter"></set>
           <set token="worker_group_metric_filter">group=*</set>
         </condition>
@@ -35,8 +35,8 @@
           <set token="worker_group_metric_pre_filter">group=*</set>
           <set token="worker_group_metric_filter">group=*</set>
         </condition>
-        <condition label="All Standalone Instances">
-          <set token="worker_group_event_filter">instance_type=standalone</set>
+        <condition label="All Single Instances">
+          <set token="worker_group_event_filter">instance_type=single</set>
           <set token="worker_group_metric_pre_filter"></set>
           <set token="worker_group_metric_filter">group=`set_unknown_worker_group_value`</set>
         </condition>
@@ -93,7 +93,7 @@
     <panel depends="$show_details$">
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>This view is designed to provide an "at a glance" overview of the health status of the selected Worker Group(s), Standalone instances, or individual Nodes (via "Worker Group / Standalone" and "Host" dropdowns). It displays key indicators for Sources and Destinations along with CPU and memory usage for the selected host. Click on any of the high-level panels to drill down further.</p>
+          <p>This view is designed to provide an "at a glance" overview of the health status of the selected Worker Group(s), Single instances, or individual Nodes (via "Worker Group / Single" and "Host" dropdowns). It displays key indicators for Sources and Destinations along with CPU and memory usage for the selected host. Click on any of the high-level panels to drill down further.</p>
           <p>
             <b>Note:</b> This dashboard requires both logs and metrics for every panel to populate.</p>
         </div>
@@ -178,13 +178,13 @@
     <panel id="cpu_perc_timeline">
       <title>CPU Perc (Avg) Breakdown by Host over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_cpu_perc$">
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
 | timechart avg(cpuPerc) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Avg CPU (%)</option>
         <option name="charting.chart">area</option>
@@ -223,13 +223,13 @@
     <panel id="mem_usage_timeline">
       <title>Memory Usage (Avg) Breakdown by Host over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_mem_usage$">
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
 | timechart avg(mem.rss) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Avg Memory Usage (MB)</option>
         <option name="charting.chart">area</option>
@@ -337,7 +337,9 @@
             <eval token="pq_configured">if($job.resultCount$ == 0, null(), "true")</eval>
             <eval token="pq_not_configured">if($job.resultCount$ == 0, "true", null())</eval>
           </done>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$</query>
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| stats sum(total_pq_size) AS total_pq_size</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -397,7 +399,6 @@
     <panel>
       <title>Unhealthy Sources over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_sources$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
@@ -405,6 +406,7 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsY.majorUnit">1</option>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Status</option>
@@ -454,7 +456,6 @@
     <panel>
       <title>Unhealthy Destinations over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
@@ -462,6 +463,7 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsY.majorUnit">1</option>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Status</option>
@@ -527,13 +529,13 @@
     <panel id="total_pq_size_timeline">
       <title>PQ Size by Host (Last 15 Minutes)</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_total_pq_size$">
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ span=auto BY host prestats=true
 | timechart sum(`set_cribl_metrics_prefix("pq.queue_size")`) BY host</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">PQ Size (B)</option>
         <option name="charting.chart">line</option>
@@ -686,13 +688,13 @@
     <panel id="worker_process_reset_timeline">
       <title>Worker Process Restarts by Host over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_worker_process_restarts$">
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
 | timechart count BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Worker Process Restarts</option>
         <option name="charting.chart">area</option>
@@ -722,7 +724,6 @@
     <panel id="backpressured_destinations_timeline">
       <title>Destinations with Backpressure over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_backpressured_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ back_pressured!=0
@@ -730,6 +731,7 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Back Pressure</option>
         <option name="charting.axisY.minimumNumber">0</option>
@@ -765,7 +767,6 @@
     <panel id="blocked_destinations_timeline">
       <title>Blocked Destinations over Time</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_blocked_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ blocked!=0
@@ -773,6 +774,7 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Back Pressure</option>
         <option name="charting.axisY.abbreviation">none</option>
@@ -809,7 +811,6 @@
     <panel id="pq_engaged_timeline">
       <title>Destinations with PQ Engaged over Time (Last 15 Minutes)</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_pq_engaged$">
           <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ BY output host group span=auto fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
@@ -818,6 +819,7 @@
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">PQs Engaged</option>
         <option name="charting.chart">area</option>

@@ -13,7 +13,7 @@
       <choice value="all_instances">All Instances</choice>
       <choice value="all_leaders">All Leaders</choice>
       <choice value="all_worker_groups">All Worker Groups</choice>
-      <choice value="all_standalone">All Standalone Instances</choice>
+      <choice value="all_single">All Single Instances</choice>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
@@ -31,8 +31,8 @@
         <condition label="All Worker Groups">
           <set token="worker_group_event_filter">instance_type=worker</set>
         </condition>
-        <condition label="All Standalone Instances">
-          <set token="worker_group_event_filter">instance_type=standalone</set>
+        <condition label="All Single Instances">
+          <set token="worker_group_event_filter">instance_type=single</set>
         </condition>
         <condition>
           <set token="worker_group_event_filter">instance_type=worker worker_group="$worker_group$"</set>
