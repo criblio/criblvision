@@ -119,11 +119,11 @@
     <panel depends="$show_leader_overview$">
       <chart>
         <title>Leader Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time leader</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Leader Node(s)</option>
         <option name="charting.chart">area</option>
@@ -134,11 +134,11 @@
     <panel depends="$show_worker_overview$">
       <chart>
         <title>Worker Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time worker</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Worker Node(s)</option>
         <option name="charting.chart">area</option>
@@ -149,11 +149,11 @@
     <panel depends="$show_standalone_overview$">
       <chart>
         <title>Standalone Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time standalone</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.text">Active Standalone Node(s)</option>
@@ -187,12 +187,15 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <option name="drilldown">none</option>
+        <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
         <format type="color" field="Status">
           <colorPalette type="map">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</colorPalette>
         </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
+        </drilldown>
       </table>
     </panel>
     <panel id="cribl_stream_asset_piechart">
