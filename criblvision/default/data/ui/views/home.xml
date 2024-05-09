@@ -9,8 +9,9 @@
       </default>
     </input>
     <input type="dropdown" token="worker_group" searchWhenChanged="true">
-      <label>Worker Group / Standalone</label>
+      <label>Instance Type</label>
       <choice value="all_instances">All Instances</choice>
+      <choice value="all_leaders">All Leaders</choice>
       <choice value="all_worker_groups">All Worker Groups</choice>
       <choice value="all_standalone">All Standalone Instances</choice>
       <fieldForLabel>label</fieldForLabel>
@@ -22,7 +23,10 @@
       </search>
       <change>
         <condition label="All Instances">
-          <set token="worker_group_event_filter">instance_type IN (worker, standalone)</set>
+          <set token="worker_group_event_filter">instance_type=*</set>
+        </condition>
+        <condition label="All Leaders">
+          <set token="worker_group_event_filter">instance_type=leader</set>
         </condition>
         <condition label="All Worker Groups">
           <set token="worker_group_event_filter">instance_type=worker</set>
