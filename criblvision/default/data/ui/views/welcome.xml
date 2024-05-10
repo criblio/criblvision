@@ -1,69 +1,162 @@
-<dashboard version="1.1">
+<dashboard version="1.1" hideTitle="true">
   <label>Welcome</label>
-  <row>
+  <row depends="$HIDE_CSS$">
     <panel>
       <html>
         <style>
-          #container {
+          h1, h2, h3 {
+            font-family: Arial !important;
+            font-weight: bold !important;
+            padding-bottom: 0.25em;
+          }
+          h1 {
+            font-size: 48pt !important;
+          }
+          h2 {
+            font-size: 32pt !important;
+          }
+          h3 {
+            font-size: 16pt !important;
+          }
+          pre {
+            font-family: Consolas;
+            margin-left: 20em;
+            margin-right: 20em;   
+            text-align: left;
+          }
+          table {
+            border: 2px solid black;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 0.25em;
+          }
+          td, th {
+            border: 2px solid black;
+            padding: 0.25em;
+          }
+          td {
+            text-align: left;
+          }
+          .break-line {
+            border-top: 3px solid #bbb;
+            padding-bottom: 0.1em;
+            padding-top: 0.1em;
+          }
+          .dashboard-element-html {
+            background-color: #F2F4F5;
+          }
+          .panel-body {
+            margin-left: 20em;
+            margin-right: 20em;
+          }
+          .welcome-container {
             font-family: Arial;
             font-size: 11pt;
             list-style-type: square;
-          }
-          table, th, td {
-            border: 2px solid black;
+            text-align: center;
+            background-color: white;
+            padding: 1em;
           }
         </style>
-        <div id="container">
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
+          <h1>CriblVision</h1>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container" style="text-align: center;">
+          <h2>Before Starting</h2>
+          <hr class="break-line" />
+          <p>The CriblVision app utilizes a lookup to add context to its searches. Click the button below to run the lookup populating report. For further information, see the <b>Populate Cribl Stream Asset Lookup Report</b> section below.</p>
+          <a href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Asset%2520Lookup" class="btn btn-primary">Populate Cribl Stream Asset Lookup Report</a>
+          <hr class="break-line" />
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
           <div>
-            <h1 class="header">Getting Started</h1>
+            <h2>Getting Started</h2>
+            <hr class="break-line" />
             <p>This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl Support Engineers to help customers troubleshoot their own Cribl deployments. There are serveral troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own Cribl deployment, this app will always be a continual "work in progress" and should always be used in conjunction with the Cribl Monitoring Console and associated views.</p>
           </div>
+          <hr class="break-line" />
           <div>
-            <h2 class="header"><b>Context is Crucial</b></h2>
+            <h3>Context is Crucial</h3>
             <p>In the ancient art of troubleshooting, context is key - whether the problem is of a technical nature, or merely one related to existence itself.</p>
             <p>Without a clear understanding of the circumstances surrounding an issue, it becomes challenging to identify the root cause and provide an effective solution. Context provides valuable information about a specific environment, and every environment is unique; when using this app, it is wise to ask yourself the following questions:</p>
-            <ul>
-              <li><i>What is the current issue you are attempting to troubleshoot?</i></li>
-              <li><i>Are there any recent configuration changes that were made before the issue started?</i></li>
-              <li><i>Were there any specific user interactions that may have contributed to the start of the issue? <b>Example:</b> Increase in data throughput, new Sources or Destinations, change in architecture, etc.</i></li>
-            </ul>
+            <p><i>What is the current issue you are attempting to troubleshoot?</i></p>
+            <p><i>Are there any recent configuration changes that were made before the issue started?</i></p>
+            <p><i>Were there any specific user interactions that may have contributed to the start of the issue? <b>Example:</b> Increase in data throughput, new Sources or Destinations, change in architecture, etc.</i></p>
             <p>Answers to the above questions, and many others, will help narrow down the scope of the investigation, enabling you and your team to focus their efforts on the relevant areas. Additionally, contexts aids in replicating the problem, as it enables Support Engineers to understand the exact conditions under which the issue occurs. Knowledge of the environment, along with the context of use-cases and integrations, and ensure that the troubleshooting process is efficient and accurate.</p>
           </div>
+          <hr class="break-line" />
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
+          <h2>Configuration</h2>
+          <hr class="break-line" />
+          <p>This app and its associated dashboards rely on a few components which you must configure.</p>
+          <p>
+            <b>Note:</b> On your initial entry into the application after it has been installed, you should be prompted to navigate to the setup page which will guide you through configuring the required macros. Once the <code>Save Configuration</code> button is pressed, the macro definitions will be saved, and automatic lookups will be created off the back of the provided sourcetype(s) to automatically enrich events with the Worker Group of the Worker Node from which that event came. If you are wanting to manually configure these (or you run into errors executing the setup page), the following instructions can be followed. You may experience errors when deploying this app within a Search Head Cluster or when changing the name of the app from <code>criblvision</code> to something else. For information on deploying to a Search Head Cluster, refer to Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/Splunk/9.2.0/DistSearch/PropagateSHCconfigurationchanges#Deploy_a_configuration_bundle">here</a>.</p>
+          <hr class="break-line" />
           <div>
-            <h2><b>Configuration</b></h2>
-            <p>This app and its associated dashboards rely on a few components which you must configure.</p>
-            <p><b>Note:</b> On your initial entry into the application after it has been installed, you should be prompted to navigate to the setup page which will guide you through configuring the required macros. Once the <code>Save Configuration</code> button is pressed, the macro definitions will be saved, and automatic lookups will be created off the back of the provided sourcetype(s) to automatically enrich events with the Worker Group of the Worker Node from which that event came. If you are wanting to manually configure these (or you run into errors executing the setup page), the following instructions can be followed. You may experience errors when deploying this app within a Search Head Cluster or when changing the name of the app from <code>criblvision</code> to something else. For information on deploying to a Search Head Cluster, refer to Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/Splunk/9.2.0/DistSearch/PropagateSHCconfigurationchanges#Deploy_a_configuration_bundle">here</a>.</p>
-            <div>
-              <h3>Logs and Metrics</h3>
-              <p>Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer to the documentation <a target="_blank" href="https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource">here</a> for instructions on configuring this Source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics.</p>
-            </div>
-            <div>
-              <h3>Macros</h3>
-              <p>This app ships with 4 macros which must be edited in accordance with your Splunk index naming schema. For more info on configuring macros, reference Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/SplunkCloud/9.0.2303/Knowledge/Definesearchmacros">here</a>.</p>
-              <table>
-                <tr>
-                  <th>Macro Name</th>
-                  <th>Macro Description</th>
-                </tr>
-                <tr>
-                  <td><code>set_cribl_internal_log_index</code></td>
-                  <td>Set this macro definition to the index you configured for your Cribl logs.</td>
-                </tr>
-                <tr>
-                  <td><code>set_cribl_log_sourcetype</code></td>
-                  <td>Set this macro definition to the sourcetype you configured for Cribl logs.</td>
-                </tr>
-                <tr>
-                  <td><code>set_cribl_metrics_index</code></td>
-                  <td>Set this macro definition to the index your configured for Cribl metrics.</td>
-                </tr>
-                <tr>
-                  <td><code>set_cribl_metrics_prefix(1)</code></td>
-                  <td>Change the <code>cribl.logstream</code> value before <code>.$metric_name$</code> if you have changed the default namespace used for your Cribl metrics internal Source.</td>
-                </tr>
-              </table>
-              <p>For manual configuration of the macro definitions through the CLI, append and update the following to <code>$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
-              <pre><code>[set_cribl_internal_log_index]
+            <h3>Logs and Metrics</h3>
+            <p>Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer to the documentation <a target="_blank" href="https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource">here</a> for instructions on configuring this Source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics.</p>
+          </div>
+          <hr class="break-line" />
+          <div>
+            <h3>Macros</h3>
+            <p>This app ships with 4 macros which must be edited in accordance with your Splunk index naming schema. For more info on configuring macros, reference Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/SplunkCloud/9.0.2303/Knowledge/Definesearchmacros">here</a>.</p>
+            <table>
+              <tr>
+                <th>Macro Name</th>
+                <th>Macro Description</th>
+              </tr>
+              <tr>
+                <td>
+                  <code>set_cribl_internal_log_index</code>
+                </td>
+                <td>Set this macro definition to the index you configured for your Cribl logs.</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>set_cribl_log_sourcetype</code>
+                </td>
+                <td>Set this macro definition to the sourcetype you configured for Cribl logs.</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>set_cribl_metrics_index</code>
+                </td>
+                <td>Set this macro definition to the index your configured for Cribl metrics.</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>set_cribl_metrics_prefix(1)</code>
+                </td>
+                <td>Change the <code>cribl.logstream</code> value before <code>.$metric_name$</code> if you have changed the default namespace used for your Cribl metrics internal Source.</td>
+              </tr>
+            </table>
+            <p>For manual configuration of the macro definitions through the CLI, append and update the following to <code>$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
+            <pre>[set_cribl_internal_log_index]
 definition = index=cribl_logs
 
 [set_cribl_log_sourcetype]
@@ -73,125 +166,173 @@ definition = sourcetype IN (cribl)
 definition = index=cribl_metrics
 
 [set_cribl_metrics_prefix(1)]
-definition = cribl.logstream.$metric_name$ </code></pre>
-            </div>
-            <div>
-              <h3>Leader Logs</h3>
-              <p>Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently <b>NOT</b> sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to <code>/opt/cribl/log/*</code>. For more information on how to deploy a Cribl Edge Node, please refer to our documentation <a target="_blank" href="https://docs.cribl.io/edge/deploy-planning">here</a>.</p>
-            </div>
-            <div>
-              <h3>Populate Cribl Stream Worker Lookup Report</h3>
-              <p>After installing or upgrading the CriblVision application, run the <a target="_blank" href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Worker%2520Lookup">Populate Cribl Stream Worker Lookup</a> Report to repopulate the <code>cribl_stream_workers</code> lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</p>
-              <p><b>Note:</b> When the report is initially run, you may see an error stating that the <code>cribl_stream_workers.csv</code> lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.</p>
-            </div>
-            <div>
-              <h3>Automatic Lookups</h3>
-              <p>This app uses an automatic lookup to enrich events with the Worker Group (the <code>worker_group</code> field) on events from a Worker Node in a distributed environment. For more on automatic lookups, see Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/DefineanautomaticlookupinSplunkWeb">here</a>.</p>
-              <p>When configuring an automatic lookup from the Splunk UI, ensure that the following values are set before clicking the <code>Save</code> button:</p>
-              <ul>
-                <li><b>Lookup table</b>: <code>cribl_stream_workers</code></li>
-                <li><b>Apply to:</b> <code>sourcetype</code></li>
-                <li><b>named:</b> <i>Your Cribl log sourcetype <b>Note: </b> You cannot use wildcards in this definition</i></li>
-                <li><b>Lookup input fields:</b> <code>worker</code> = <code>host</code></li>
-                <li><b>Lookup output fields:</b> <code>worker_group</code> = <code>worker_group</code></li>
-              </ul>
-              <p>For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to <code>$SPLUNK_HOME/etc/apps/criblvision/local/props.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
-              <pre><code>[your_sourcetype]
-LOOKUP-cribl_stream_workers = cribl_stream_workers worker AS host OUTPUTNEW worker_group AS worker_group</code></pre>
-              <p>If you are using multiple sourcetypes for your internal Cribl logs and would like to use a wildcarded props definition over configuring multiple automated lookups, you can use the following stanza template:</p>
-              <pre><code>[(?::){0}your_wildcarded_sourcetype]</code></pre>
-            </div>
-            <div>
-              <h3>Alerts</h3>
-              <p>This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment. For more on scheduling alerts, please reference Splunk's documentation <a href="https://docs.splunk.com/Documentation/Splunk/latest/Alert/Definescheduledalerts" target="_blank">here</a>. Fore more on configuring alert actions, please reference Splunk's documentation <a href="https://docs.splunk.com/Documentation/Splunk/9.2.0/Alert/Setupalertactions" target="_blank">here</a>.</p> 
-              <table>
-                <tr>
-                  <th>Macro Name</th>
-                  <th>Related Alert(s)</th>
-                  <th>Description</th>
-                </tr>
-                <tr>
-                  <td><code>set_alert_ignored_destinations</code></td>
-                  <td>No Output From Destinations, Unhealthy Destinations</td>
-                  <td>A list of Destinations that should not trigger alerts</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_ignored_sources</code></td>
-                  <td>No Input From Sources, Unhealthy Sources</td>
-                  <td>A list of Sources that should not trigger alerts</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_lower_limit_unhealthy_memory_usage_mb</code></td>
-                  <td>RSS Memory Usage Within Threshold</td>
-                  <td>The lower limit of the threshold when alerts for memory usage (in MB) should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_backpressure</code></td>
-                  <td>Destinations Experiencing Backpressure</td>
-                  <td>The threshold of backpressure messages received (for a Worker Group + Worker) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_blocked_destinations</code></td>
-                  <td>Blocked Destinations</td>
-                  <td>The threshold of blocked Destination messages received (for a Worker Group + Destination) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_cluster_communication_errors</code></td>
-                  <td>Blocked Destinations</td>
-                  <td>The threshold of cluster communcation error messages received (for a Worker Group + Worker) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_no_destination_thruput_pct</code></td>
-                  <td>No Output From Destinations</td>
-                  <td>The threshold of times a Destination has not sent any events (for a Worker Group + Destination) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_no_source_thruput_pct</code></td>
-                  <td>No Input From Sources</td>
-                  <td>The threshold of times a Source has not received any events (for a Worker Group + Source) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_unhealthy_cpu_usage_pct</code></td>
-                  <td>CPU Usage Over Threshold</td>
-                  <td>The threshold of times a host has reported above the unhealthy CPU percentage threshold (for a Worker Group + Worker) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_unhealthy_destinations_pct</code></td>
-                  <td>Unhealthy Destinations</td>
-                  <td>The threshold of times a Destination has reported as being unhealthy (for a Worker Group + Destination) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_unhealthy_memory_usage_mb_pct</code></td>
-                  <td>RSS Memory Usage Within Threshold</td>
-                  <td>The threshold of times a host has reported memory usage within the unhealthy threshold (for a Worker Group + host) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_unhealthy_sources_pct</code></td>
-                  <td>Unhealthy Sources</td>
-                  <td>The threshold of times a Source has reported as being unhealthy (for a Worker Group + Source) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_threshold_worker_process_restarts</code></td>
-                  <td>Worker Proces Restarted</td>
-                  <td>The threshold of times a host has reported Worker Process restarts (for a Worker Group + host) before the alert should trigger</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_unhealthy_cpu_usage_pct</code></td>
-                  <td>CPU Usage Over Threshold</td>
-                  <td>The threshold at which a host's CPU usage is deemed to be unhealthy</td>
-                </tr>
-                <tr>
-                  <td><code>set_alert_upper_limit_unhealthy_memory_usage_mb</code></td>
-                  <td>RSS Memory Usage Within Threshold</td>
-                  <td>The upper limit of the threshold when alerts for memory usage (in MB) should trigger</td>
-                </tr>
-              </table>
-            </div>
-            <div>
-              <h2><b>Using This App</b></h2>
-              <p>In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "How to Use" toggle that reveals a description and instructions for that view. We recommend starting with the <a target="_blank" href="/app/criblvision/health_check">Health Check</a> view and selecting a single Worker Group or Worker Node from the provided filters.</p>
-            </div>
+definition = cribl.logstream.$metric_name$</pre>
           </div>
+          <hr class="break-line" />
+          <div>
+            <h3>Leader Logs</h3>
+            <p>Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently <b>NOT</b> sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to <code>/opt/cribl/log/*</code>. For more information on how to deploy a Cribl Edge Node, please refer to our documentation <a target="_blank" href="https://docs.cribl.io/edge/deploy-planning">here</a>.</p>
+          </div>
+          <hr class="break-line" />
+          <div>
+            <h3>Populate Cribl Stream Asset Lookup Report</h3>
+            <p>After installing or upgrading the CriblVision application, run the <a target="_blank" href="/app/criblvision/search?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FPopulate%2520Cribl%2520Stream%2520Asset%2520Lookup">Populate Cribl Stream Asset Lookup</a> Report to repopulate the <code>cribl_stream_assets</code> lookup. This can be done by selecting "Populate Cribl Stream Asset Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.</p>
+            <p>
+              <b>Note:</b> When the report is initially run, you may see an error stating that the <code>cribl_stream_assets.csv</code> lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.</p>
+          </div>
+          <hr class="break-line" />
+          <div>
+            <h3>Automatic Lookups</h3>
+            <p>This app uses an automatic lookup to enrich events with the Worker Group (the <code>worker_group</code> field) and the instance type (the <code>instnace_type</code> field) on events. For Leader and Single Nodes, the Worker Group value will be set to <code>n/a</code>. For more on automatic lookups, see Splunk's documentation <a target="_blank" href="https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/DefineanautomaticlookupinSplunkWeb">here</a>.</p>
+            <p>When configuring an automatic lookup from the Splunk UI, ensure that the following values are set before clicking the <code>Save</code> button:</p>
+            <p><b>Lookup table</b>: <code>cribl_stream_assets</code></p>
+            <p><b>Apply to:</b> <code>sourcetype</code></p>
+            <p><b>named:</b> <i>Your Cribl log sourcetype <b>Note: </b> You cannot use wildcards in this definition</i></p>
+            <p><b>Lookup input fields:</b> <code>host</code> = <code>host</code></p>
+            <p><b>Lookup output fields:</b> <code>worker_group</code> = <code>worker_group</code> and <code>instance_type</code> = <code>instance_type</code></p>
+            <p>For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to <code>$SPLUNK_HOME/etc/apps/criblvision/local/props.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
+            <pre>[your_sourcetype]
+LOOKUP-cribl_stream_workers = cribl_stream_assets host AS host OUTPUTNEW instance_type AS instance_type worker_group AS worker_group</pre>
+            <p>If you are using multiple sourcetypes for your internal Cribl logs and would like to use a wildcarded props definition over configuring multiple automated lookups, you can use the following stanza template:</p>
+            <pre>[(?::){0}your_wildcarded_sourcetype]</pre>
+          </div>
+          <hr class="break-line" />
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
+          <h2>Alerts</h2>
+          <hr class="break-line" />
+          <p>This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment. For more on scheduling alerts, please reference Splunk's documentation <a href="https://docs.splunk.com/Documentation/Splunk/latest/Alert/Definescheduledalerts" target="_blank">here</a>. Fore more on configuring alert actions, please reference Splunk's documentation <a href="https://docs.splunk.com/Documentation/Splunk/9.2.0/Alert/Setupalertactions" target="_blank">here</a>.</p> 
+          <table>
+            <tr>
+              <th>Macro Name</th>
+              <th>Related Alert(s)</th>
+              <th>Description</th>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_ignored_destinations</code>
+              </td>
+              <td>No Output From Destinations, Unhealthy Destinations</td>
+              <td>A list of Destinations that should not trigger alerts</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_ignored_sources</code>
+              </td>
+              <td>No Input From Sources, Unhealthy Sources</td>
+              <td>A list of Sources that should not trigger alerts</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_lower_limit_unhealthy_memory_usage_mb</code>
+              </td>
+              <td>RSS Memory Usage Within Threshold</td>
+              <td>The lower limit of the threshold when alerts for memory usage (in MB) should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_backpressure</code>
+              </td>
+              <td>Destinations Experiencing Backpressure</td>
+              <td>The threshold of backpressure messages received (for a Worker Group + Worker) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_blocked_destinations</code>
+              </td>
+              <td>Blocked Destinations</td>
+              <td>The threshold of blocked Destination messages received (for a Worker Group + Destination) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_cluster_communication_errors</code>
+              </td>
+              <td>Blocked Destinations</td>
+              <td>The threshold of cluster communcation error messages received (for a Worker Group + Worker) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_no_destination_thruput_pct</code>
+              </td>
+              <td>No Output From Destinations</td>
+              <td>The threshold of times a Destination has not sent any events (for a Worker Group + Destination) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_no_source_thruput_pct</code>
+              </td>
+              <td>No Input From Sources</td>
+              <td>The threshold of times a Source has not received any events (for a Worker Group + Source) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_unhealthy_cpu_usage_pct</code>
+              </td>
+              <td>CPU Usage Over Threshold</td>
+              <td>The threshold of times a host has reported above the unhealthy CPU percentage threshold (for a Worker Group + Worker) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_unhealthy_destinations_pct</code>
+              </td>
+              <td>Unhealthy Destinations</td>
+              <td>The threshold of times a Destination has reported as being unhealthy (for a Worker Group + Destination) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_unhealthy_memory_usage_mb_pct</code>
+              </td>
+              <td>RSS Memory Usage Within Threshold</td>
+              <td>The threshold of times a host has reported memory usage within the unhealthy threshold (for a Worker Group + host) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_unhealthy_sources_pct</code>
+              </td>
+              <td>Unhealthy Sources</td>
+              <td>The threshold of times a Source has reported as being unhealthy (for a Worker Group + Source) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_threshold_worker_process_restarts</code>
+              </td>
+              <td>Worker Proces Restarted</td>
+              <td>The threshold of times a host has reported Worker Process restarts (for a Worker Group + host) before the alert should trigger</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_unhealthy_cpu_usage_pct</code>
+              </td>
+              <td>CPU Usage Over Threshold</td>
+              <td>The threshold at which a host's CPU usage is deemed to be unhealthy</td>
+            </tr>
+            <tr>
+              <td>
+                <code>set_alert_upper_limit_unhealthy_memory_usage_mb</code>
+              </td>
+              <td>RSS Memory Usage Within Threshold</td>
+              <td>The upper limit of the threshold when alerts for memory usage (in MB) should trigger</td>
+            </tr>
+          </table>
+          <hr class="break-line" />
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
+          <h2>Using This App</h2>
+          <hr class="break-line" />
+          <p>In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "How to Use" toggle that reveals a description and instructions for that view. We recommend starting with the <a target="_blank" href="/app/criblvision/health_check">Health Check</a> view and selecting a single Worker Group or Worker Node from the provided filters.</p>
+          <hr class="break-line" />
         </div>
       </html>
     </panel>

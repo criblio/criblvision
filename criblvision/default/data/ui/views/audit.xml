@@ -10,41 +10,52 @@
     </input>
     <input type="dropdown" token="host" searchWhenChanged="true">
       <label>Host</label>
-      <fieldForLabel>host</fieldForLabel>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) as host where `set_cribl_internal_log_index` | mvexpand host | sort -host</query>
+        <query>| `dashboard_host_filter`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
   </fieldset>
   <row>
     <panel>
-      <title>Successful logins by user</title>
+      <title>Successful Logins by User</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` channel=auth message="Successful login" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ channel=auth message="Successful login" 
 | timechart count limit=100 by user</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">column</option>
         <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Latest configuration updates by worker</title>
+      <title>Latest Configuration Updates by Worker</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` message="finished config update" 
-| table _time worker version</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ message="finished config update" 
+| table _time worker version
+| rename worker AS Worker version AS Version</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
       </table>
     </panel>
   </row>

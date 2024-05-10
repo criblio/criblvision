@@ -5,6 +5,9 @@
   	<view name="home" />
   	<view name="stats" />
   </collection>
+  <collection label="Assets">
+    <view name="cribl_stream_assets" />
+  </collection>
   <collection label="Configuration">
     <view name="sources_and_destinations_overview" />
   </collection>
@@ -25,29 +28,34 @@
   </collection>
   <collection label="Alerts">
     <view name="alerts" />
+    <collection label="Assets">
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Missing%2520Cribl%2520Stream%2520Assets">Missing Cribl Stream Assets</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Shutdown%2520Cribl%2520Stream%2520Assets">Shutdown Cribl Stream Assets</a>
+    </collection>
     <collection label="Sources">
-      <saved name="CriblVision Alert - No Input From Sources" />
-      <saved name="CriblVision Alert - Unhealthy Sources" />
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520No%2520Input%2520From%2520Sources">No Input From Sources</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Unhealthy%2520Sources">Unhealthy Sources</a>
     </collection>
     <collection label="Destinations">
-      <saved name="CriblVision Alert - Blocked Destinations" />
-      <saved name="CriblVision Alert - Destinations Experiencing Backpressure" />
-      <saved name="CriblVision Alert - No Output From Destinations" />
-      <saved name="CriblVision Alert - Unhealthy Destinations" />
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Blocked%2520Destinations">Blocked Destinations</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Destinations%2520Experiencing%2520Backpressure">Destinations Experiencing Backpressure</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520No%2520Output%2520From%2520Destinations">No Output From Destinations</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Unhealthy%2520Destinations">Unhealthy Destinations</a>
     </collection>
     <collection label="Persistent Queue">
-      <saved name="CriblVision Alert - Persistent Queue Initialized" />
+     <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Persistent%2520Queue%2520Initialized">Persistent Queue Initialized</a>
     </collection>
     <collection label="Distributed Environment">
-      <saved name="CriblVision Alert - Cluster Communication Errors" />
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Cluster%2520Communication%2520Errors">Cluster Communication Errors</a>
     </collection>
     <collection label="System">
-      <saved name="CriblVision Alert - CPU Usage Over Threshold" />
-      <saved name="CriblVision Alert - RSS Memory Usage Within Threshold" />
-      <saved name="CriblVision Alert - Worker Process Restarted" />
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520CPU%2520Usage%2520Over%2520Threshold">CPU Usage Over Threshold</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Opened%2520Connections%2520Over%2520Threshold">Opened Connections Over Threshold</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520RSS%2520Memory%2520Usage%2520Within%2520Threshold">RSS Memory Usage Within Threshold</a>
+      <a href="/app/criblvision/alert?s=%2FservicesNS%2Fnobody%2Fcriblvision%2Fsaved%2Fsearches%2FCriblVision%2520Alert%2520-%2520Worker%2520Process%2520Restarted">Worker Process Restarted</a>
     </collection>
   </collection>
   <view name="dashboards" />
   <view name="search" />
-  <saved name="Populate Cribl Stream Worker Lookup" />
+  <saved name="Populate Cribl Stream Asset Lookup" />
 </nav>

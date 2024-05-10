@@ -9,22 +9,24 @@
       </default>
     </input>
     <input type="dropdown" token="host" searchWhenChanged="true">&gt;<label>Leader Host</label>
-      <fieldForLabel>host</fieldForLabel>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| tstats values(host) AS host WHERE `set_cribl_internal_log_index` AND source IN ("*state/jobs/*") | mvexpand host | sort host</query>
+        <query>| `dashboard_host_filter("instance_type=leader")`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
+      <prefix>host="</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="dropdown" token="worker_group">
       <label>Worker Group</label>
       <choice value="*">All Worker Groups</choice>
       <initialValue>*</initialValue>
-      <fieldForLabel>worker_group</fieldForLabel>
+      <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
         <query>| `dashboard_worker_group_filter`</query>
@@ -37,7 +39,7 @@
       <fieldForLabel>JobName</fieldForLabel>
       <fieldForValue>JobName</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") host=$host$ 
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") $host$ 
 | mvexpand source 
 | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
 | rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
@@ -53,7 +55,7 @@
       <fieldForLabel>JobId</fieldForLabel>
       <fieldForValue>JobId</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") host=$host$ 
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") $host$ 
 | mvexpand source
 | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
 | rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"
@@ -100,14 +102,14 @@
     <panel>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` host=$host$ source=*state/jobs/$worker_group$/$jobId$/*</query>
+          <query>`set_cribl_internal_log_index` $host$ source=*state/jobs/$worker_group$/$jobId$/*</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="list.drilldown">none</option>
         <option name="raw.drilldown">none</option>
         <option name="refresh.display">progressbar</option>
-        <option name="type">raw</option>
+        <option name="type">list</option>
       </event>
     </panel>
   </row>

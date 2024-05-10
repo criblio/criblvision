@@ -76,7 +76,7 @@ export async function perform(splunk_js_sdk, setup_options){
       }
 
       // configure the automatic lookup(s)
-      const lookup_property = { 'LOOKUP-cribl_stream_workers': 'cribl_stream_workers worker AS host OUTPUTNEW worker_group AS worker_group' };
+      const lookup_property = { 'LOOKUP-cribl_stream_workers': 'cribl_stream_assets host AS host OUTPUTNEW instance_type AS instance_type worker_group AS worker_group' };
       for(let sourcetype of macros[CRIBL_LOG_SOURCETYPE_MACRO].value.split(',')){
         await Splunk.update_configuration_file(service, 'props', sourcetype.trim(), lookup_property);
       }

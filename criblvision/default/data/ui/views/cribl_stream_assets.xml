@@ -1,0 +1,216 @@
+<form theme="dark" version="1.1">
+  <label>Cribl Stream Assets</label>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="overview_base_search">
+    <query>| inputlookup cribl_stream_assets
+| stats count(eval(status == "active")) AS active count AS total BY instance_type
+| eval value = tostring(active, "commas")." / ".tostring(total, "commas")</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="active_assets_base_search">
+    <query>| tstats count WHERE `set_cribl_internal_log_index` `set_cribl_log_sourcetype` BY host _time span=auto
+| lookup cribl_stream_assets host
+| eval status = if(count &gt; 0, "active", "missing")
+| timechart count(eval(status == "active")) AS active BY instance_type</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <init>
+    <set token="show_leader_overview">true</set>
+    <set token="show_worker_overview">true</set>
+    <set token="show_single_overview">true</set>
+  </init>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <eval token="show_details">if(label == "Show", "true", null())</eval>
+      </change>
+    </input>
+  </fieldset>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>Fill this with information about how to use this dashboard.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row depends="$HIDE_CSS$">
+    <panel>
+      <html>
+        <style>
+          #cribl_stream_asset_table {
+            width: 75% !important;
+          }
+          #cribl_stream_asset_piechart {
+            width: 25% !important;
+          }
+        </style>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_leader_overview$">
+      <single>
+        <search base="overview_base_search">
+          <query>
+| where instance_type == "leader"
+| table value total</query>
+          <done>
+            <eval token="show_leader_overview">if($result.total$ &gt; 0, "true", null())</eval>
+          </done>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="underLabel">Active vs Total Leader Nodes</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel depends="$show_worker_overview$">
+      <single>
+        <search base="overview_base_search">
+          <query>
+| where instance_type == "worker"
+| table value total</query>
+          <done>
+            <eval token="show_worker_overview">if($result.total$ &gt; 0, "true", null())</eval>
+          </done>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="underLabel">Active vs Total Worker Nodes</option>
+      </single>
+    </panel>
+    <panel depends="$show_single_overview$">
+      <single>
+        <search base="overview_base_search">
+          <query>
+| where instance_type == "single"
+| table value total</query>
+          <done>
+            <eval token="show_single_overview">if($result.total$ &gt; 0, "true", null())</eval>
+          </done>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="underLabel">Active vs Total Single Nodes</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_leader_overview$">
+      <chart>
+        <title>Leader Node Log Activity</title>
+        <search base="active_assets_base_search">
+          <query>
+| table _time leader</query>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Active Leader Node(s)</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel depends="$show_worker_overview$">
+      <chart>
+        <title>Worker Node Log Activity</title>
+        <search base="active_assets_base_search">
+          <query>
+| table _time worker</query>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Active Worker Node(s)</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+    <panel depends="$show_single_overview$">
+      <chart>
+        <title>Single Node Log Activity</title>
+        <search base="active_assets_base_search">
+          <query>
+| table _time single</query>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Active Single Node(s)</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel id="cribl_stream_asset_table">
+      <input type="dropdown" token="status" searchWhenChanged="true">
+        <label>Status</label>
+        <choice value="*">All</choice>
+        <choice value="active">Active</choice>
+        <choice value="missing">Missing</choice>
+        <choice value="shutdown">Shutdown</choice>
+        <default>*</default>
+        <prefix>status="</prefix>
+        <suffix>"</suffix>
+        <initialValue>*</initialValue>
+      </input>
+      <table>
+        <title>Cribl Stream Asset Overview</title>
+        <search>
+          <query>| inputlookup cribl_stream_assets
+| search $status$
+| table host instance_type worker_group latest_activity_time latest_shutdown_time status
+| foreach latest_*_time 
+    [ eval &lt;&lt;FIELD&gt;&gt; = strftime(&lt;&lt;FIELD&gt;&gt;, "%Y-%m-%dT%H:%M:%S.%3N") ] 
+| rename host AS Host instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <format type="color" field="Status">
+          <colorPalette type="map">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</colorPalette>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
+        </drilldown>
+      </table>
+    </panel>
+    <panel id="cribl_stream_asset_piechart">
+      <chart>
+        <title>Cribl Stream Asset Status</title>
+        <search>
+          <query>| inputlookup cribl_stream_assets
+| stats count BY status</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</option>
+      </chart>
+    </panel>
+  </row>
+</form>
