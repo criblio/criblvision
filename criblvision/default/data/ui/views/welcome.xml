@@ -189,7 +189,7 @@ definition = cribl.logstream.$metric_name$</pre>
             <p><b>Apply to:</b> <code>sourcetype</code></p>
             <p><b>named:</b> <i>Your Cribl log sourcetype <b>Note: </b> You cannot use wildcards in this definition</i></p>
             <p><b>Lookup input fields:</b> <code>host</code> = <code>host</code></p>
-            <p><b>Lookup output fields:</b> <code>worker_group</code> = <code>worker_group</code> and <code>instance_Type</code> = <code>instance_type</code></p>
+            <p><b>Lookup output fields:</b> <code>worker_group</code> = <code>worker_group</code> and <code>instance_type</code> = <code>instance_type</code></p>
             <p>For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to <code>$SPLUNK_HOME/etc/apps/criblvision/local/props.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
             <pre>[your_sourcetype]
 LOOKUP-cribl_stream_workers = cribl_stream_assets host AS host OUTPUTNEW instance_type AS instance_type worker_group AS worker_group</pre>

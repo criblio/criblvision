@@ -1,14 +1,30 @@
+# CriblVision
+
+## Upgrading to Version 3.x
+
+Version 3.x of the CriblVision app introduces a new Cribl Stream asset lookup to replace the previous Worker Group lookup. This will cause dashboards to behave unexpectedly until the cutover to the new lookup is made. If you are upgrading from version 2.x of CriblVision then the following steps will be required to make this cutover:
+
+1. Install version 3.x of CriblVision
+2. Run the CriblVision setup age again:
+    1. From the **Apps** dropdown, select **Manage Apps**
+    2. Selected the **Set up** action for CriblVision
+    3. Follow the instructions on the setup page
+3. Run the **Populate Cribl Stream Assets Lookup** report by either:
+    * Clicking the button on the landing page 
+    * Clicking the link in the navigation bar
+4. Double check that any alerts that were enabled are still enabled
+
+If installing the app through other methods, refer to the documentation below on how to configure the app and update your configuration accordingly.
+
 ## Getting started
 
 This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl Support Engineers to help customers troubleshoot their own Cribl deployments. There are several troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own Cribl deployment, this app will always be a continuous ”work in progress” and should always be used in conjunction with the Cribl monitoring console and associated views. 
 
- ### **Context is crucial**
+### **Context is crucial**
 
 In the ancient art of troubleshooting, context is key - whether the problem is of a technical nature, or merely one related to existence itself.
 
 Without a clear understanding of the circumstances surrounding an issue, it becomes challenging to identify the root cause and provide an effective solution. Context provides valuable information about a specific environment, and every environment is unique; when using this app, it is wise to ask yourself the following questions:
-
-
 
 * What is the current issue you are attempting to troubleshoot?
 * Are there any recent configuration changes that were made before the issue started?
@@ -59,9 +75,56 @@ This app ships with four macros which must be edited in accordance with your spl
   </tr>
 </table>
 
+For manual configuration of the macro definitions through the CLI, append and update the following to `$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf` on Search Head Deployers for a Search Head Cluster:
+
+```
+[set_cribl_internal_log_index]
+definition = index=cribl_logs
+
+[set_cribl_log_sourcetype]
+definition = sourcetype IN (cribl)
+
+[set_cribl_metrics_index]
+definition = index=cribl_metrics
+
+[set_cribl_metrics_prefix(1)]
+definition = cribl.logstream.$metric_name$
+```
+
 #### **Leader logs**
 
 Some of the views in this app will require Leader logs to be forwarded on to Splunk. In distributed Cribl Stream environments, Leader logs are currently NOT sent via our internal source. You will have to install an Edge node on your Leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to `/opt/cribl/log/*.log`. For more information on how to deploy an Edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning). Note: When deploying the Edge node to your Leader node, we recommend having a separate fleet just for this node. Be sure to disable all other inputs on that Edge node except for file monitor inputs. 
+
+#### **Populate Cribl Stream Asset Lookup Report**
+
+After installing or upgrading the CriblVision application, run the **Populate Cribl Stream Asset Lookup** report to repopulate the `cribl_stream_assets` lookup. This can be done by clicking the **Populate Cribl Stream Asset Lookup** link in the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.
+
+**Note:** When the report is initially run, you may see an error stating that the `cribl_stream_assets.csv` lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.
+
+#### **Automatic Lookups**
+
+This app uses an automatic lookup to enrich events with the Worker Group (the `worker_group` field) and the instance type (the `instnace_type` field) on events. For Leader and Single Nodes, the Worker Group value will be set to `n/a`. For more on automatic lookups, see Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/DefineanautomaticlookupinSplunkWeb).
+
+When configuring an automatic lookup from the Splunk UI, ensure that the following values are set before clicking the **Save** button:
+
+* **Lookup table:** cribl_stream_assets
+* **Apply to:** sourcetype
+* **named:** *Your Cribl log sourcetype **Note:** You cannot use wildcards in this definition*
+* **Lookup input fields:** `host` = `host`
+* **Lookup output fields:** `worker_group` = `worker_group` and `instance_type` = `instance_type`
+
+For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to `$SPLUNK_HOME/etc/apps/criblvision/local/props.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf` on Search Head Deployers for a Search Head Cluster:
+
+```
+[your_sourcetype]
+LOOKUP-cribl_stream_workers = cribl_stream_assets host AS host OUTPUTNEW instance_type AS instance_type worker_group AS worker_group
+```
+
+If you are using multiple sourcetypes for your internal Cribl logs and would like to use a wildcarded props definition over configuring multiple automated lookups, you can use the following stanza template:
+
+```
+[(?::){0}your_wildcarded_sourcetype]
+```
 
 ### **Alerts**
 
@@ -156,17 +219,10 @@ In addition to this overview page, this app provides several views intended to a
 
 #### **About**
 
- \
-Author: Johan Woger 
-
-Co-Authors: Jeremy Prescott, Martin Prado 
-
-Honorable Mentions: George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at [https://github.com/arcsector](https://github.com/arcsector)) 
-
-Ben Marcus - General Testing. 
-
-Brendan Dalpe - Guru of many things.
-
-Brandon McCombs - General Testing.
-
-Chris Owens - General testing and contributor. 
+* **Author:** Johan Woger 
+* **Co-Authors:** Jeremy Prescott, Martin Prado, Chris Owens, and David Sheridan 
+* **Honorable Mentions:**
+  * George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at [https://github.com/arcsector](https://github.com/arcsector)) 
+  * Ben Marcus - General Testing. 
+  * Brendan Dalpe - Guru of many things.
+  * Brandon McCombs - General Testing.
