@@ -14,6 +14,8 @@ Version 3.x of the CriblVision app introduces a new Cribl Stream asset lookup to
     * Clicking the link in the navigation bar
 4. Double check that any alerts that were enabled are still enabled
 
+If there are issues after completing these steps, you may need to clear your browser cache to clear cached scripts in Splunk. Clear the browser cache and follow from instructions from step 2 onwards.
+
 If installing the app through other methods, refer to the documentation below on how to configure the app and update your configuration accordingly.
 
 ## Getting started
