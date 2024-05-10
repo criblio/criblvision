@@ -1,4 +1,4 @@
-<dashboard isDashboard="false" version="1.1" script="javascript/setup_criblvision_page.js">
+<dashboard isDashboard="false" version="1.1" hideTitle="true" script="javascript/setup_criblvision_page.js">
   <label>CriblVision Setup Page</label>
   <row>
     <panel>
