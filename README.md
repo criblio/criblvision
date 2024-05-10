@@ -1,3 +1,21 @@
+# CriblVision
+
+## Upgrading to Version 3.x
+
+Version 3.x of the CriblVision app introduces a new Cribl Stream asset lookup to replace the previous Worker Group lookup. This will cause dashboards to behave unexpectedly until the cutover to the new lookup is made. If you are upgrading from version 2.x of CriblVision then the following steps will be required to make this cutover:
+
+1. Install version 3.x of CriblVision
+2. Run the CriblVision setup age again:
+    1. From the **Apps** dropdown, select **Manage Apps**
+    2. Selected the **Set up** action for CriblVision
+    3. Follow the instructions on the setup page
+3. Run the **Populate Cribl Stream Assets Lookup** report by either:
+    * Clicking the button on the landing page 
+    * Clicking the link in the navigation bar
+4. Double check that any alerts that were enabled are still enabled
+
+If installing the app through other methods, refer to the documentation below on how to configure the app and update your configuration accordingly.
+
 ## Getting Started
 
 This Splunk app was designed as a troubleshooting tool and monitoring aid for Cribl administrators. It was created by Cribl Support Engineers to help customers troubleshoot their own Cribl deployments. There are several troubleshooting dashboards tailored to certain product areas in which support has seen the highest number of recurring issues. And while our intent is to help you troubleshoot your own Cribl deployment, this app will always be a continual "work in progress" and should always be used in conjunction with the Cribl Monitoring Console and associated views.
