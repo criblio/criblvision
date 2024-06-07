@@ -11,7 +11,8 @@ define(['react', 'splunkjs/splunk'], function(react, splunk_js_sdk){
         set_cribl_internal_log_index: 'cribl_logs',
         set_cribl_log_sourcetype: '',
         set_cribl_metrics_index: 'cribl_metrics',
-        set_cribl_metrics_prefix: 'cribl.logstream.'
+        set_cribl_metrics_prefix: 'cribl.logstream.',
+        set_cribl_environment_field_name: 'env'
       };
 
       this.handleChange = this.handleChange.bind(this);
@@ -59,6 +60,10 @@ define(['react', 'splunkjs/splunk'], function(react, splunk_js_sdk){
             e('p', { style: { display: 'table-row' } }, [
               e('label', { style: { display: 'table-cell', textAlign: 'left', marginBottom: '1em', paddingRight: '1em' } }, 'Cribl Metrics Prefix:'),
               e('input', { style: { display: 'table-cell', marginBottom: '1em' }, type: 'text', name: 'set_cribl_metrics_prefix', value: this.state.set_cribl_metrics_prefix, onChange: this.handleChange })
+            ]),
+            e('p', { style: { display: 'table-row' } }, [
+              e('label', { style: { display: 'table-cell', textAlign: 'left', marginBottom: '1em', paddingRight: '1em' } }, 'Cribl Environment Field Name:'),
+              e('input', { style: { display: 'table-cell', marginBottom: '1em' }, type: 'text', name: 'set_cribl_environment_field_name', value: this.state.set_cribl_environment_field_name, onChange: this.handleChange })
             ])
           ]))
         ]),
@@ -73,7 +78,7 @@ define(['react', 'splunkjs/splunk'], function(react, splunk_js_sdk){
             e('a', { href: 'https://docs.cribl.io/edge/deploy-planning', target: '_blank' }, 'here'),
             '. ',
             e('b', null, 'NOTE:'),
-            ' When deploying the Edge node to your Leader node, we recommend having a separate fleet just for this node. Be sure to disable all other inputs on that Edge node except for file monitor inputs.'
+            ' When deploying the Edge Node to your Leader Node, we recommend having a separate Fleet just for this Node. Be sure to disable all other inputs on that Edge Node except for file monitor inputs.'
           ])
         ]),
         e('div', null, [
