@@ -8,6 +8,27 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
     <input type="dropdown" token="worker_group" searchWhenChanged="true">
       <label>Worker Group / Single</label>
       <choice value="all_instances">All Instances</choice>
@@ -16,7 +37,7 @@
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query>| `dashboard_worker_group_filter`</query>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
@@ -42,7 +63,7 @@
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| `dashboard_host_filter($worker_group_event_filter|s$)`</query>
+        <query>| `dashboard_host_filter($environment_filter|s$ $worker_group_event_filter|s$)`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -131,7 +152,7 @@
           <done>
             <set token="workerProcessCount">$result.WorkerProcessCount$</set>
           </done>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
 | stats dc(cid) AS WorkerProcessCount BY host
 | stats sum(WorkerProcessCount) AS WorkerProcessCount</query>
           <earliest>$time.earliest$</earliest>
@@ -180,7 +201,7 @@
       <title>Total Throughput (inBytes + outBytes) in GB</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
 | eval totalGB=round((('inBytes' + 'outBytes') / 1024 / 1024 / 1024), 0)
@@ -200,7 +221,7 @@
       <title>Estimated Worker Processes Required</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
 | eval inGB=round(('inBytes' / 1024 / 1024 / 1024), 0)
@@ -224,7 +245,7 @@
       <title>Estimated Worker Processes Required, Based on DAILY Throughput over the Selected Time Range</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
 | eval date = strftime(_time, "%Y-%m-%d")
@@ -262,7 +283,7 @@
       <title>Percentage, over the Selected Time Range, that a Worker Process Exceeded 90%  cpuPerc Usage</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel="server" message="_raw stats"
 | bin span=1m _time
 | stats max(cpuPerc) AS cpuPerc BY _time cid
 | eval percentage=if(cpuPerc &gt;= 90, 1, 0)
@@ -289,7 +310,7 @@
       <title>Percentage, over the Selected Time Range, that a Worker Process exceeded 90% eluPerc Usage</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel="server" message="_raw stats" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel="server" message="_raw stats" 
 | bin span=1m _time 
 | stats max(eluPerc) AS eluPerc BY _time cid 
 | eval percentage = if(eluPerc &gt;= 90, 1, 0) 

@@ -6,13 +6,14 @@
   </search>
   <search id="overview_base_search">
     <query>| inputlookup cribl_stream_assets
+| search $environment_filter$
 | stats count(eval(status == "active")) AS active count AS total BY instance_type
 | eval value = tostring(active, "commas")." / ".tostring(total, "commas")</query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
   <search id="active_assets_base_search">
-    <query>| tstats count WHERE `set_cribl_internal_log_index` `set_cribl_log_sourcetype` BY host _time span=auto
+    <query>| tstats count WHERE `set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ BY host _time span=auto
 | lookup cribl_stream_assets host
 | eval status = if(count &gt; 0, "active", "missing")
 | timechart count(eval(status == "active")) AS active BY instance_type</query>
@@ -31,6 +32,27 @@
         <earliest>-15m</earliest>
         <latest>now</latest>
       </default>
+    </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -119,11 +141,11 @@
     <panel depends="$show_leader_overview$">
       <chart>
         <title>Leader Node Log Activity</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time leader</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Leader Node(s)</option>
         <option name="charting.chart">area</option>
@@ -134,11 +156,11 @@
     <panel depends="$show_worker_overview$">
       <chart>
         <title>Worker Node Log Activity</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time worker</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Worker Node(s)</option>
         <option name="charting.chart">area</option>
@@ -149,11 +171,11 @@
     <panel depends="$show_single_overview$">
       <chart>
         <title>Single Node Log Activity</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time single</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.text">Active Single Node(s)</option>
@@ -179,11 +201,11 @@
         <title>Cribl Stream Asset Overview</title>
         <search>
           <query>| inputlookup cribl_stream_assets
-| search $status$
-| table host instance_type worker_group latest_activity_time latest_shutdown_time status
+| search $status$ $environment_filter$
+| table host `set_cribl_environment_field_name` instance_type worker_group latest_activity_time latest_shutdown_time status
 | foreach latest_*_time 
     [ eval &lt;&lt;FIELD&gt;&gt; = strftime(&lt;&lt;FIELD&gt;&gt;, "%Y-%m-%dT%H:%M:%S.%3N") ] 
-| rename host AS Host instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status</query>
+| rename host AS Host `set_cribl_environment_field_name` AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -203,6 +225,7 @@
         <title>Cribl Stream Asset Status</title>
         <search>
           <query>| inputlookup cribl_stream_assets
+| search $environment_filter$
 | stats count BY status</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>

@@ -13,6 +13,27 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
     <input type="dropdown" token="worker_group" searchWhenChanged="true">
       <label>Worker Group / Single</label>
       <choice value="all_instances">All Instances</choice>
@@ -21,7 +42,7 @@
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query>| `dashboard_worker_group_filter`</query>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
@@ -47,7 +68,7 @@
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| `dashboard_host_filter($worker_group_event_filter|s$)`</query>
+        <query>| `dashboard_host_filter($environment_filter|s$ $worker_group_event_filter|s$)`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -113,7 +134,7 @@
       <chart>
         <title>CPU Usage</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(cpuPerc) as cpuPerc $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(cpuPerc) as cpuPerc $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -134,7 +155,7 @@
       <chart>
         <title>Memory Usage</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(mem.ext) as memExt last(mem.heap) as memHeap last(mem.rss) as memRss $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(mem.ext) as memExt last(mem.heap) as memHeap last(mem.rss) as memRss $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -153,7 +174,7 @@
       <chart>
         <title>Active vs Blocked Event Processors</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(activeEP) as activeEP last(blockedEP) as blockedEP $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(activeEP) as activeEP last(blockedEP) as blockedEP $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -174,7 +195,7 @@
       <chart>
         <title>Event Stats</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(droppedEvents) as DroppedEvents last(outEvents) as outEvents last(inEvents) as inEvents $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(droppedEvents) as DroppedEvents last(outEvents) as outEvents last(inEvents) as inEvents $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -193,7 +214,7 @@
       <chart>
         <title>Persistent Queue Stats</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(pqInBytes) as pqInBytes last(pqOutBytes) as pqOutBytes last(pqTotalBytes) as pqTotalBytes $splitby$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" | timechart $span$ last(pqInBytes) as pqInBytes last(pqOutBytes) as pqOutBytes last(pqTotalBytes) as pqTotalBytes $splitby$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>

@@ -12,6 +12,27 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
     <input type="dropdown" token="worker_group" searchWhenChanged="true">
       <label>Worker Group / Single</label>
       <choice value="all_instances">All Instances</choice>
@@ -20,7 +41,7 @@
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query>| `dashboard_worker_group_filter`</query>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
@@ -49,12 +70,12 @@
       <default>all_instances</default>
       <initialValue>all_instances</initialValue>
     </input>
-    <input type="dropdown" token="host">
+    <input type="dropdown" token="host" searchWhenChanged="true">
       <label>Host</label>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| `dashboard_host_filter($worker_group_event_filter|s$)`</query>
+        <query>| `dashboard_host_filter($environment_filter|s$ $worker_group_event_filter|s$)`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -94,7 +115,7 @@
       <title>Count of Destinations with PQ Engaged</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ pq_engaged &gt; 0
 | stats count</query>
           <earliest>$time.earliest$</earliest>
@@ -124,7 +145,7 @@
       <title>Latest PQ Size</title>
       <single>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) as total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | stats sum(total_pq_size) AS total_pq_size</query>
           <earliest>$time.earliest$</earliest>
@@ -155,7 +176,7 @@
       <title>Destinations with PQ Engaged</title>
       <table>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ pq_engaged &gt; 0 
 | dedup output
 | fields - pq_engaged
@@ -179,8 +200,9 @@
     <panel>
       <title>PQ Size by Destination</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $host$ $worker_group_metric_pre_filter$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum(pq_size) useother=false BY output WHERE max in top100
 | fields - _span*</query>
@@ -188,7 +210,6 @@
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
         <option name="charting.axisTitleX.text">Time</option>
@@ -238,7 +259,7 @@
       </input>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` $host$ $worker_group_event_filter$ channel="IPersistentQueue"</query>
+          <query>`set_cribl_internal_log_index` $environment_filter$ $host$ $worker_group_event_filter$ channel="IPersistentQueue"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>

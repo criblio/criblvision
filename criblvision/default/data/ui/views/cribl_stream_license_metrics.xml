@@ -13,6 +13,27 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
     <input type="dropdown" token="unit" searchWhenChanged="true">
       <label>Unit</label>
       <choice value="bytes">Bytes</choice>
@@ -53,7 +74,7 @@
       <title>Cribl Stream $unit$ In</title>
       <single>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=1h
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=1h
 | stats sum(`set_cribl_metrics_prefix(route.in_bytes)`) AS bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
@@ -78,7 +99,7 @@
       <title>Cribl Stream $unit$ Out</title>
       <single>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=1h
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=1h
 | stats sum(`set_cribl_metrics_prefix(route.out_bytes)`) AS bytes
 | eval KB=round(bytes/1024, 4)
 | eval MB=round(bytes/1024/1024, 4)
@@ -102,7 +123,7 @@
       <title>Cribl Stream $unit$ Volume Reduction</title>
       <single>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index`
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index` $environment_filter$
 | eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
 | eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
 | eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
@@ -131,7 +152,7 @@
       <title>Cribl Stream $unit$ Volume Reduction %</title>
       <single>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index`
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index` $environment_filter$
 | eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
 | eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
 | eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
@@ -159,9 +180,8 @@
     <panel>
       <title>Cribl Stream $unit$ In</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=15m
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=15m
 | timechart sum(`set_cribl_metrics_prefix(route.in_bytes)`) AS bytes span=15m
 | table _time bytes
 | eval KB=round(bytes/1024, 4)
@@ -171,18 +191,19 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">area</option>
         <option name="charting.drilldown">all</option>
         <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
     <panel>
       <title>Cribl Stream $unit$ Out</title>
       <chart>
-        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` span=15m
+          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=15m
 | timechart sum(`set_cribl_metrics_prefix(route.out_bytes)`) AS bytes span=15m
 | table _time bytes
 | eval KB=round(bytes/1024, 4)
@@ -193,6 +214,7 @@
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">area</option>
         <option name="charting.chart.showDataLabels">minmax</option>

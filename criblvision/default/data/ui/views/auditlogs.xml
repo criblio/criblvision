@@ -8,12 +8,33 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
     <input type="dropdown" token="host">
       <label>Leader Host</label>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| `dashboard_host_filter("instance_type=leader")`</query>
+        <query>| `dashboard_host_filter("instance_type=leader $environment_filter|s$")`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -54,7 +75,7 @@
     <panel>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") type!="expression" action!="commit" action!="deploy"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") type!="expression" action!="commit" action!="deploy"
 | stats values("caseNumber") AS caseNumber values("email") AS email values("filename") AS filename values("group") AS group values("guids") AS guids values("id") AS id values("path") AS path values("rows") AS rows values("size") AS size values("type") AS type by _time action user delim=", "
 | eval id=if(type="system-info", path, id)
 | eval id=if((action="send" AND type="system-info"), caseNumber, id)

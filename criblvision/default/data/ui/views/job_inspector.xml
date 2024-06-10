@@ -8,11 +8,33 @@
         <latest>now</latest>
       </default>
     </input>
-    <input type="dropdown" token="host" searchWhenChanged="true">&gt;<label>Leader Host</label>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="host" searchWhenChanged="true">
+      <label>Leader Host</label>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| `dashboard_host_filter("instance_type=leader")`</query>
+        <query>| `dashboard_host_filter($environment_filter|s$ instance_type=leader)`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -29,7 +51,7 @@
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query>| `dashboard_worker_group_filter`</query>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
@@ -39,7 +61,7 @@
       <fieldForLabel>JobName</fieldForLabel>
       <fieldForValue>JobName</fieldForValue>
       <search>
-        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") $host$ 
+        <query>| tstats values(source) AS source WHERE `set_cribl_internal_log_index` source IN ("*state/jobs/*") $environment_filter$ $host$ 
 | mvexpand source 
 | rex field=source "state\/jobs\/(?&lt;WorkerGroup&gt;.*?)\/(?&lt;JobId&gt;.*?)\/"
 | rex field=JobId "^.*\d+\.\d+\.(scheduled|adhoc|system)\.(?&lt;JobName&gt;.*)"

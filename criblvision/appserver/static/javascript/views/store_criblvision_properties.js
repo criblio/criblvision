@@ -3,6 +3,7 @@
 import * as Splunk from './splunk_helpers.js'
 import * as Config from './setup_configuration.js';
 
+const CRIBL_ENVIRONMENT_FIELD_NAME = 'set_cribl_environment_field_name';
 const CRIBL_INTERNAL_LOG_INDEX_MACRO = 'set_cribl_internal_log_index';
 const CRIBL_LOG_SOURCETYPE_MACRO = 'set_cribl_log_sourcetype';
 const CRIBL_METRICS_INDEX_MACRO = 'set_cribl_metrics_index';
@@ -15,25 +16,39 @@ function extract_macro_properties(setup_options){
     set_cribl_log_sourcetype,
     set_cribl_metrics_index,
     set_cribl_metrics_prefix,
+    set_cribl_environment_field_name
   } = setup_options;
 
   return {
+    [CRIBL_ENVIRONMENT_FIELD_NAME]: {
+      defaultValue: 'env',
+      value: set_cribl_environment_field_name.trim(),
+      definition: value => value,
+      isRequired: false,
+    },
     [CRIBL_INTERNAL_LOG_INDEX_MACRO]: {
+      defaultValue: 'cribl_logs',
       value: set_cribl_internal_log_index.trim(),
-      definition: `index=${set_cribl_internal_log_index.trim()}`
+      definition: index => `index=${index}`,
+      isRequired: true
     },
     [CRIBL_LOG_SOURCETYPE_MACRO]: {
       value: set_cribl_log_sourcetype.trim(),
-      definition: `sourcetype IN (${set_cribl_log_sourcetype.trim()})`
+      definition: sourcetypes => `sourcetype IN (${sourcetypes})`,
+      isRequired: true
     },
     [CRIBL_METRICS_INDEX_MACRO]: {
+      defaultValue: 'cribl_metrics',
       value: set_cribl_metrics_index.trim(),
-      definition: `index=${set_cribl_metrics_index.trim()}`
+      definition: index => `index=${index}`,
+      isRequired: true
     },
     [CRIBL_METRICS_PREFIX]: {
+      defaultValue: 'cribl.logstream.',
       value: set_cribl_metrics_prefix.trim(),
-      definition: `${set_cribl_metrics_prefix.trim()}$metric_name$`,
-      args: ['metric_name']
+      definition: prefix => `${prefix}$metric_name$`,
+      args: ['metric_name'],
+      isRequired: true
     }
   }
 }
@@ -53,8 +68,13 @@ export async function perform(splunk_js_sdk, setup_options){
 
       // check that values have been provided for each macro
       Object.keys(macros).forEach(key => {
-        if(macros[key].value === undefined || macros[key].value.length === 0){
-          throw new Error(`Please enter a value for the "${key}" macro.`)
+        if((macros[key].value === undefined || macros[key].value.length === 0)){
+          if(macros[key].isRequired){
+            throw new Error(`Please enter a value for the "${key}" macro.`);
+          }
+          else{
+            macros[key].value = macros[key].defaultValue;
+          }
         }
       });
 
@@ -62,7 +82,7 @@ export async function perform(splunk_js_sdk, setup_options){
       for(let key in macros){
         let stanza = key;
         let properties = {
-          definition: macros[key].definition,
+          definition: macros[key].definition(macros[key].value),
           iseval: 0
         };
 
