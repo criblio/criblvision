@@ -1,5 +1,9 @@
 <form theme="dark" version="1.1">
-  <label>Log Analytics</label>
+  <label>Health Check</label>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -8,34 +12,59 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
     <input type="dropdown" token="worker_group" searchWhenChanged="true">
-      <label>Instance Type</label>
+      <label>Worker Group / Single</label>
       <choice value="all_instances">All Instances</choice>
-      <choice value="all_leaders">All Leaders</choice>
       <choice value="all_worker_groups">All Worker Groups</choice>
       <choice value="all_single">All Single Instances</choice>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>worker_group</fieldForValue>
       <search>
-        <query>| `dashboard_worker_group_filter`</query>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
       <change>
         <condition label="All Instances">
-          <set token="worker_group_event_filter">instance_type=*</set>
-        </condition>
-        <condition label="All Leaders">
-          <set token="worker_group_event_filter">instance_type=leader</set>
+          <set token="worker_group_event_filter">instance_type IN (worker, single)</set>
+          <set token="worker_group_metric_pre_filter"></set>
+          <set token="worker_group_metric_filter">group=*</set>
         </condition>
         <condition label="All Worker Groups">
           <set token="worker_group_event_filter">instance_type=worker</set>
+          <set token="worker_group_metric_pre_filter">group=*</set>
+          <set token="worker_group_metric_filter">group=*</set>
         </condition>
         <condition label="All Single Instances">
           <set token="worker_group_event_filter">instance_type=single</set>
+          <set token="worker_group_metric_pre_filter"></set>
+          <set token="worker_group_metric_filter">group=`set_unknown_worker_group_value`</set>
         </condition>
         <condition>
           <set token="worker_group_event_filter">instance_type=worker worker_group="$worker_group$"</set>
+          <set token="worker_group_metric_pre_filter">group="$worker_group$"</set>
+          <set token="worker_group_metric_filter">group="$worker_group$"</set>
         </condition>
       </change>
       <default>all_instances</default>
@@ -46,7 +75,7 @@
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| `dashboard_host_filter($worker_group_event_filter|s$)`</query>
+        <query>| `dashboard_host_filter($environment_filter|s$ $worker_group_event_filter|s$)`</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -56,20 +85,6 @@
       <prefix>host="</prefix>
       <suffix>"</suffix>
     </input>
-    <input type="dropdown" token="debug">
-      <label>Show Debug?</label>
-      <choice value="yes">Yes!</choice>
-      <choice value="no">No!</choice>
-      <default>no</default>
-      <change>
-        <condition value="no">
-          <unset token="show_debug"></unset>
-        </condition>
-        <condition value="yes">
-          <set token="show_debug">true</set>
-        </condition>
-      </change>
-    </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
       <choice value="show">Show</choice>
@@ -77,190 +92,783 @@
       <default>hide</default>
       <initialValue>hide</initialValue>
       <change>
-        <condition label="Show">
-          <set token="show_details">true</set>
-        </condition>
-        <condition>
-          <unset token="show_details"></unset>
-        </condition>
+        <eval token="show_details">if(label == "Show", "true", null())</eval>
       </change>
     </input>
   </fieldset>
+  <row depends="$HIDE_CSS$">
+    <panel>
+      <html>
+        <style>
+          #cpu_perc_timeline, #mem_usage_timeline, #total_pq_size_timeline, #worker_process_reset_timeline, #backpressured_destinations_timeline, #blocked_destinations_timeline, #pq_engaged_timeline {
+            width: 65% !important;
+          }
+          #cpu_perc_breakdown, #mem_usage_breakdown, #total_pq_size_breakdown, #worker_process_reset_breakdown, #backpressured_destinations_breakdown, #blocked_destinations_breakdown, #pq_engaged_breakdown {
+            width: 35% !important;
+          }
+        </style>
+      </html>
+    </panel>
+  </row>
   <row>
     <panel depends="$show_details$">
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>This dashboard is interactive and intended for general troubleshooting. It displays a series of panels with <code>log_level</code> counts split by <code>channel</code> or <code>message</code>. You can refine the panel results further by limiting the log type, which defaults to <code>All</code>. Clicking on any of the <code>channel</code> or <code>message</code> values in the panels will populate a results table below with the raw messages in syntax highlighted mode.</p>
+          <p>This view is designed to provide an "at a glance" overview of the health status of the selected Worker Group(s), Single instances, or individual Nodes (via "Worker Group / Single" and "Host" dropdowns). It displays key indicators for Sources and Destinations along with CPU and memory usage for the selected host. Click on any of the high-level panels to drill down further.</p>
+          <p>
+            <b>Note:</b> This dashboard requires both logs and metrics for every panel to populate.</p>
         </div>
       </html>
     </panel>
   </row>
   <row>
     <panel>
-      <title>ERRORS</title>
-      <input type="dropdown" token="messagesplit" searchWhenChanged="true">
-        <label>Split By</label>
-        <choice value="channel">Channel</choice>
-        <choice value="message">Message</choice>
-        <default>channel</default>
-        <initialValue>channel</initialValue>
-      </input>
-      <input type="dropdown" token="logtype" searchWhenChanged="true">
-        <label>Log Type</label>
-        <choice value="api">Api</choice>
-        <choice value="w*">Worker</choice>
-        <choice value="*">All</choice>
-        <choice value="cfg*">Config events</choice>
-        <default>*</default>
-        <initialValue>*</initialValue>
-      </input>
-      <table>
+      <title>CPU Perc (Avg)</title>
+      <single>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=ERROR cid=$logtype$ | chart count sparkline by $messagesplit$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <done>
+            <set token="max_cpuPerc">$result.max_cpuPerc$</set>
+          </done>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| stats avg(cpuPerc) AS cpuPerc</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <option name="drilldown">cell</option>
-        <option name="percentagesRow">false</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0xdc4e41"]</option>
+        <option name="rangeValues">[90]</option>
         <option name="refresh.display">progressbar</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unit">%</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
         <drilldown>
-          <set token="level">ERROR</set>
-          <set token="name">$messagesplit$</set>
-          <set token="value">$click.value$</set>
-          <set token="cid">$logtype$</set>
+          <set token="show_cpu_perc">true</set>
+          <unset token="show_mem_usage"></unset>
         </drilldown>
-      </table>
+      </single>
     </panel>
     <panel>
-      <title>WARNS</title>
-      <input type="dropdown" token="messagesplit1" searchWhenChanged="true">
-        <label>Split By</label>
-        <choice value="channel">Channel</choice>
-        <choice value="message">Message</choice>
-        <default>channel</default>
-        <initialValue>channel</initialValue>
-      </input>
-      <input type="dropdown" token="logtype1" searchWhenChanged="true">
-        <label>Log Type</label>
-        <choice value="api">Api</choice>
-        <choice value="w*">Worker</choice>
-        <choice value="*">All</choice>
-        <choice value="cfg*">Config events</choice>
-        <default>*</default>
-        <initialValue>*</initialValue>
-      </input>
-      <table>
+      <title>Memory Usage (Avg)</title>
+      <single>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=WARN cid=$logtype1$ | chart count sparkline by $messagesplit1$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <done>
+            <eval token="max_memRss">tostring($result.max_memRss$, "commas")</eval>
+          </done>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| stats avg(mem.rss) AS memRss</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <option name="drilldown">cell</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
         <option name="refresh.display">progressbar</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unit">MB</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
         <drilldown>
-          <set token="level">WARN</set>
-          <set token="name">$messagesplit$</set>
-          <set token="value">$click.value$</set>
-          <set token="cid">$logtype1$</set>
+          <set token="show_mem_usage">true</set>
+          <unset token="show_cpu_perc"></unset>
         </drilldown>
-      </table>
+      </single>
     </panel>
-    <panel>
-      <title>INFO</title>
-      <input type="dropdown" token="messagesplit2" searchWhenChanged="true">
-        <label>Split By</label>
-        <choice value="channel">Channel</choice>
-        <choice value="message">Message</choice>
-        <default>channel</default>
-        <initialValue>channel</initialValue>
-      </input>
-      <input type="dropdown" token="logtype2" searchWhenChanged="true">
-        <label>Log Type</label>
-        <choice value="api">Api</choice>
-        <choice value="w*">Worker</choice>
-        <choice value="*">All</choice>
-        <choice value="cfg*">Config events</choice>
-        <default>*</default>
-        <initialValue>*</initialValue>
-      </input>
+  </row>
+  <row depends="$show_cpu_perc$">
+    <panel id="cpu_perc_timeline">
+      <title>CPU Perc (Avg) Breakdown by Host over Time</title>
+      <chart>
+        <search depends="$show_cpu_perc$">
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| timechart avg(cpuPerc) BY host</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Avg CPU (%)</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="cpu_perc_breakdown">
+      <title>CPU Perc (Avg) Breakdown by Host</title>
       <table>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=INFO cid=$logtype2$ | chart count sparkline by $messagesplit2$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+        <search depends="$show_cpu_perc$">
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| stats avg(cpuPerc) AS cpuPerc BY host worker_group
+| rename host AS Host worker_group AS Group cpuPerc AS "Avg CPU %"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
+        <format type="number" field="Avg CPU %">
+          <option name="unit">%</option>
+        </format>
+        <format type="color" field="Avg CPU %">
+          <colorPalette type="list">[#118832,#D94E17,#D41F1F]</colorPalette>
+          <scale type="threshold">90,100</scale>
         </format>
         <drilldown>
-          <set token="level">INFO</set>
-          <set token="name">$messagesplit2$</set>
-          <set token="value">$click.value$</set>
-          <set token="cid">$logtype2$</set>
-        </drilldown>
-      </table>
-    </panel>
-    <panel depends="$show_debug$">
-      <title>DEBUG</title>
-      <input type="dropdown" token="messagesplit3" searchWhenChanged="true">
-        <label>Split By</label>
-        <choice value="channel">Channel</choice>
-        <choice value="message">Message</choice>
-        <default>channel</default>
-        <initialValue>channel</initialValue>
-      </input>
-      <input type="dropdown" token="logtype3" searchWhenChanged="true">
-        <label>Log Type</label>
-        <choice value="api">Api</choice>
-        <choice value="w*">Worker</choice>
-        <choice value="*">All</choice>
-        <choice value="cfg*">Config events</choice>
-        <default>*</default>
-        <initialValue>*</initialValue>
-      </input>
-      <table>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ level=DEBUG cid=$logtype3$ | chart count sparkline by $messagesplit3$ | sort -count | rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-        </search>
-        <option name="drilldown">cell</option>
-        <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
-        <drilldown>
-          <set token="level">DEBUG</set>
-          <set token="name">$messagesplit3$</set>
-          <set token="value">$click.value$</set>
-          <set token="cid">$logtype3$</set>
+          <link target="_blank">/app/criblvision/stats?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
         </drilldown>
       </table>
     </panel>
   </row>
-  <row depends="$name$">
-    <panel>
-      <event>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ $worker_group_event_filter$ $name$=$value|s$ cid=$cid$ level=$level$</query>
+  <row depends="$show_mem_usage$">
+    <panel id="mem_usage_timeline">
+      <title>Memory Usage (Avg) Breakdown by Host over Time</title>
+      <chart>
+        <search depends="$show_mem_usage$">
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| timechart avg(mem.rss) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <option name="list.drilldown">full</option>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Avg Memory Usage (MB)</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="mem_usage_breakdown">
+      <title>Memory Usage (Avg) Breakdown by Host</title>
+      <table>
+        <search depends="$show_mem_usage$">
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| stats avg(mem.rss) AS memRss BY host worker_group
+| rename host AS Host worker_group AS Group memRss AS "Memory Usage"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="number" field="Memory Usage">
+          <option name="unit">MB</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/stats?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Unhealthy Sources</title>
+      <single>
+        <search>
+          <done>
+            <set token="unhealthy_sources">$result.unhealthy_sources$</set>
+          </done>
+          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY input group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ health &gt; 0
+| stats count AS unhealthy_sources_count values(input) AS unhealthy_sources
+| eval unhealthy_sources = if(unhealthy_sources_count == 0, "input!=*", "input IN (\"".mvjoin(unhealthy_sources, "\", \"")."\")")</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20source%3D*.log%20$name$%3D$value|s$%20level%3D$level$&amp;earliest=$time.earliest$&amp;latest=$time.latest$</link>
+          <set token="show_unhealthy_sources">true</set>
+          <unset token="show_unhealthy_destinations"></unset>
+          <unset token="show_cluster_communication_errors"></unset>
+          <unset token="show_total_pq_size"></unset>
         </drilldown>
-      </event>
+      </single>
+    </panel>
+    <panel>
+      <title>Unhealthy Destinations</title>
+      <single>
+        <search>
+          <done>
+            <set token="unhealthy_destinations">$result.unhealthy_destinations$</set>
+          </done>
+          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ health &gt; 0
+| stats count AS unhealthy_destinations_count values(output) AS unhealthy_destinations
+| eval unhealthy_destinations = if(unhealthy_destinations_count == 0, "output!=*", "output IN (\"".mvjoin(unhealthy_destinations, "\", \"")."\")")</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="show_unhealthy_destinations">true</set>
+          <unset token="show_unhealthy_sources"></unset>
+          <unset token="show_cluster_communication_errors"></unset>
+          <unset token="show_total_pq_size"></unset>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Cluster Communication Errors</title>
+      <single>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=clustercomm level=warn OR level=error NOT message=metric*
+| stats count AS cluster_communication_errors</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="show_cluster_communication_errors">true</set>
+          <unset token="show_unhealthy_sources"></unset>
+          <unset token="show_unhealthy_destinations"></unset>
+          <unset token="show_total_pq_size"></unset>
+        </drilldown>
+      </single>
+    </panel>
+    <panel depends="$pq_configured$">
+      <title>Historic Total PQ Size (Last 15 Minutes)</title>
+      <single>
+        <search>
+          <done>
+            <eval token="pq_configured">if($job.resultCount$ == 0, null(), "true")</eval>
+            <eval token="pq_not_configured">if($job.resultCount$ == 0, "true", null())</eval>
+          </done>
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| stats sum(total_pq_size) AS total_pq_size</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unit">B</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <set token="show_total_pq_size">true</set>
+          <unset token="show_unhealthy_sources"></unset>
+          <unset token="show_unhealthy_destinations"></unset>
+          <unset token="show_cluster_communication_errors"></unset>
+        </drilldown>
+      </single>
+    </panel>
+    <panel depends="$pq_not_configured$">
+      <title>Historic Total PQ Size (Last 15 Minutes)</title>
+      <single>
+        <search>
+          <query>| makeresults | eval message = "Not Configured"</query>
+          <earliest>-1s</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+  <row depends="$show_unhealthy_sources$">
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>
+            <b>Note:</b> Hover over individual Sources in the legend to highlight them on the graph. The status values represent the health of a Source as documented in the <a href="https://docs.cribl.io/stream/internal-metrics/#health">System Health Metrics</a> section of the Cribl Docs:</p>
+            <p>0 = Healthy</p>
+            <p>1 = Warning</p>
+            <p>2 = Trouble</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row depends="$show_unhealthy_sources$">
+    <panel>
+      <title>Unhealthy Sources over Time</title>
+      <chart>
+        <search depends="$show_unhealthy_sources$">
+          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| timechart max(health) BY input</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Status</option>
+        <option name="charting.axisY.maximumNumber">2</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.overlayFields">warning,troubled</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Unhealthy Sources Breakdown</title>
+      <table>
+        <search depends="$show_unhealthy_sources$">
+          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| stats sparkline(max(health)) AS sparkline BY input host group
+| rex field=input "(?&lt;technology&gt;[^:]+):(?&lt;input&gt;.*)" 
+| table technology input host group sparkline
+| rename technology AS Technology input AS Source host AS Host group AS Group sparkline AS "Health Sparkline"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;form.selected=$row.Source$&amp;form.full_selected=$row.Technology$:$row.Source$&amp;form.type=in&amp;type_printable=In</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_unhealthy_destinations$">
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>
+            <b>Note:</b> Hover over individual Destinations in the legend to highlight them on the graph. The status values represent the health of a Destination as documented in the <a href="https://docs.cribl.io/stream/internal-metrics/#health">System Health Metrics</a> section of the Cribl Docs:</p>
+            <p>0 = Healthy</p>
+            <p>1 = Warning</p>
+            <p>2 = Trouble</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row depends="$show_unhealthy_destinations$">
+    <panel>
+      <title>Unhealthy Destinations over Time</title>
+      <chart>
+        <search depends="$show_unhealthy_destinations$">
+          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| timechart max(health) BY output</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Status</option>
+        <option name="charting.axisY.maximumNumber">2</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.overlayFields">warning,troubled</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Unhealthy Destinations Breakdown</title>
+      <table>
+        <search depends="$show_unhealthy_destinations$">
+          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY output host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| stats sparkline(max(health)) AS sparkline BY output host group
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
+| table technology output host group sparkline
+| rename technology AS Technology output AS Destination host AS Host group AS Group sparkline AS "Health Sparkline"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_cluster_communication_errors$">
+    <panel>
+      <title>Cluster Communication Errors Breakdown</title>
+      <table>
+        <search depends="$show_cluster_communication_errors$">
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=clustercomm level=warn OR level=error NOT message=metric*
+| stats count BY host worker_group
+| rename host AS Host worker_group AS Group count AS "Cluster Communication Errors"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20host%3D$row.Host$%20worker_group%3D$row.Group$%20channel%3Dclustercomm%20level%3Dwarn%20OR%20level%3Derror%20NOT%20message%3Dmetric*&amp;earliest=$time.earliest$&amp;latest=$time.latest$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_total_pq_size$">
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>
+            <b>Note:</b> The PQ panels are locked to showing data from the last 15 minutes to give an up-to-date view of the PQ size.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row depends="$show_total_pq_size$">
+    <panel id="total_pq_size_timeline">
+      <title>PQ Size by Host (Last 15 Minutes)</title>
+      <chart>
+        <search depends="$show_total_pq_size$">
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ span=auto BY host prestats=true
+| timechart sum(`set_cribl_metrics_prefix("pq.queue_size")`) BY host</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">PQ Size (B)</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="total_pq_size_breakdown">
+      <title>Historic Total PQ Size by Host (Last 15 Minutes)</title>
+      <table>
+        <search depends="$show_total_pq_size$">
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| rename host AS Host group AS Group total_pq_size AS "Total PQ Size"</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="number" field="Total PQ Size">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/persistent_queue_analytics?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Worker Process Restarts</title>
+      <single>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=cribl* message="restarting worker process"
+| stats count AS worker_process_restarts</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <set token="show_worker_process_restarts">true</set>
+          <unset token="show_backpressured_destinations"></unset>
+          <unset token="show_blocked_destinations"></unset>
+          <unset token="show_pq_engaged"></unset>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Destinations with Backpressure</title>
+      <single>
+        <search>
+          <done>
+            <eval token="max_back_pressured">tostring($result.max_back_pressured$, "commas")</eval>
+          </done>
+          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ back_pressured &gt; 0
+| stats count AS back_pressured_destinations</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="show_backpressured_destinations">true</set>
+          <unset token="show_worker_process_restarts"></unset>
+          <unset token="show_blocked_destinations"></unset>
+          <unset token="show_pq_engaged"></unset>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Blocked Destinations</title>
+      <single>
+        <search>
+          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ blocked &gt; 0
+| stats count AS blocked_destinations</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="show_blocked_destinations">true</set>
+          <unset token="show_worker_process_restarts"></unset>
+          <unset token="show_backpressured_destinations"></unset>
+          <unset token="show_pq_engaged"></unset>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Destinations with PQ Engaged (Last 15 Minutes)</title>
+      <single>
+        <search>
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output
+| search pq_engaged &gt; 0
+| stats count AS pq_engaged</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <set token="show_pq_engaged">true</set>
+          <unset token="show_worker_process_restarts"></unset>
+          <unset token="show_backpressured_destinations"></unset>
+          <unset token="show_blocked_destinations"></unset>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row depends="$show_worker_process_restarts$">
+    <panel id="worker_process_reset_timeline">
+      <title>Worker Process Restarts by Host over Time</title>
+      <chart>
+        <search depends="$show_worker_process_restarts$">
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
+| timechart count BY host</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Worker Process Restarts</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="worker_process_reset_breakdown">
+      <title>Worker Process Restarts by Host</title>
+      <table>
+        <search depends="$show_worker_process_restarts$">
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
+| stats count sparkline BY host
+| rename host AS Host count AS "Worker Restarts" sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_backpressured_destinations$">
+    <panel id="backpressured_destinations_timeline">
+      <title>Destinations with Backpressure over Time</title>
+      <chart>
+        <search depends="$show_backpressured_destinations$">
+          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ back_pressured!=0
+| timechart max(back_pressured) BY output</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Back Pressure</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="backpressured_destinations_breakdown">
+      <title>Destinations with Backpressure Breakdown</title>
+      <table>
+        <search depends="$show_backpressured_destinations$">
+          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ back_pressured &gt; 0
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
+| table technology output host group
+| rename technology AS Technology output AS Destination host AS Host group AS Group</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_blocked_destinations$">
+    <panel id="blocked_destinations_timeline">
+      <title>Blocked Destinations over Time</title>
+      <chart>
+        <search depends="$show_blocked_destinations$">
+          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ blocked!=0
+| timechart max(blocked) BY output</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Back Pressure</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="blocked_destinations_breakdown">
+      <title>Blocked Destinations Breakdown</title>
+      <table>
+        <search depends="$show_blocked_destinations$">
+          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ blocked &gt; 0
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
+| table technology output host group
+| rename technology AS Technology output AS Destination host AS Host group AS Group</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_pq_engaged$">
+    <panel id="pq_engaged_timeline">
+      <title>Destinations with PQ Engaged over Time (Last 15 Minutes)</title>
+      <chart>
+        <search depends="$show_pq_engaged$">
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group span=auto fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| eval pq_engaged = min(pq_engaged, 1)
+| timechart max(pq_engaged) BY output</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">PQs Engaged</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked100</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="pq_engaged_breakdown">
+      <title>Destinations with PQ Engaged Breakdown (Last 15 Minutes)</title>
+      <table>
+        <search depends="$show_pq_engaged$">
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
+| table technology output host group
+| rename technology AS Technology output AS Destination host AS Host group AS Group</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+        </drilldown>
+      </table>
     </panel>
   </row>
 </form>
