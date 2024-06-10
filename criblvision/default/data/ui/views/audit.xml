@@ -8,12 +8,33 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
     <input type="dropdown" token="host" searchWhenChanged="true">
       <label>Host</label>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
       <search>
-        <query>| `dashboard_host_filter`</query>
+        <query>| `dashboard_host_filter($environment_filter|s$)`</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
@@ -29,7 +50,7 @@
       <title>Successful Logins by User</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ channel=auth message="Successful login" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ channel=auth message="Successful login" 
 | timechart count limit=100 by user</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -47,7 +68,7 @@
       <title>Latest Configuration Updates by Worker</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $host$ message="finished config update" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ message="finished config update" 
 | table _time worker version
 | rename worker AS Worker version AS Version</query>
           <earliest>$time.earliest$</earliest>
