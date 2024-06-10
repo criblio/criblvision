@@ -66,13 +66,19 @@ This app ships with four macros which must be edited in accordance with your spl
   <tr>
    <td>set_cribl_metrics_index
    </td>
-   <td>Macro definition for the index you configured for cribl metrics
+   <td>Set this macro definition to the index you configured for cribl metrics.
    </td>
   </tr>
   <tr>
    <td>set_cribl_metrics_prefix(1)
    </td>
    <td>Change the "cribl.logstream" value before .$metric_name$ if you have changed the default namespace used for metrics on your cribl metrics internal source. 
+   </td>
+  </tr>
+  <tr>
+   <td>set_cribl_environment_field_name
+   </td>
+   <td>(Optional) Set this macro definition to the name of the field that specifies the environment a Cribl Stream instance belongs to.
    </td>
   </tr>
 </table>
@@ -91,6 +97,9 @@ definition = index=cribl_metrics
 
 [set_cribl_metrics_prefix(1)]
 definition = cribl.logstream.$metric_name$
+
+[set_cribl_environment_field_name]
+definition = env
 ```
 
 #### **Leader logs**
