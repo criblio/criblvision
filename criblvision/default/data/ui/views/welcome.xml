@@ -157,6 +157,12 @@
                 </td>
                 <td>Change the <code>cribl.logstream</code> value before <code>.$metric_name$</code> if you have changed the default namespace used for your Cribl metrics internal Source.</td>
               </tr>
+              <tr>
+                <td>
+                  <code>set_cribl_environment_field_name</code>
+                </td>
+                <td>(Optional) Set this macro definition to the name of the field that specifies the environment a Cribl Stream instance belongs to.</td>
+              </tr>
             </table>
             <p>For manual configuration of the macro definitions through the CLI, append and update the following to <code>$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf</code> on standalone Search Heads or <code>$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf</code> on Search Head Deployers for a Search Head Cluster:</p>
             <pre>[set_cribl_internal_log_index]
@@ -169,7 +175,10 @@ definition = sourcetype IN (cribl)
 definition = index=cribl_metrics
 
 [set_cribl_metrics_prefix(1)]
-definition = cribl.logstream.$metric_name$</pre>
+definition = cribl.logstream.$metric_name$
+
+[set_cribl_environment_field_name]
+definition = env</pre>
           </div>
           <hr class="break-line" />
           <div>
