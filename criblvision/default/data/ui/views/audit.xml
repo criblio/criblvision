@@ -41,8 +41,11 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
-      <prefix>host="</prefix>
-      <suffix>"</suffix>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
     </input>
   </fieldset>
   <row>
@@ -50,7 +53,7 @@
       <title>Successful Logins by User</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ channel=auth message="Successful login" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ channel=auth message="Successful login" 
 | timechart count limit=100 by user</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -68,7 +71,7 @@
       <title>Latest Configuration Updates by Worker</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ message="finished config update" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ message="finished config update" 
 | table _time worker version
 | rename worker AS Worker version AS Version</query>
           <earliest>$time.earliest$</earliest>
