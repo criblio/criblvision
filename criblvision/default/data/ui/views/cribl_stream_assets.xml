@@ -202,10 +202,10 @@
         <search>
           <query>| inputlookup cribl_stream_assets
 | search $status$ $environment_filter$
-| table host `set_cribl_environment_field_name` instance_type worker_group latest_activity_time latest_shutdown_time status
+| table host environment instance_type worker_group latest_activity_time latest_shutdown_time status
 | foreach latest_*_time 
     [ eval &lt;&lt;FIELD&gt;&gt; = strftime(&lt;&lt;FIELD&gt;&gt;, "%Y-%m-%dT%H:%M:%S.%3N") ] 
-| rename host AS Host `set_cribl_environment_field_name` AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status</query>
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
