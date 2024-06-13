@@ -83,8 +83,11 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
-      <prefix>host="</prefix>
-      <suffix>"</suffix>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
     </input>
     <input type="dropdown" token="mstats_span" searchWhenChanged="true">
       <label>Time Span</label>
@@ -151,7 +154,7 @@
         <fieldForLabel>output</fieldForLabel>
         <fieldForValue>output</fieldForValue>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value` 
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value` 
 | search $worker_group_metric_filter$
 | dedup output</query>
           <earliest>$time.earliest$</earliest>
@@ -165,7 +168,7 @@
       <chart>
         <title>Total Events Out</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum("out_events") $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
@@ -187,7 +190,7 @@
       <chart>
         <title>Total Bytes Out</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum("out_bytes") $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
@@ -218,7 +221,7 @@
         <fieldForLabel>input</fieldForLabel>
         <fieldForValue>input</fieldForValue>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY input group fillnull_value=`set_unknown_worker_group_value` 
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY input group fillnull_value=`set_unknown_worker_group_value` 
 | search $worker_group_metric_filter$
 | dedup input</query>
           <earliest>$time.earliest$</earliest>
@@ -264,7 +267,7 @@
       <chart>
         <title>Total Events In</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $input_token$ $mstats_span$ BY $splitby$ group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $input_token$ $mstats_span$ BY $splitby$ group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum("in_events") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
@@ -286,7 +289,7 @@
       <chart>
         <title>CPU Percentage by Worker Process</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $mstats_span$ BY cribl_wp
+          <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $mstats_span$ BY cribl_wp
 | timechart sum("cpu_perc") $timechart_span$ useother=false BY cribl_wp WHERE max in top$limit$
 | fields - _span*</query>
           <earliest>$time.earliest$</earliest>
@@ -307,7 +310,7 @@
       <chart>
         <title>Total Bytes In</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $input_token$ $mstats_span$ BY $splitby$ group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $input_token$ $mstats_span$ BY $splitby$ group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum("in_bytes") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
