@@ -82,8 +82,11 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
-      <prefix>host="</prefix>
-      <suffix>"</suffix>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -115,7 +118,7 @@
       <title>Count of Destinations with PQ Engaged</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ pq_engaged &gt; 0
 | stats count</query>
           <earliest>$time.earliest$</earliest>
@@ -145,7 +148,7 @@
       <title>Latest Destination PQ Size</title>
       <single>
         <search>
-          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | stats sum(pq_size) AS total_pq_size</query>
           <earliest>$time.earliest$</earliest>
@@ -176,7 +179,7 @@
       <title>Destinations with PQ Engaged</title>
       <table>
         <search>
-          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ pq_size &gt; 0 
 | rename output AS Destination group AS "Worker Group" pq_size AS "PQ Size (B)"</query>
           <earliest>$time.earliest$</earliest>
@@ -204,7 +207,7 @@
       <chart>
         <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
 | search output!=`set_unknown_worker_group_value` $worker_group_metric_filter$
 | timechart sum(pq_size) useother=false BY output</query>
           <earliest>$time.earliest$</earliest>
@@ -260,7 +263,7 @@
       </input>
       <event>
         <search>
-          <query>`set_cribl_internal_log_index` $environment_filter$ $host$ $worker_group_event_filter$ channel="IPersistentQueue"</query>
+          <query>`set_cribl_internal_log_index` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="IPersistentQueue"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
