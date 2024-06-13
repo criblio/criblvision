@@ -8,7 +8,7 @@
     <latest>$time.latest$</latest>
   </search>
   <search id="messages_base_search">
-    <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ channel="$type$put:$selected$" $worker_group_event_filter$ level=* 
+    <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ channel="$type$put:$selected$" $worker_group_event_filter$ level=* 
 | stats count sparkline(count) AS sparkline BY channel message level
 | sort - count
 | rename channel AS Channel message AS Messages count AS Count sparkline AS Sparkline</query>
@@ -93,8 +93,11 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
-      <prefix>host="</prefix>
-      <suffix>"</suffix>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
     </input>
     <input type="link" token="type" searchWhenChanged="true">
       <label>Show Sources or Destinations</label>
@@ -116,7 +119,7 @@
       <fieldForLabel>$type$put</fieldForLabel>
       <fieldForValue>selected</fieldForValue>
       <search>
-        <query>| mstats sum(`set_cribl_metrics_prefix(health.$type$puts)`) WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY $type$put group fillnull_value=`set_unknown_worker_group_value`
+        <query>| mstats sum(`set_cribl_metrics_prefix(health.$type$puts)`) WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY $type$put group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ 
 | rex field=$type$put "[^:]+:(?&lt;selected&gt;.*)" 
 | stats count BY $type$put selected</query>
@@ -157,7 +160,7 @@
       <single>
         <title>Total Bytes $type_printable$</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | stats sum($type$_bytes) AS $type$_bytes</query>
           <earliest>$time.earliest$</earliest>
@@ -173,7 +176,7 @@
       <single>
         <title>Total Events $type_printable$</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) AS $type$_events WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) AS $type$_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | stats sum($type$_events) AS $type$_events</query>
           <earliest>$time.earliest$</earliest>
@@ -189,7 +192,7 @@
       <chart>
         <title>Total Bytes $type_printable$ over Time</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY $type$put group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY $type$put group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum($type$_bytes) BY $type$put</query>
           <earliest>$time.earliest$</earliest>
@@ -210,7 +213,7 @@
       <chart>
         <title>Total Events $type_printable$ over Time</title>
         <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) AS $type$_events WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY $type$put group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) AS $type$_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY $type$put group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart sum($type$_events) BY $type$put</query>
           <earliest>$time.earliest$</earliest>
@@ -246,7 +249,7 @@
       <chart>
         <title>Health of $type_printable$puts over Time</title>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix(health.$type$puts)`) AS $type$put_health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY $type$put group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix(health.$type$puts)`) AS $type$put_health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY $type$put group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart max($type$put_health) BY $type$put</query>
           <earliest>$time.earliest$</earliest>
@@ -329,7 +332,7 @@
       <event>
         <title>Events for Channel "$type$put:$selected$"</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=$type$put:$selected$ $levels$</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=$type$put:$selected$ $levels$</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
