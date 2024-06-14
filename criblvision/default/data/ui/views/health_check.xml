@@ -82,8 +82,11 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
-      <prefix>host="</prefix>
-      <suffix>"</suffix>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -129,7 +132,7 @@
           <done>
             <set token="max_cpuPerc">$result.max_cpuPerc$</set>
           </done>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats" 
 | stats avg(cpuPerc) AS cpuPerc</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -165,7 +168,7 @@
           <done>
             <eval token="max_memRss">tostring($result.max_memRss$, "commas")</eval>
           </done>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats" 
 | stats avg(mem.rss) AS memRss</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -196,11 +199,11 @@
     </panel>
   </row>
   <row depends="$show_cpu_perc$">
-    <panel id="cpu_perc_timeline">
+    <panel>
       <title>CPU Perc (Avg) Breakdown by Host over Time</title>
       <chart>
         <search depends="$show_cpu_perc$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats" 
 | timechart avg(cpuPerc) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -215,18 +218,22 @@
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
-    <panel id="cpu_perc_breakdown">
+    <panel>
       <title>CPU Perc (Avg) Breakdown by Host</title>
       <table>
         <search depends="$show_cpu_perc$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
-| stats avg(cpuPerc) AS cpuPerc BY host worker_group
-| rename host AS Host worker_group AS Group cpuPerc AS "Avg CPU %"</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| stats avg(cpuPerc) AS cpuPerc BY host instance_type worker_group
+| lookup cribl_stream_assets host OUTPUTNEW environment
+| table host environment instance_type worker_group cpuPerc
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" cpuPerc AS "Avg CPU %"
+| `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
+        <fields>Host,Environment,"Instance Type","Worker Group","Avg CPU %"</fields>
         <format type="number" field="Avg CPU %">
           <option name="unit">%</option>
         </format>
@@ -235,17 +242,18 @@
           <scale type="threshold">90,100</scale>
         </format>
         <drilldown>
-          <link target="_blank">/app/criblvision/stats?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/stats?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.host=$row.Host$&amp;form.worker_group=$worker_group_drilldown$</link>
         </drilldown>
       </table>
     </panel>
   </row>
   <row depends="$show_mem_usage$">
-    <panel id="mem_usage_timeline">
+    <panel>
       <title>Memory Usage (Avg) Breakdown by Host over Time</title>
       <chart>
         <search depends="$show_mem_usage$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats" 
 | timechart avg(mem.rss) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -260,23 +268,27 @@
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
-    <panel id="mem_usage_breakdown">
+    <panel>
       <title>Memory Usage (Avg) Breakdown by Host</title>
       <table>
         <search depends="$show_mem_usage$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=server message="_raw stats" 
-| stats avg(mem.rss) AS memRss BY host worker_group
-| rename host AS Host worker_group AS Group memRss AS "Memory Usage"</query>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats" 
+| stats avg(mem.rss) AS memRss BY host instance_type worker_group
+| lookup cribl_stream_assets host OUTPUTNEW environment
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" memRss AS "Memory Usage"
+| `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
+        <fields>Host,Environment,"Instance Type","Worker Group","Memory Usage"</fields>
         <format type="number" field="Memory Usage">
           <option name="unit">MB</option>
         </format>
         <drilldown>
-          <link target="_blank">/app/criblvision/stats?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/stats?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.host=$row.Host$&amp;form.worker_group=$worker_group_drilldown$</link>
         </drilldown>
       </table>
     </panel>
@@ -289,7 +301,7 @@
           <done>
             <set token="unhealthy_sources">$result.unhealthy_sources$</set>
           </done>
-          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY input group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY input group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ health &gt; 0
 | stats count AS unhealthy_sources_count values(input) AS unhealthy_sources
 | eval unhealthy_sources = if(unhealthy_sources_count == 0, "input!=*", "input IN (\"".mvjoin(unhealthy_sources, "\", \"")."\")")</query>
@@ -314,7 +326,7 @@
           <done>
             <set token="unhealthy_destinations">$result.unhealthy_destinations$</set>
           </done>
-          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ health &gt; 0
 | stats count AS unhealthy_destinations_count values(output) AS unhealthy_destinations
 | eval unhealthy_destinations = if(unhealthy_destinations_count == 0, "output!=*", "output IN (\"".mvjoin(unhealthy_destinations, "\", \"")."\")")</query>
@@ -335,7 +347,7 @@
       <title>Cluster Communication Errors</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=clustercomm level=warn OR level=error NOT message=metric*
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=clustercomm level=warn OR level=error NOT message=metric*
 | stats count AS cluster_communication_errors</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -358,7 +370,7 @@
             <eval token="pq_configured">if($job.resultCount$ == 0, null(), "true")</eval>
             <eval token="pq_not_configured">if($job.resultCount$ == 0, "true", null())</eval>
           </done>
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | stats sum(total_pq_size) AS total_pq_size</query>
           <earliest>-15m</earliest>
@@ -421,7 +433,7 @@
       <title>Unhealthy Sources over Time</title>
       <chart>
         <search depends="$show_unhealthy_sources$">
-          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart max(health) BY input</query>
           <earliest>$time.earliest$</earliest>
@@ -444,18 +456,22 @@
       <title>Unhealthy Sources Breakdown</title>
       <table>
         <search depends="$show_unhealthy_sources$">
-          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input host group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input host group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | stats sparkline(max(health)) AS sparkline BY input host group
-| rex field=input "(?&lt;technology&gt;[^:]+):(?&lt;input&gt;.*)" 
-| table technology input host group sparkline
-| rename technology AS Technology input AS Source host AS Host group AS Group sparkline AS "Health Sparkline"</query>
+| rex field=input "(?&lt;technology&gt;[^:]+):(?&lt;input&gt;.*)"
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| table technology input host environment instance_type group sparkline
+| rename technology AS Technology input AS Source host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" sparkline AS "Health Sparkline"
+| `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <fields>Technology,Source,Host,Environment,"Instance Type","Worker Group","Health Sparkline"</fields>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;form.selected=$row.Source$&amp;form.full_selected=$row.Technology$:$row.Source$&amp;form.type=in&amp;type_printable=In</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$&amp;form.selected=$row.Source$&amp;form.full_selected=$row.Technology$:$row.Source$&amp;form.type=in&amp;type_printable=In</link>
         </drilldown>
       </table>
     </panel>
@@ -478,7 +494,7 @@
       <title>Unhealthy Destinations over Time</title>
       <chart>
         <search depends="$show_unhealthy_destinations$">
-          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | timechart max(health) BY output</query>
           <earliest>$time.earliest$</earliest>
@@ -501,18 +517,22 @@
       <title>Unhealthy Destinations Breakdown</title>
       <table>
         <search depends="$show_unhealthy_destinations$">
-          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY output host group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY output host group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | stats sparkline(max(health)) AS sparkline BY output host group
-| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
-| table technology output host group sparkline
-| rename technology AS Technology output AS Destination host AS Host group AS Group sparkline AS "Health Sparkline"</query>
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| table technology output host environment instance_type group sparkline
+| rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" sparkline AS "Health Sparkline"
+| `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <fields>Technology,Destination,Host,Environment,"Instance Type","Worker Group","Health Sparkline"</fields>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$&amp;form.worker_group=$row.Group$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>
@@ -522,16 +542,19 @@
       <title>Cluster Communication Errors Breakdown</title>
       <table>
         <search depends="$show_cluster_communication_errors$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=clustercomm level=warn OR level=error NOT message=metric*
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=clustercomm level=warn OR level=error NOT message=metric*
 | stats count BY host worker_group
-| rename host AS Host worker_group AS Group count AS "Cluster Communication Errors"</query>
+| lookup cribl_stream_assets host OUTPUTNEW environment
+| rename host AS Host environment AS Environment worker_group AS "Worker Group" count AS "Cluster Communication Errors"
+| `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20host%3D$row.Host$%20worker_group%3D$row.Group$%20channel%3Dclustercomm%20level%3Dwarn%20OR%20level%3Derror%20NOT%20message%3Dmetric*&amp;earliest=$time.earliest$&amp;latest=$time.latest$</link>
+          <set token="worker_group_drilldown">'row.Worker Group'</set>
+          <link target="_blank">search?q=%60set_cribl_internal_log_index%60%20host%3D$row.Host$%20worker_group%3D$worker_group_drilldown$%20channel%3Dclustercomm%20level%3Dwarn%20OR%20level%3Derror%20NOT%20message%3Dmetric*&amp;earliest=$time.earliest$&amp;latest=$time.latest$</link>
         </drilldown>
       </table>
     </panel>
@@ -551,7 +574,7 @@
       <title>PQ Size by Host (Last 15 Minutes)</title>
       <chart>
         <search depends="$show_total_pq_size$">
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ span=auto BY host prestats=true
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ span=auto BY host prestats=true
 | timechart sum(`set_cribl_metrics_prefix("pq.queue_size")`) BY host</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
@@ -571,20 +594,24 @@
       <title>Historic Total PQ Size by Host (Last 15 Minutes)</title>
       <table>
         <search depends="$show_total_pq_size$">
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
-| search $worker_group_metric_filter$
-| rename host AS Host group AS Group total_pq_size AS "Total PQ Size"</query>
+          <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ total_pq_size > 0
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" total_pq_size AS "Total PQ Size"
+| `get_environment_hosts(Environment)`</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
+        <fields>Host,Environment,"Instance Type","Worker Group","Total PQ Size"</fields>
         <format type="number" field="Total PQ Size">
           <option name="precision">0</option>
           <option name="unit">B</option>
         </format>
         <drilldown>
-          <link target="_blank">/app/criblvision/persistent_queue_analytics?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.host=$row.Host$</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/persistent_queue_analytics?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
         </drilldown>
       </table>
     </panel>
@@ -594,7 +621,7 @@
       <title>Worker Process Restarts</title>
       <single>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=cribl* message="restarting worker process"
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=cribl* message="restarting worker process"
 | stats count AS worker_process_restarts</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -631,7 +658,7 @@
           <done>
             <eval token="max_back_pressured">tostring($result.max_back_pressured$, "commas")</eval>
           </done>
-          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ back_pressured &gt; 0
 | stats count AS back_pressured_destinations</query>
           <earliest>$time.earliest$</earliest>
@@ -652,7 +679,7 @@
       <title>Blocked Destinations</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ blocked &gt; 0
 | stats count AS blocked_destinations</query>
           <earliest>$time.earliest$</earliest>
@@ -672,7 +699,7 @@
       <title>Destinations with PQ Engaged (Last 15 Minutes)</title>
       <single>
         <search>
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output
 | search pq_engaged &gt; 0
 | stats count AS pq_engaged</query>
           <earliest>-15m</earliest>
@@ -710,7 +737,7 @@
       <title>Worker Process Restarts by Host over Time</title>
       <chart>
         <search depends="$show_worker_process_restarts$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
 | timechart count BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -730,7 +757,7 @@
       <title>Worker Process Restarts by Host</title>
       <table>
         <search depends="$show_worker_process_restarts$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
 | stats count sparkline BY host
 | rename host AS Host count AS "Worker Restarts" sparkline AS Sparkline</query>
           <earliest>$time.earliest$</earliest>
@@ -746,7 +773,7 @@
       <title>Destinations with Backpressure over Time</title>
       <chart>
         <search depends="$show_backpressured_destinations$">
-          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ back_pressured!=0
 | timechart max(back_pressured) BY output</query>
           <earliest>$time.earliest$</earliest>
@@ -768,18 +795,22 @@
       <title>Destinations with Backpressure Breakdown</title>
       <table>
         <search depends="$show_backpressured_destinations$">
-          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ back_pressured &gt; 0
-| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
-| table technology output host group
-| rename technology AS Technology output AS Destination host AS Host group AS Group</query>
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| table technology output host environment instance_type group
+| rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group"
+| `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <fields>Technology,Destination,Host,Environment,"Instance Type","Worker Group"</fields>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>
@@ -789,7 +820,7 @@
       <title>Blocked Destinations over Time</title>
       <chart>
         <search depends="$show_blocked_destinations$">
-          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output group span=auto fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ blocked!=0
 | timechart max(blocked) BY output</query>
           <earliest>$time.earliest$</earliest>
@@ -812,18 +843,22 @@
       <title>Blocked Destinations Breakdown</title>
       <table>
         <search depends="$show_blocked_destinations$">
-          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ blocked &gt; 0
-| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
-| table technology output host group
-| rename technology AS Technology output AS Destination host AS Host group AS Group</query>
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| table technology output host environment instance_type group
+| rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group"
+| `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <fields>Technology,Destination,Host,Environment,"Instance Type","Worker Group"</fields>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>
@@ -833,7 +868,7 @@
       <title>Destinations with PQ Engaged over Time (Last 15 Minutes)</title>
       <chart>
         <search depends="$show_pq_engaged$">
-          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group span=auto fillnull_value=`set_unknown_worker_group_value`
+          <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output host group span=auto fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$
 | eval pq_engaged = min(pq_engaged, 1)
 | timechart max(pq_engaged) BY output</query>
@@ -855,18 +890,22 @@
       <title>Destinations with PQ Engaged Breakdown (Last 15 Minutes)</title>
       <table>
         <search depends="$show_pq_engaged$">
-          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
-| search $worker_group_metric_filter$
-| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)" 
-| table technology output host group
-| rename technology AS Technology output AS Destination host AS Host group AS Group</query>
+          <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY output host group fillnull_value=`set_unknown_worker_group_value`
+| search $worker_group_metric_filter$ pq_engaged > 0
+| rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| table technology output host environment instance_type group
+| rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group"
+| `get_environment_hosts(Environment)`</query>
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
+        <fields>Technology,Destination,Host,Environment,"Instance Type","Worker Group"</fields>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.worker_group=$row.Group$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
+          <eval token="worker_group_drilldown">if('row.Instance Type' == "single", "all_single", 'row.Worker Group')</eval>
+          <link target="_blank">/app/criblvision/sources_and_destinations_overview?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$&amp;form.selected=$row.Destination$&amp;form.full_selected=$row.Technology$:$row.Destination$&amp;form.type=out&amp;type_printable=Out</link>
         </drilldown>
       </table>
     </panel>

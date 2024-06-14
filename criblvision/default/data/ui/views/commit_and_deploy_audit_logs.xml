@@ -41,8 +41,11 @@
       <choice value="*">All Hosts</choice>
       <default>*</default>
       <initialValue>*</initialValue>
-      <prefix>host="</prefix>
-      <suffix>"</suffix>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
     </input>
     <input type="radio" token="FilesCreated" searchWhenChanged="true">
       <label>Show Files Created</label>
@@ -91,7 +94,7 @@
     <panel>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") (action=commit AND type=git AND id!="") OR (action=deploy AND type=groups AND id!="") 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") (action=commit AND type=git AND id!="") OR (action=deploy AND type=groups AND id!="") 
 | eval WorkerGroup=case(action="deploy", id), CommitVersion=case(action="deploy", version, action="commit", id), DeployTime=case(action="deploy", time), CommitTime=case(action="commit", time), isDeployed=if(action="deploy", "1", "0")
 | stats values(user) AS User values(WorkerGroup) AS WorkerGroup values(CommitTime) AS CommitTime values(files.created{}) AS FilesCreated values(files.modified{}) AS FilesModified values(files.deleted{}) AS FilesDeleted max(isDeployed) AS isDeployed values(DeployTime) AS DeployTime latest(_time) AS _time by CommitVersion
 | sort 0 - _time
