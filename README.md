@@ -53,6 +53,7 @@ This app ships with 4 macros which must be edited in accordance with your Splunk
 |`set_cribl_log_sourcetype`|Set this macro definition to the sourcetype you configured for Cribl logs.|
 |`set_cribl_metrics_index`|Set this macro definition to the index your configured for Cribl metrics.|
 |`set_cribl_metrics_prefix(1)`|Change the `cribl.logstream` value before `.$metric_name$` if you have changed the default namespace used for your Cribl metrics internal Source.|
+|`set_cribl_environment_field_name`|(Optional) Set this macro definition to the name of the field that specifies the environment a Cribl Stream instance belongs to.|
 
 For manual configuration of the macro definitions through the CLI, append and update the following to `$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf` on Search Head Deployers for a Search Head Cluster:
 
@@ -68,6 +69,9 @@ definition = index=cribl_metrics
 
 [set_cribl_metrics_prefix(1)]
 definition = cribl.logstream.$metric_name$
+
+[set_cribl_environment_field_name]
+definition = env
 ```
 
 #### Leader Logs
