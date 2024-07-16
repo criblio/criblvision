@@ -1,0 +1,324 @@
+<form version="1.1" theme="dark">
+  <label>Splunk S2S Destination Troubleshooting</label>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="messages_base_search">
+    <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $destination_filter$ level=* 
+| stats count sparkline(count) AS sparkline BY channel message level
+| sort - count
+| rename channel AS Channel message AS Messages count AS Count sparkline AS Sparkline</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="worker_group" searchWhenChanged="true">
+      <label>Worker Group / Single</label>
+      <choice value="all_instances">All Instances</choice>
+      <choice value="all_worker_groups">All Worker Groups</choice>
+      <choice value="all_single">All Single Instances</choice>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Instances">
+          <set token="worker_group_event_filter">instance_type IN (worker, single)</set>
+          <set token="worker_group_metric_pre_filter"></set>
+          <set token="worker_group_metric_filter">group=*</set>
+        </condition>
+        <condition label="All Worker Groups">
+          <set token="worker_group_event_filter">instance_type=worker</set>
+          <set token="worker_group_metric_pre_filter">group=*</set>
+          <set token="worker_group_metric_filter">group=*</set>
+        </condition>
+        <condition label="All Single Instances">
+          <set token="worker_group_event_filter">instance_type=single</set>
+          <set token="worker_group_metric_pre_filter"></set>
+          <set token="worker_group_metric_filter">group=`set_unknown_worker_group_value`</set>
+        </condition>
+        <condition>
+          <set token="worker_group_event_filter">instance_type=worker worker_group="$worker_group$"</set>
+          <set token="worker_group_metric_pre_filter">group="$worker_group$"</set>
+          <set token="worker_group_metric_filter">group="$worker_group$"</set>
+        </condition>
+      </change>
+      <default>all_instances</default>
+      <initialValue>all_instances</initialValue>
+    </input>
+    <input type="dropdown" token="host" searchWhenChanged="true">
+      <label>Host</label>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| `dashboard_host_filter($environment_filter|s$ $worker_group_event_filter|s$)`</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
+    </input>
+    <input type="dropdown" token="destination_filter" searchWhenChanged="true">
+      <label>Splunk S2S Destination</label>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>value</fieldForValue>
+      <search>
+        <query>| mstats sum(`set_cribl_metrics_prefix(total.out_bytes)`) AS out_bytes WHERE `set_cribl_metrics_index` output IN (splunk:*, splunk_lb:*) BY output
+| rex field=output "(?&lt;type&gt;[^:]+):(?&lt;value&gt;.*)"
+| eval label = "(".if(type == "splunk", "Single", "LB").") ".value, value = "\"outout:".value."\""
+| table label value</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+      <default>[ | mstats sum(`set_cribl_metrics_prefix(total.out_bytes)`) AS out_bytes WHERE `set_cribl_metrics_index` output IN (splunk:*, splunk_lb:*) BY output | rex field=output "[^:]+:(?&lt;channel&gt;.*)" | eval channel = "output:".channel | table channel ]</default>
+      <choice value="[ | mstats sum(`set_cribl_metrics_prefix(total.out_bytes)`) AS out_bytes WHERE `set_cribl_metrics_index` output IN (splunk:*, splunk_lb:*) BY output | rex field=output &quot;[^:]+:(?&lt;channel&gt;.*)&quot; | eval channel = &quot;output:&quot;.channel | table channel ]">All</choice>
+      <initialValue>[ | mstats sum(`set_cribl_metrics_prefix(total.out_bytes)`) AS out_bytes WHERE `set_cribl_metrics_index` output IN (splunk:*, splunk_lb:*) BY output | rex field=output "[^:]+:(?&lt;channel&gt;.*)" | eval channel = "output:".channel | table channel ]</initialValue>
+    </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <eval token="show_details">if(label == "Show", "true", null())</eval>
+      </change>
+    </input>
+  </fieldset>
+  <row depends="$show_details$">
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashobard provides an overview into Splunk S2S Destinations configured in Cribl Stream. It shows a breakdown of connectivity issues between Cribl Stream instances and Splunk, as well as issues with subsecond timestamp processing. It also contains a breakdown of the <code>error</code>, <code>warn</code>, and <code>info</code> messages, as well as filtering the full list of events for the selected S2S Destinations presented in reverse chronological order.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row depends="$show_details$">
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>The table below details the Cribl Stream instances that are connecting to Splunk using the S2S protocol, as reported by the incoming TCP connections to Splunk.</p>
+        </div>
+      </html>
+    </panel>
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>The table below provides details of Cribl Stream instances that have Splunk S2S Destination(s) configured that are reporting the Splunk endpoint as being in a dead state. This typically indicates that Cribl Stream is unable to connect to the receiving Splunk instance due to restrictions on the S2S protocol.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Cribl Stream S2S Senders (TCP In Connections to Splunk - Splunk Internal Logs)</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=splunkd group=tcpin_connections connectionType IN (cooked, cookedSSL)
+| rex field=version "(?&lt;version&gt;[^\-]+)"
+| rex field=build "(?:[^\-]+\-)?(?&lt;build&gt;.*)"
+| stats values(host) AS receivers BY hostname version build
+| lookup cribl_stream_assets host AS hostname
+| where isnotnull(instance_type)
+| rename hostname AS host
+| search $environment_filter$ $worker_group_event_filter$ $host_filter$
+| table host environment instance_type worker_group version build receivers
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" version AS Version build AS Build receivers AS Receivers</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="Is Supported Version">
+          <colorPalette type="map">{"true":#118832,"false":#D41F1F}</colorPalette>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <title>Cribl Stream S2S Destinations in Dead State (Cribl Stream Internal Logs)</title>
+      <table>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $destination_filter$ message="sender state change" state=DEAD
+| stats count BY host instance_type worker_group channel
+| lookup cribl_stream_assets host OUTPUTNEW environment
+| rex field=channel "output:(?&lt;output&gt;.*)"
+| table host environment instance_type worker_group output
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" output AS Destination</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_details$">
+    <panel>
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>The panels below provide insight into events sent to Splunk with an invalid subsecond field. This typically occurs when:</p>
+          <ul>
+            <li>The S2S Destination in Cribl Stream is set use version 3 of the S2S protocol.</li>
+            <li>Cooked events from Splunk instances are being sent to Cribl Stream and onto Splunk.</li>
+          </ul>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Invalid Subsecond Field Format (SQS Smartbus Input Worker - Splunk Internal Logs)</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=splunkd component=SQSSmartbusInputWorker log_level=WARN "Invalid subsecond field"
+| rex "bytesRemaining\=(?&lt;bytes_remaining&gt;\d+)"
+| stats count AS "Number of Events" sum(bytes_remaining) AS "Bytes Remaining"
+| fillnull value=0 "Bytes Remaining"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="number" field="Subsecond Error Count">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="Bytes Remaining">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <format type="number" field="Number of Events">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <title>Invalid Subsecond Field Format (TCP Input Processor - Splunk Internal Logs)</title>
+      <table>
+        <search>
+          <query>index=_internal sourcetype=splunkd component=TcpInputProc thread_name=FwdDataReceiverThread "Invalid subsecond field format" 
+| rex field=src "(?&lt;src&gt;[^:]+)" 
+| stats count as subsecond_errors BY src 
+| rename src AS "Cribl Stream Instance" subsecond_errors AS "Subsecond Error Count"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="number" field="Subsecond Error Count">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Error Messages for Splunk S2S Destinations</title>
+      <table>
+        <search base="messages_base_search">
+          <query>
+| where level == "error"
+| fields - level</query>
+        </search>
+        <option name="drilldown">none</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <title>Warning Messages for Splunk S2S Destinations</title>
+      <table>
+        <search base="messages_base_search">
+          <query>
+| where level == "warn"
+| fields - level</query>
+        </search>
+        <option name="drilldown">none</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <title>Info Messages for Splunk S2S Destinations</title>
+      <table>
+        <search base="messages_base_search">
+          <query>
+| where level == "info"
+| fields - level</query>
+        </search>
+        <option name="drilldown">none</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="multiselect" token="levels" searchWhenChanged="true">
+        <label>Levels</label>
+        <choice value="debug">Debug</choice>
+        <choice value="info">Info</choice>
+        <choice value="warn">Warn</choice>
+        <choice value="error">Error</choice>
+        <default>error,warn</default>
+        <prefix>level IN (</prefix>
+        <suffix>)</suffix>
+        <initialValue>error,warn</initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+        <delimiter>, </delimiter>
+      </input>
+      <event>
+        <title>Events for Splunk S2S Destinations</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $destination_filter$ $levels$</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="list.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </event>
+    </panel>
+  </row>
+</form>
