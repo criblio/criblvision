@@ -123,6 +123,8 @@
           <div>
             <h3>Logs and Metrics</h3>
             <p>Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer to the documentation <a target="_blank" href="https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource">here</a> for instructions on configuring this Source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics.</p>
+            <p>It is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk from Cribl Stream. If using the Splunk 2 Splunk (S2S) protocol Destinations, you can view the Splunk S2S Troubleshooting dashboard to troubleshoot issues with potential dropped events or events experiencing subsecond timestamp issues.</p>
+            <a href="/app/criblvision/splunk_destination_troubleshooting" class="btn btn-primary">Splunk S2S Destination Troubleshooting</a>
           </div>
           <hr class="break-line" />
           <div>
@@ -184,6 +186,7 @@ definition = env</pre>
           <div>
             <h3>Leader Logs</h3>
             <p>Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently <b>NOT</b> sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to <code>/opt/cribl/log/*</code>. For more information on how to deploy a Cribl Edge Node, please refer to our documentation <a target="_blank" href="https://docs.cribl.io/edge/deploy-planning">here</a>.</p>
+            <p>If sending directly to Splunk from the Edge Node, it is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk.</p>
           </div>
           <hr class="break-line" />
           <div>
