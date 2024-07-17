@@ -40,7 +40,9 @@ This app and its associated dashboards rely on a few components which you must c
 
 #### **Logs and Metrics**
 
-Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics. 
+Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics.
+
+It is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk from Cribl Stream. If using the Splunk 2 Splunk (S2S) protocol Destinations, you can view the Splunk S2S Troubleshooting dashboard to troubleshoot issues with potential dropped events or events experiencing subsecond timestamp issues.
 
 #### **General Searching Macros**
 
@@ -104,7 +106,9 @@ definition = env
 
 #### **Leader logs**
 
-Some of the views in this app will require Leader logs to be forwarded on to Splunk. In distributed Cribl Stream environments, Leader logs are currently NOT sent via our internal source. You will have to install an Edge node on your Leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to `/opt/cribl/log/*.log`. For more information on how to deploy an Edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning). Note: When deploying the Edge node to your Leader node, we recommend having a separate fleet just for this node. Be sure to disable all other inputs on that Edge node except for file monitor inputs. 
+Some of the views in this app will require Leader logs to be forwarded on to Splunk. In distributed Cribl Stream environments, Leader logs are currently NOT sent via our internal source. You will have to install an Edge node on your Leader node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename allow list modal to `/opt/cribl/log/*.log`. For more information on how to deploy an Edge node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning). Note: When deploying the Edge node to your Leader node, we recommend having a separate fleet just for this node. Be sure to disable all other inputs on that Edge node except for file monitor inputs.
+
+If sending directly to Splunk from the Edge Node, it is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk.
 
 #### **Populate Cribl Stream Asset Lookup Report**
 
