@@ -194,9 +194,9 @@
   <row depends="$show_details$">
     <panel>
       <html>
-        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>The panels below provide insight into events sent to Splunk with an invalid subsecond field. This typically occurs when:</p>
-          <ul>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square;">
+          <p style="text-align: center;">The panels below provide insight into events sent to Splunk with an invalid subsecond field. This typically occurs when:</p>
+          <ul style="display: table; margin: auto;">
             <li>The S2S Destination in Cribl Stream is set use version 3 of the S2S protocol.</li>
             <li>Cooked events from Splunk instances are being sent to Cribl Stream and onto Splunk.</li>
           </ul>
