@@ -43,6 +43,8 @@ This app and its associated dashboards rely on a few components which you must c
 
 Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer to the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this Source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics.
 
+It is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk from Cribl Stream. If using the Splunk 2 Splunk (S2S) protocol Destinations, you can view the Splunk S2S Troubleshooting dashboard to troubleshoot issues with potential dropped events or events experiencing subsecond timestamp issues.
+
 #### Macros
 
 This app ships with 4 macros which must be edited in accordance with your Splunk index naming schema. For more info on configuring macros, reference Splunk's documentation [here](https://docs.splunk.com/Documentation/SplunkCloud/9.0.2303/Knowledge/Definesearchmacros).
@@ -77,6 +79,8 @@ definition = env
 #### Leader Logs
 
 Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently *NOT* sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to `/opt/cribl/log/*`. For more information on how to deploy a Cribl Edge Node, please refer to our documentation [here](href="https://docs.cribl.io/edge/deploy-planning">).
+
+If sending directly to Splunk from the Edge Node, it is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk.
 
 #### Populate Cribl Stream Worker Lookup Report
 
