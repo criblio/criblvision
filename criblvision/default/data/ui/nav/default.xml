@@ -10,6 +10,7 @@
   </collection>
   <collection label="Configuration">
     <view name="sources_and_destinations_overview" />
+    <view name="splunk_destination_troubleshooting" />
   </collection>
   <collection label="Performance">
     <view name="sizingcalculator" />
