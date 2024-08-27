@@ -56,7 +56,7 @@ CriblVision Alert - Cluster Communication Errors
 
 ## Requirements
 
-This is intended to be used with Cribl's entire product suite. You will need Owner/Admin permissions in your cribl cloud deployment and access to Cribl Search, Stream, Search, and Lake. This is currently only intended for use with hybrid worker groups. 
+This is intended to be used with Cribl Cloud's product suite. You will need Owner/Admin permissions in your cribl cloud deployment and access to Cribl Search, Stream, and Lake. This is currently only intended for use with hybrid worker groups. Support for other types will be coming soon. 
 
 ### Configure Data Lake destinations
 
