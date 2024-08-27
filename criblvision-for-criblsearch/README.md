@@ -54,7 +54,9 @@ CriblVision Alert - Cluster Communication Errors
 
 ## **Installation instructions**
 
-  
+## Requirements
+
+This is intended to be used with Cribl's entire product suite. You will need Owner/Admin permissions in your cribl cloud deployment and access to Cribl Search, Stream, Search, and Lake. This is currently only intended for use with hybrid worker groups. 
 
 ### Configure Data Lake destinations
 
@@ -166,6 +168,10 @@ Jon Rust (Cribl)
 David Sheridan (GKC)
 Jeremy Prescott (Cribl)
 Andrew Duca (Cribl)
-Eugene Kats (Cribl)
+Eugene Katz (Cribl)
+
+## License
+
+This project is licensed under the GNU General Public License (GPL). You are free to use, modify, and distribute this software under the terms of the license.
 Christopher Owens (Cribl)
 David Maislin (Cribl)
