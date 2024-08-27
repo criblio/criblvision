@@ -1,0 +1,247 @@
+{
+  "elements": [
+    {
+      "config": {
+        "defaultValue": "*",
+        "field": "group"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | summarize count() by group | sort by group desc",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "rkljaygth",
+      "inputId": "wg",
+      "type": "input.dropdown",
+      "layout": {
+        "x": 3,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Worker Group"
+    },
+    {
+      "config": {
+        "field": "host",
+        "defaultValue": "*"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | where group == \"$wg\" | summarize count() by host | sort by host desc",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "cpcyglxxn",
+      "inputId": "wn",
+      "type": "input.dropdown",
+      "layout": {
+        "x": 6,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Worker Node"
+    },
+    {
+      "config": {
+        "defaultValue": {
+          "earliest": "-1h",
+          "latest": "now",
+          "timezone": "local"
+        }
+      },
+      "id": "ypqobwwf6",
+      "inputId": "timepicker",
+      "type": "input.timerange",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Timerange"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "Run a new search",
+          "search": "dataset=\"diag_cribl_log\" case=\"$case\" diagfile=\"$input_2\" level=\"error\" channel=\"$value$\""
+        },
+        "showRowNumbers": false,
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "data": {
+          "connectNulls": "Leave gaps",
+          "stack": false
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "horizontalChart": false,
+        "query": "${set_cribl_logs_dataset}  host=\"$wn\"  level=\"error\" |  summarize cnt=count() by channel | sort by cnt desc | render table",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "query": "${set_cribl_logs_dataset}  host=\"$wn\"  level=\"error\" |  summarize cnt=count() by channel | sort by cnt desc | render table",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "timezone": "$timepicker.timezone"
+      },
+      "horizontalChart": false,
+      "id": "9y6hylgv0",
+      "type": "list.table",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 3
+      },
+      "title": "Error counts by channel"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "Run a new search",
+          "search": "dataset=\"diag_cribl_log\" case=\"$case\" diagfile=\"$input_2\" level=\"error\" channel=\"$value$\""
+        },
+        "showRowNumbers": false,
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "data": {
+          "connectNulls": "Leave gaps",
+          "stack": false
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "horizontalChart": false,
+        "query": "${set_cribl_logs_dataset}  host=\"$wn\"  level=\"warn\" |  summarize cnt=count() by channel |sort by cnt desc | render table",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "query": "${set_cribl_logs_dataset}  host=\"$wn\"  level=\"warn\" |  summarize cnt=count() by channel |sort by cnt desc | render table",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "timezone": "$timepicker.timezone"
+      },
+      "horizontalChart": false,
+      "id": "632i8leyf",
+      "type": "list.table",
+      "layout": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 3
+      },
+      "title": "Warn counts by Channel"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "Run a new search",
+          "search": "dataset=\"diag_cribl_log\" case=\"$case\" diagfile=\"$input_2\" level=\"error\" channel=\"$value$\""
+        },
+        "showRowNumbers": false,
+        "horizontalChart": false,
+        "query": "${set_cribl_logs_dataset} host=\"$wn\"  level=\"info\" |  summarize cnt=count() by channel |sort by cnt desc | render table",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "query": "${set_cribl_logs_dataset} host=\"$wn\"  level=\"info\" |  summarize cnt=count() by channel |sort by cnt desc | render table",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "timezone": "$timepicker.timezone"
+      },
+      "horizontalChart": false,
+      "id": "caqjp1wim",
+      "type": "list.table",
+      "layout": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 3
+      },
+      "title": "Info counts by channel"
+    },
+    {
+      "config": {
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [],
+          "seriesCount": 11
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": false
+        },
+        "onClickAction": {
+          "type": "Run a new search",
+          "search": "dataset=\"diag_cribl_log\" case=\"$case\" diagfile=\"$input_2\" level=\"error\" channel=\"$value$\""
+        },
+        "data": {
+          "connectNulls": "Leave gaps",
+          "stack": false
+        },
+        "timestats": true,
+        "horizontalChart": false,
+        "query": "${set_cribl_logs_dataset} host=\"$wn\"  level=\"error\" | timestats span=10m count() by channel",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "query": "${set_cribl_logs_dataset} host=\"$wn\"  level=\"error\" | timestats span=10m count() by channel",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "timezone": "$timepicker.timezone"
+      },
+      "horizontalChart": false,
+      "id": "t65f3ize8",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 3,
+        "w": 12,
+        "h": 4
+      },
+      "title": "Error count by channel"
+    }
+  ]
+}

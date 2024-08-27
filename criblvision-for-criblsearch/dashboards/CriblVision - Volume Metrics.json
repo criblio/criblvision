@@ -1,0 +1,853 @@
+{
+  "elements": [
+    {
+      "config": {
+        "defaultValue": {
+          "earliest": "-1h",
+          "latest": "now",
+          "timezone": "local"
+        }
+      },
+      "id": "nfcshyn55",
+      "inputId": "timepick",
+      "type": "input.timerange",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 2,
+        "h": 2
+      },
+      "title": "Time"
+    },
+    {
+      "config": {
+        "defaultValue": "/.*/"
+      },
+      "id": "osc1fwqag",
+      "inputId": "group_re",
+      "type": "input.text",
+      "layout": {
+        "x": 2,
+        "y": 0,
+        "w": 2,
+        "h": 2
+      },
+      "title": "Worker Group ( /regex/ )"
+    },
+    {
+      "config": {
+        "defaultValue": "/.*/"
+      },
+      "id": "kbyd3aze1",
+      "inputId": "route_re",
+      "type": "input.text",
+      "layout": {
+        "x": 4,
+        "y": 0,
+        "w": 2,
+        "h": 2
+      },
+      "title": "Route Match ( /regex/ )"
+    },
+    {
+      "horizontalChart": false,
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "showRowNumbers": false,
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "_time",
+            "route_name",
+            "group",
+            "host",
+            "mb_in",
+            "mb_out",
+            "events_in",
+            "events_out"
+          ]
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "timestats": false,
+        "horizontalChart": false
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepick.earliest",
+        "latest": "$timepick.latest",
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table",
+        "timezone": "$timepick.timezone"
+      },
+      "id": "c1k9nc2vs",
+      "type": "list.table",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 2
+      },
+      "title": "base_routing_metrics",
+      "hidePanel": false
+    },
+    {
+      "config": {
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "count"
+          ],
+          "seriesCount": 1
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "timestats": false,
+        "axis": {
+          "xAxis": "count",
+          "yAxis": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "query": "| summarize count() by worker_guid | summarize count=count()",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "m9avonuyy",
+      "type": "counter.single",
+      "layout": {
+        "x": 0,
+        "y": 2,
+        "w": 3,
+        "h": 1
+      },
+      "title": "Worker Count",
+      "parentSearchId": "c1k9nc2vs"
+    },
+    {
+      "horizontalChart": false,
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "count"
+          ],
+          "seriesCount": 1
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "timestats": false,
+        "horizontalChart": false,
+        "axis": {
+          "xAxis": "count",
+          "yAxis": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "query": "| summarize count() by name | summarize count=count()",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "m9avonuyy-copy",
+      "type": "counter.single",
+      "layout": {
+        "x": 3,
+        "y": 2,
+        "w": 3,
+        "h": 1
+      },
+      "title": "Route Count",
+      "parentSearchId": "c1k9nc2vs"
+    },
+    {
+      "config": {
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "events_in"
+          ],
+          "seriesCount": 1
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "timestats": false,
+        "axis": {
+          "xAxis": "events_in",
+          "yAxis": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "query": "| summarize events_in=sum(events_in)",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "m9avonuyy-copy-copy",
+      "type": "counter.single",
+      "layout": {
+        "x": 6,
+        "y": 2,
+        "w": 3,
+        "h": 1
+      },
+      "title": "Events Processed - In",
+      "parentSearchId": "c1k9nc2vs"
+    },
+    {
+      "config": {
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "events_in"
+          ],
+          "seriesCount": 1
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "timestats": false,
+        "axis": {
+          "xAxis": "events_in",
+          "yAxis": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "query": "| summarize events_in=sum(events_out)",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "m9avonuyy-copy-copy-copy",
+      "type": "counter.single",
+      "layout": {
+        "x": 9,
+        "y": 2,
+        "w": 3,
+        "h": 1
+      },
+      "title": "Events Processed - Out",
+      "parentSearchId": "c1k9nc2vs"
+    },
+    {
+      "horizontalChart": false,
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "showRowNumbers": false,
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "name",
+            "IN",
+            "OUT",
+            "redux",
+            "redux_perc"
+          ]
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "timestats": false,
+        "horizontalChart": false
+      },
+      "search": {
+        "type": "inline",
+        "earliest": 0,
+        "latest": "now",
+        "query": "| summarize MB_IN=sum(mb_in), MB_OUT=sum(mb_out) by name, worker_group\n| extend REDUX=MB_IN-MB_OUT, ['REDUX%']=round(100*REDUX/MB_IN,2), REDUX=round(REDUX,2)\n| extend MB_IN=round(MB_IN,2), MB_OUT=round(MB_OUT,2) \n| where MB_IN>0 "
+      },
+      "id": "lhpjh1xla",
+      "type": "list.table",
+      "layout": {
+        "x": 0,
+        "y": 3,
+        "w": 6,
+        "h": 2
+      },
+      "title": "MBytes By Route, Totals",
+      "parentSearchId": "c1k9nc2vs"
+    },
+    {
+      "horizontalChart": false,
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "showRowNumbers": false,
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "name",
+            "IN",
+            "OUT",
+            "redux",
+            "redux_perc"
+          ]
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "timestats": false,
+        "horizontalChart": false
+      },
+      "search": {
+        "type": "inline",
+        "earliest": 0,
+        "latest": "now",
+        "query": "| summarize Events_IN=sum(events_in), Events_OUT=sum(events_out) by name, worker_group\n| extend REDUX=Events_IN-Events_OUT, ['REDUX%']=round(100*REDUX/Events_IN,2), REDUX=round(REDUX,2)\n| where Events_IN>0\n"
+      },
+      "id": "lhpjh1xla-copy-2",
+      "type": "list.table",
+      "layout": {
+        "x": 6,
+        "y": 3,
+        "w": 6,
+        "h": 2
+      },
+      "title": "Events By Route, Totals",
+      "parentSearchId": "c1k9nc2vs"
+    },
+    {
+      "config": {
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "_time",
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ],
+          "seriesCount": 11
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "timestats": true,
+        "horizontalChart": false,
+        "axis": {
+          "yAxis": [
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ]
+        },
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_IN=sum(mb_in) by worker_group"
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepick.earliest",
+        "latest": "$timepick.latest",
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_IN=sum(mb_in) by worker_group",
+        "timezone": "$timepick.timezone"
+      },
+      "horizontalChart": false,
+      "id": "lhpjh1xla-copy-copy",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "title": "IN MBytes By Route, Over Time"
+    },
+    {
+      "config": {
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "_time",
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ],
+          "seriesCount": 11
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "timestats": true,
+        "horizontalChart": false,
+        "axis": {
+          "yAxis": [
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ]
+        },
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats Events_IN=sum(events_in) by worker_group"
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepick.earliest",
+        "latest": "$timepick.latest",
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats Events_IN=sum(events_in) by worker_group",
+        "timezone": "$timepick.timezone"
+      },
+      "horizontalChart": false,
+      "id": "lhpjh1xla-copy",
+      "type": "chart.line",
+      "layout": {
+        "x": 6,
+        "y": 5,
+        "w": 6,
+        "h": 4
+      },
+      "title": "IN Events By Route, Over Time"
+    },
+    {
+      "config": {
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "_time",
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ],
+          "seriesCount": 11
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "timestats": true,
+        "horizontalChart": false,
+        "axis": {
+          "yAxis": [
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ]
+        },
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_OUT=sum(mb_in) by worker_group"
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepick.earliest",
+        "latest": "$timepick.latest",
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_OUT=sum(mb_in) by worker_group",
+        "timezone": "$timepick.timezone"
+      },
+      "horizontalChart": false,
+      "id": "lhpjh1xla-copy-copy-copy",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "title": "OUT MBytes By Route, Over Time"
+    },
+    {
+      "config": {
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "_time",
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ],
+          "seriesCount": 11
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "timestats": true,
+        "horizontalChart": false,
+        "axis": {
+          "yAxis": [
+            "homenet:Cribl Metrics to Cloud",
+            "default:Cribl Metrics to Lake",
+            "default:default",
+            "homenet:IOS Shortcuts",
+            "homenet:DNS only to Cloud Workers",
+            "homenet:Weather data to Cloud Workers",
+            "default:Internal logs",
+            "default:purple",
+            "default:Linux Commands"
+          ]
+        },
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out\n| extend worker_group=worker_group+\":\"+name\n| timestats Events_OUT=sum(events_out) by worker_group"
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepick.earliest",
+        "latest": "$timepick.latest",
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out\n| extend worker_group=worker_group+\":\"+name\n| timestats Events_OUT=sum(events_out) by worker_group",
+        "timezone": "$timepick.timezone"
+      },
+      "horizontalChart": false,
+      "id": "lhpjh1xla-copy-copy-2",
+      "type": "chart.line",
+      "layout": {
+        "x": 6,
+        "y": 9,
+        "w": 6,
+        "h": 4
+      },
+      "title": "OUT Events By Route, Over Time"
+    },
+    {
+      "id": "mpb46a484",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 4
+      },
+      "title": "Total Reduction",
+      "search": {
+        "type": "inline",
+        "earliest": "-1d",
+        "latest": "now",
+        "query": "cribl dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'/.*/') and match_regex(worker_group,@'/.*/')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats  MB_IN=sum(mb_in), MB_OUT=sum(mb_out)\n| extend REDUX=MB_IN-MB_OUT, ['REDUX%']=round(100*REDUX/MB_IN,2), REDUX=round(REDUX,2)\n| extend MB_IN=round(MB_IN,2), MB_OUT=round(MB_OUT,2) \n| where MB_IN>0 "
+      },
+      "config": {
+        "type": "line",
+        "shouldApplyUserChartSettings": false,
+        "series": [
+          {
+            "yAxisField": "MB_IN",
+            "name": "MB_IN",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 0
+            }
+          },
+          {
+            "yAxisField": "MB_OUT",
+            "name": "MB_OUT",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 1
+            }
+          },
+          {
+            "yAxisField": "REDUX",
+            "name": "REDUX",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 2
+            }
+          },
+          {
+            "yAxisField": "REDUX%",
+            "name": "REDUX%",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 3
+            }
+          }
+        ],
+        "legend": {
+          "truncate": true
+        },
+        "timestats": true
+      }
+    }
+  ],
+  "refreshRate": 1800000
+}

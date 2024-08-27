@@ -1,0 +1,610 @@
+{
+  "elements": [
+    {
+      "config": {
+        "defaultValue": "*",
+        "field": "group"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | summarize count() by group | sort by group desc",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "rkljaygth",
+      "inputId": "wg",
+      "type": "input.dropdown",
+      "layout": {
+        "x": 3,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Worker Group"
+    },
+    {
+      "config": {
+        "field": "host",
+        "defaultValue": "*"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | where group == \"$wg\" | summarize count() by host | sort by host desc",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "cpcyglxxn",
+      "inputId": "wn",
+      "type": "input.dropdown",
+      "layout": {
+        "x": 6,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Worker Node"
+    },
+    {
+      "config": {
+        "defaultValue": {
+          "earliest": "-1h",
+          "latest": "now",
+          "timezone": "local"
+        }
+      },
+      "id": "ypqobwwf6",
+      "inputId": "timepicker",
+      "type": "input.timerange",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Timerange"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "dataset",
+            "_raw",
+            "source",
+            "_time",
+            "_value",
+            "_metric",
+            "_metric_type",
+            "ci",
+            "input",
+            "input_type",
+            "group",
+            "host",
+            "event_source",
+            "event_host",
+            "cribl_wp",
+            "index",
+            "cribl_pipe",
+            "datatype",
+            "data_source"
+          ],
+          "seriesCount": 1
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "timestats": false
+      },
+      "search": {
+        "type": "inline",
+        "query": "${set_cribl_metrics_dataset} group=\"$wg\" host=\"$wn\"  _metric in (\"cribl.logstream.system.mem_rss\",\n\"cribl.logstream.system.cpu_perc\",\n\"cribl.logstream.health.inputs\",\n\"cribl.logstream.pq.queue_size\",\n\"cribl.logstream.health.outputs\",\n\"cribl.logstream.backpressure.outputs\",\n\"cribl.logstream.blocked.outputs\",\n\"cribl.logstream.total.in_bytes\",\n\"cribl.logstream.total.out_bytes\",\n\"cribl.logstream.total.in_events\",\n\"cribl.logstream.total.out_events\") | project _time, _metric, _value, host, group\n",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "70m3mzrcn",
+      "type": "list.events",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 2
+      },
+      "title": "datacube",
+      "hidePanel": true
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "Worker"
+          ],
+          "seriesCount": 1
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "timestats": false
+      },
+      "search": {
+        "type": "inline",
+        "query": "| summarize \n//CPU_perc=percentile(iff(_metric==\"cribl.logstream.system.cpu_perc\",_value,null),95),\n            CPU_perc=avg(iff(_metric==\"cribl.logstream.system.cpu_perc\",_value,null)),\n            InMBytes=sum(iff(_metric==\"cribl.logstream.total.in_bytes\",_value,0)),\n            OutMBytes=sum(iff(_metric==\"cribl.logstream.total.out_bytes\",_value,0)),\n            InEvents=sum(iff(_metric==\"cribl.logstream.total.in_events\",_value,0)),\n            OutEvents=sum(iff(_metric==\"cribl.logstream.total.out_events\",_value,0))\n by Worker=host, Group=group\n | extend CPU_perc=round(CPU_perc,2), InMBytes=round(InMBytes/1000/1000,2), OutMBytes=round(OutMBytes/1000/1000,2)\n | sort by Group asc, InMBytes desc",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "6dsnsz8vg",
+      "type": "list.table",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 2
+      },
+      "parentSearchId": "70m3mzrcn",
+      "title": "Overall by Worker"
+    },
+    {
+      "config": {
+        "colorPalette": 0,
+        "colorPaletteReversed": false,
+        "customData": {
+          "trellis": false,
+          "connectNulls": "Leave gaps",
+          "stack": false,
+          "dataFields": [
+            "_time"
+          ],
+          "seriesCount": 2
+        },
+        "xAxis": {
+          "labelOrientation": 0,
+          "position": "Bottom"
+        },
+        "yAxis": {
+          "position": "Left",
+          "scale": "Linear",
+          "splitLine": true
+        },
+        "legend": {
+          "position": "Right",
+          "truncate": true
+        },
+        "onClickAction": {
+          "type": "None"
+        },
+        "style": false,
+        "applyThreshold": true,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 0
+            },
+            {
+              "color": "#ccd733",
+              "threshold": 1200
+            },
+            {
+              "color": "#f1041b",
+              "threshold": 1500
+            }
+          ]
+        },
+        "decimals": 2,
+        "timestats": true,
+        "axis": {},
+        "query": "${set_cribl_metrics_dataset} group=\"$wg\" host=\"$wn\" _metric in (\"cribl.logstream.system.mem_rss\") | project _time, _metric, _value, host, group | timestats mem_usage=max(_value) / 1024 / 1024 by host "
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "${set_cribl_metrics_dataset} group=\"$wg\" host=\"$wn\" _metric in (\"cribl.logstream.system.mem_rss\") | project _time, _metric, _value, host, group | timestats mem_usage=max(_value) / 1024 / 1024 by host ",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "hj9w4zhg5",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 2,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Avg mem"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "customData": {
+          "dataFields": [
+            "_time"
+          ],
+          "stack": false,
+          "seriesCount": 2
+        },
+        "decimals": 2,
+        "suffix": "%",
+        "timestats": true,
+        "axis": {},
+        "query": "${set_cribl_metrics_dataset} group=\"$wg\" host=\"$wn\"  _metric in (\"cribl.logstream.system.cpu_perc\") | project _time, _metric, _value, host, group| where _metric == \"cribl.logstream.system.cpu_perc\" | timestats cpuUsage=percentile(_value,95) by host"
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "${set_cribl_metrics_dataset} group=\"$wg\" host=\"$wn\"  _metric in (\"cribl.logstream.system.cpu_perc\") | project _time, _metric, _value, host, group| where _metric == \"cribl.logstream.system.cpu_perc\" | timestats cpuUsage=percentile(_value,95) by host",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "agr78ovfe",
+      "type": "chart.area",
+      "layout": {
+        "x": 4,
+        "y": 2,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Cpu Usage"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "timestats": true,
+        "customData": {
+          "dataFields": [
+            "_time"
+          ],
+          "seriesCount": 3
+        },
+        "axis": {
+          "xAxis": "_time",
+          "yAxis": []
+        },
+        "query": "${set_cribl_metrics_dataset} group=\"$wg\" host=\"$wn\"  _metric in (\"cribl.logstream.pq.queue_size\") | project _time, _metric, _value, host, group| where _metric == \"cribl.logstream.pq.queue_size\"  | timestats pq_size=percentile(_value,95) by host \n"
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "${set_cribl_metrics_dataset} group=\"$wg\" host=\"$wn\"  _metric in (\"cribl.logstream.pq.queue_size\") | project _time, _metric, _value, host, group| where _metric == \"cribl.logstream.pq.queue_size\"  | timestats pq_size=percentile(_value,95) by host \n",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "tddjmj82p",
+      "type": "chart.area",
+      "layout": {
+        "x": 8,
+        "y": 2,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Latest PQ Size"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "timestats": false,
+        "customData": {
+          "dataFields": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "earliest": 0,
+        "latest": "now",
+        "query": "| where _metric == \"cribl.logstream.health.inputs\" && _value > 0 \n            | summarize unhealthy_inputs=count() by host | mv-expand unhealthy_inputs | render table\n",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "rv7hs03k8",
+      "type": "list.table",
+      "layout": {
+        "x": 0,
+        "y": 4,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Unhealthy Inputs",
+      "parentSearchId": "70m3mzrcn"
+    },
+    {
+      "config": {
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "timestats": false,
+        "customData": {
+          "dataFields": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "${set_cribl_logs_dataset} channel=\"clustercomm\" level=\"warn\" OR level=\"error\" message!=\"metric*\" group=\"$wg\" host=\"$wn\" | summarize errors=count()",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "s3j17fatr",
+      "type": "counter.single",
+      "layout": {
+        "x": 4,
+        "y": 4,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Cluster communication errors"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "series": [],
+        "timestats": false,
+        "customData": {
+          "dataFields": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "earliest": 0,
+        "latest": "now",
+        "query": "| where _metric == \"cribl.logstream.health.outputs\"  && _value > 0 | summarize outputs=values(output) by host | mv-expand outputs | render table",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "l3mfsp77e",
+      "type": "list.table",
+      "layout": {
+        "x": 8,
+        "y": 4,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Unhealthy outputs",
+      "parentSearchId": "70m3mzrcn"
+    },
+    {
+      "config": {
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "timestats": false,
+        "customData": {
+          "dataFields": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "${set_cribl_logs_dataset} channel=cribl* message=\"restarting worker process\" group=\"$wg\" host=\"$wn\" | summarize restarts=count() ",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "y8r8wkkwi",
+      "type": "counter.single",
+      "layout": {
+        "x": 0,
+        "y": 6,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Worker Process Restarts"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "timestats": false,
+        "customData": {
+          "dataFields": []
+        }
+      },
+      "search": {
+        "type": "inline",
+        "earliest": 0,
+        "latest": "now",
+        "query": "| where _metric == \"cribl.logstream.backpressure.outputs\" | where _value > 0 | summarize destinations=values(output) by host | mv-expand destinations",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "527axoz79",
+      "type": "list.table",
+      "layout": {
+        "x": 4,
+        "y": 6,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Destinations with Backpressure",
+      "parentSearchId": "70m3mzrcn"
+    },
+    {
+      "config": {
+        "onClickAction": {
+          "type": "None"
+        },
+        "style": false,
+        "applyThreshold": false,
+        "colorThresholds": {
+          "thresholds": [
+            {
+              "color": "#45850B",
+              "threshold": 30
+            },
+            {
+              "color": "#EFDB23",
+              "threshold": 70
+            },
+            {
+              "color": "#B20000",
+              "threshold": 100
+            }
+          ]
+        },
+        "timestats": false,
+        "customData": {
+          "dataFields": [
+            "destinations"
+          ]
+        }
+      },
+      "search": {
+        "type": "inline",
+        "earliest": 0,
+        "latest": "now",
+        "query": "| where _metric == \"cribl.logstream.blocked.outputs\" && _value > 0 | summarize destinations=values(output) by host | mv-expand destinations",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "2zasioc26",
+      "type": "list.table",
+      "layout": {
+        "x": 8,
+        "y": 6,
+        "w": 4,
+        "h": 2
+      },
+      "title": "Blocked Destinations",
+      "parentSearchId": "70m3mzrcn"
+    }
+  ]
+}

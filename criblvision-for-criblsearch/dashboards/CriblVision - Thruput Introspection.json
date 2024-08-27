@@ -1,0 +1,357 @@
+{
+  "elements": [
+    {
+      "config": {
+        "defaultValue": "*",
+        "field": "group"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | summarize count() by group | sort by group desc",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "rkljaygth",
+      "inputId": "wg",
+      "type": "input.dropdown",
+      "layout": {
+        "x": 3,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Worker Group"
+    },
+    {
+      "config": {
+        "field": "host",
+        "defaultValue": "*"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | where group == \"$wg\" | summarize count() by host | sort by host desc",
+        "earliest": 0,
+        "latest": "now"
+      },
+      "id": "cpcyglxxn",
+      "inputId": "wn",
+      "type": "input.dropdown",
+      "layout": {
+        "x": 6,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Worker Node"
+    },
+    {
+      "config": {
+        "defaultValue": {
+          "earliest": "-1h",
+          "latest": "now",
+          "timezone": "local"
+        }
+      },
+      "id": "ypqobwwf6",
+      "inputId": "timepicker",
+      "type": "input.timerange",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 3,
+        "h": 2
+      },
+      "title": "Timerange"
+    },
+    {
+      "config": {
+        "values": [
+          "1m",
+          "5m",
+          "15m",
+          "1h",
+          "4h",
+          "1d"
+        ],
+        "axis": {},
+        "defaultValue": "5m"
+      },
+      "search": {
+        "type": "values",
+        "values": [
+          "1m",
+          "5m",
+          "15m",
+          "1h",
+          "4h",
+          "1d"
+        ]
+      },
+      "id": "bxqzd532j",
+      "inputId": "span",
+      "type": "input.dropdown",
+      "layout": {
+        "x": 0,
+        "y": 2,
+        "w": 3,
+        "h": 2
+      },
+      "title": "TimeStats Bucket Span"
+    },
+    {
+      "config": {
+        "shouldApplyUserChartSettings": false,
+        "series": [
+          {
+            "yAxisField": "cribl_http:Cloud_default_group",
+            "name": "cribl_http:Cloud_default_group",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 0
+            }
+          }
+        ],
+        "legend": {
+          "truncate": true
+        },
+        "timestats": true,
+        "query": "dataset=\"default_metrics\"  group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.total.out_events\" | timestats span=$span sum(_value) by output",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "dataset=\"default_metrics\"  group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.total.out_events\" | timestats span=$span sum(_value) by output",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "7tff87y67",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 4
+      },
+      "title": "Out events"
+    },
+    {
+      "config": {
+        "shouldApplyUserChartSettings": false,
+        "series": [
+          {
+            "yAxisField": "cribl_http:Cloud_default_group",
+            "name": "cribl_http:Cloud_default_group",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 0
+            }
+          }
+        ],
+        "legend": {
+          "truncate": true
+        },
+        "timestats": true,
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.total.out_bytes\" | timestats span=$span sum(_value) by output",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.total.out_bytes\" | timestats span=$span sum(_value) by output",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "ddk86zjcl",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 4
+      },
+      "title": "Bytes out"
+    },
+    {
+      "config": {
+        "customData": {
+          "stack": true,
+          "seriesCount": 10
+        },
+        "series": [
+          {
+            "yAxisField": "w1",
+            "name": "w1",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 0
+            }
+          },
+          {
+            "yAxisField": "w7",
+            "name": "w7",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 1
+            }
+          },
+          {
+            "yAxisField": "w8",
+            "name": "w8",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 2
+            }
+          },
+          {
+            "yAxisField": "w0",
+            "name": "w0",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 3
+            }
+          },
+          {
+            "yAxisField": "w9",
+            "name": "w9",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 4
+            }
+          },
+          {
+            "yAxisField": "w3",
+            "name": "w3",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 5
+            }
+          },
+          {
+            "yAxisField": "w5",
+            "name": "w5",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 6
+            }
+          },
+          {
+            "yAxisField": "w2",
+            "name": "w2",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 7
+            }
+          },
+          {
+            "yAxisField": "w6",
+            "name": "w6",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 8
+            }
+          },
+          {
+            "yAxisField": "w4",
+            "name": "w4",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 9
+            }
+          }
+        ],
+        "legend": {
+          "truncate": true
+        },
+        "timestats": true,
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.system.cpu_perc\" | timestats span=$span max(_value) by cribl_wp",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.system.cpu_perc\" | timestats span=$span max(_value) by cribl_wp",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "u5zy9c3em",
+      "type": "chart.column",
+      "layout": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 4
+      },
+      "title": "Cpu usage by worker process"
+    },
+    {
+      "config": {
+        "series": [
+          {
+            "yAxisField": "cribl:CriblLogs",
+            "name": "cribl:CriblLogs",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 0
+            }
+          },
+          {
+            "yAxisField": "cribl:CriblMetrics",
+            "name": "cribl:CriblMetrics",
+            "color": {
+              "paletteIndex": 0,
+              "colorIndex": 1
+            }
+          }
+        ],
+        "legend": {
+          "truncate": true
+        },
+        "timestats": true,
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.total.in_events\" | timestats span=$span sum(_value) by input",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\" _metric=\"cribl.logstream.total.in_events\" | timestats span=$span sum(_value) by input",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "0ymfi2lit",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 4
+      },
+      "title": "Total events in"
+    },
+    {
+      "config": {
+        "shouldApplyUserChartSettings": false,
+        "series": [],
+        "timestats": true,
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\"  _metric=\"cribl.logstream.total.in_bytes\" | timestats span=$span sum(_value) by input",
+        "axis": {}
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepicker.earliest",
+        "latest": "$timepicker.latest",
+        "query": "dataset=\"default_metrics\" group=\"$wg\" host=\"$wn\"  _metric=\"cribl.logstream.total.in_bytes\" | timestats span=$span sum(_value) by input",
+        "timezone": "$timepicker.timezone"
+      },
+      "id": "2a7r2mnwi",
+      "type": "chart.column",
+      "layout": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 4
+      },
+      "title": "In bytes"
+    }
+  ]
+}
