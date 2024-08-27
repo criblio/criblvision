@@ -73,6 +73,7 @@ You will create 2 Cribl-lake destinations with the following names
 ### Configure internal metrics and sources
 
 -Navigate to your hybrid worker group's sources and enable both Cribl internal logs and metrics
+-Navigate to your Cribl Internal logs source, click on fields, and add a new field with a name of group and a value that exactly matches your worker group's name.
 
 ### Configure routes
 
@@ -158,7 +159,7 @@ Inside each alert file, you will find further instructions for setting up the se
 
 # Acknowledgements
 
-**Author**: Johan Woger - Senior Professional Services Engineer - jwoger@cribl.bio
+**Author**: Johan Woger - Senior Professional Services Engineer - jwoger@cribl.io
 
 **Contributors**
 Jon Rust (Cribl)
