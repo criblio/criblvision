@@ -169,9 +169,10 @@ David Sheridan (GKC)
 Jeremy Prescott (Cribl)
 Andrew Duca (Cribl)
 Eugene Katz (Cribl)
+Christopher Owens (Cribl)
+David Maislin (Cribl)
 
 ## License
 
 This project is licensed under the GNU General Public License (GPL). You are free to use, modify, and distribute this software under the terms of the license.
-Christopher Owens (Cribl)
-David Maislin (Cribl)
+
