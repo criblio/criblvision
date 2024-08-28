@@ -50,7 +50,6 @@
       "title": "Route Match ( /regex/ )"
     },
     {
-      "horizontalChart": false,
       "config": {
         "onClickAction": {
           "type": "None"
@@ -87,15 +86,18 @@
           "truncate": true
         },
         "timestats": false,
-        "horizontalChart": false
+        "horizontalChart": false,
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1h), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table",
+        "axis": {}
       },
       "search": {
         "type": "inline",
         "earliest": "$timepick.earliest",
         "latest": "$timepick.latest",
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table",
+        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1h), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table",
         "timezone": "$timepick.timezone"
       },
+      "horizontalChart": false,
       "id": "c1k9nc2vs",
       "type": "list.table",
       "layout": {
@@ -155,16 +157,15 @@
           "type": "None"
         },
         "timestats": false,
-        "axis": {
-          "xAxis": "count",
-          "yAxis": []
-        }
+        "axis": {},
+        "query": "dataset=\"default_metrics\" | summarize distinct_host_count = dcount(host)"
       },
       "search": {
         "type": "inline",
-        "query": "| summarize count() by worker_guid | summarize count=count()",
-        "earliest": 0,
-        "latest": "now"
+        "query": "dataset=\"default_metrics\" | summarize distinct_host_count = dcount(host)",
+        "earliest": "$timepick.earliest",
+        "latest": "$timepick.latest",
+        "timezone": "$timepick.timezone"
       },
       "id": "m9avonuyy",
       "type": "counter.single",
@@ -174,8 +175,7 @@
         "w": 3,
         "h": 1
       },
-      "title": "Worker Count",
-      "parentSearchId": "c1k9nc2vs"
+      "title": "Worker Count"
     },
     {
       "horizontalChart": false,
@@ -430,17 +430,17 @@
         "type": "inline",
         "earliest": 0,
         "latest": "now",
-        "query": "| summarize MB_IN=sum(mb_in), MB_OUT=sum(mb_out) by name, worker_group\n| extend REDUX=MB_IN-MB_OUT, ['REDUX%']=round(100*REDUX/MB_IN,2), REDUX=round(REDUX,2)\n| extend MB_IN=round(MB_IN,2), MB_OUT=round(MB_OUT,2) \n| where MB_IN>0 "
+        "query": "| summarize Events_IN=sum(events_in), Events_OUT=sum(events_out) by name, worker_group\n| extend REDUX=Events_IN-Events_OUT, ['REDUX%']=round(100*REDUX/Events_IN,2), REDUX=round(REDUX,2)\n| where Events_IN>0\n"
       },
-      "id": "lhpjh1xla",
+      "id": "lhpjh1xla-copy-2",
       "type": "list.table",
       "layout": {
         "x": 0,
         "y": 3,
-        "w": 6,
+        "w": 12,
         "h": 2
       },
-      "title": "MBytes By Route, Totals",
+      "title": "Events By Route, Totals",
       "parentSearchId": "c1k9nc2vs"
     },
     {
@@ -484,17 +484,17 @@
         "type": "inline",
         "earliest": 0,
         "latest": "now",
-        "query": "| summarize Events_IN=sum(events_in), Events_OUT=sum(events_out) by name, worker_group\n| extend REDUX=Events_IN-Events_OUT, ['REDUX%']=round(100*REDUX/Events_IN,2), REDUX=round(REDUX,2)\n| where Events_IN>0\n"
+        "query": "| summarize MB_IN=sum(mb_in), MB_OUT=sum(mb_out) by name, worker_group\n| extend REDUX=MB_IN-MB_OUT, ['REDUX%']=round(100*REDUX/MB_IN,2), REDUX=round(REDUX,2)\n| extend MB_IN=round(MB_IN,2), MB_OUT=round(MB_OUT,2) \n| where MB_IN>0 "
       },
-      "id": "lhpjh1xla-copy-2",
+      "id": "lhpjh1xla",
       "type": "list.table",
       "layout": {
-        "x": 6,
-        "y": 3,
-        "w": 6,
+        "x": 0,
+        "y": 5,
+        "w": 12,
         "h": 2
       },
-      "title": "Events By Route, Totals",
+      "title": "MBytes By Route, Totals",
       "parentSearchId": "c1k9nc2vs"
     },
     {
@@ -505,19 +505,8 @@
           "trellis": false,
           "connectNulls": "Leave gaps",
           "stack": false,
-          "dataFields": [
-            "_time",
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ],
-          "seriesCount": 11
+          "dataFields": [],
+          "seriesCount": 2
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -538,17 +527,7 @@
         "timestats": true,
         "horizontalChart": false,
         "axis": {
-          "yAxis": [
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ]
+          "yAxis": []
         },
         "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_IN=sum(mb_in) by worker_group"
       },
@@ -564,7 +543,7 @@
       "type": "chart.line",
       "layout": {
         "x": 0,
-        "y": 5,
+        "y": 7,
         "w": 6,
         "h": 4
       },
@@ -578,19 +557,8 @@
           "trellis": false,
           "connectNulls": "Leave gaps",
           "stack": false,
-          "dataFields": [
-            "_time",
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ],
-          "seriesCount": 11
+          "dataFields": [],
+          "seriesCount": 2
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -611,17 +579,7 @@
         "timestats": true,
         "horizontalChart": false,
         "axis": {
-          "yAxis": [
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ]
+          "yAxis": []
         },
         "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats Events_IN=sum(events_in) by worker_group"
       },
@@ -637,7 +595,7 @@
       "type": "chart.line",
       "layout": {
         "x": 6,
-        "y": 5,
+        "y": 7,
         "w": 6,
         "h": 4
       },
@@ -651,19 +609,8 @@
           "trellis": false,
           "connectNulls": "Leave gaps",
           "stack": false,
-          "dataFields": [
-            "_time",
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ],
-          "seriesCount": 11
+          "dataFields": [],
+          "seriesCount": 2
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -684,17 +631,7 @@
         "timestats": true,
         "horizontalChart": false,
         "axis": {
-          "yAxis": [
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ]
+          "yAxis": []
         },
         "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_OUT=sum(mb_in) by worker_group"
       },
@@ -710,7 +647,7 @@
       "type": "chart.line",
       "layout": {
         "x": 0,
-        "y": 9,
+        "y": 11,
         "w": 6,
         "h": 4
       },
@@ -724,19 +661,8 @@
           "trellis": false,
           "connectNulls": "Leave gaps",
           "stack": false,
-          "dataFields": [
-            "_time",
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ],
-          "seriesCount": 11
+          "dataFields": [],
+          "seriesCount": 2
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -757,17 +683,7 @@
         "timestats": true,
         "horizontalChart": false,
         "axis": {
-          "yAxis": [
-            "homenet:Cribl Metrics to Cloud",
-            "default:Cribl Metrics to Lake",
-            "default:default",
-            "homenet:IOS Shortcuts",
-            "homenet:DNS only to Cloud Workers",
-            "homenet:Weather data to Cloud Workers",
-            "default:Internal logs",
-            "default:purple",
-            "default:Linux Commands"
-          ]
+          "yAxis": []
         },
         "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out\n| extend worker_group=worker_group+\":\"+name\n| timestats Events_OUT=sum(events_out) by worker_group"
       },
@@ -783,7 +699,7 @@
       "type": "chart.line",
       "layout": {
         "x": 6,
-        "y": 9,
+        "y": 11,
         "w": 6,
         "h": 4
       },
@@ -794,7 +710,7 @@
       "type": "chart.line",
       "layout": {
         "x": 0,
-        "y": 13,
+        "y": 15,
         "w": 12,
         "h": 4
       },
