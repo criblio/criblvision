@@ -21,33 +21,54 @@
     },
     {
       "config": {
-        "defaultValue": "/.*/"
+        "defaultValue": "*",
+        "values": [
+          null
+        ],
+        "axis": {},
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | summarize count() by group | sort by group desc",
+        "field": "group"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset=\"$vt_lookups\" lookupFile=\"environment_assets\" | summarize count() by group | sort by group desc",
+        "earliest": "-1h",
+        "latest": "now"
       },
       "id": "osc1fwqag",
-      "inputId": "group_re",
-      "type": "input.text",
+      "inputId": "group",
+      "type": "input.dropdown",
       "layout": {
         "x": 2,
         "y": 0,
-        "w": 2,
+        "w": 3,
         "h": 2
       },
-      "title": "Worker Group ( /regex/ )"
+      "title": "Worker Group"
     },
     {
       "config": {
-        "defaultValue": "/.*/"
+        "defaultValue": "*",
+        "query": "dataset='default_metrics' group=\"$group\" | where match_regex(_metric,@'/^cribl\\.logstream\\.route/') | summarize routes=values(name) | mv-expand routes\n\n",
+        "axis": {},
+        "field": "routes"
+      },
+      "search": {
+        "type": "inline",
+        "query": "dataset='default_metrics' group=\"$group\" | where match_regex(_metric,@'/^cribl\\.logstream\\.route/') | summarize routes=values(name) | mv-expand routes\n\n",
+        "earliest": "-5m",
+        "latest": "now"
       },
       "id": "kbyd3aze1",
-      "inputId": "route_re",
-      "type": "input.text",
+      "inputId": "route",
+      "type": "input.dropdown",
       "layout": {
-        "x": 4,
+        "x": 5,
         "y": 0,
-        "w": 2,
+        "w": 3,
         "h": 2
       },
-      "title": "Route Match ( /regex/ )"
+      "title": "Route"
     },
     {
       "config": {
@@ -87,14 +108,14 @@
         },
         "timestats": false,
         "horizontalChart": false,
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1h), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table",
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time=bin(_time,1h), group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table ",
         "axis": {}
       },
       "search": {
         "type": "inline",
         "earliest": "$timepick.earliest",
         "latest": "$timepick.latest",
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1h), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table",
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time=bin(_time,1h), group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | render table ",
         "timezone": "$timepick.timezone"
       },
       "horizontalChart": false,
@@ -106,7 +127,7 @@
         "w": 12,
         "h": 2
       },
-      "title": "base_routing_metrics",
+      "title": "Routing metrics",
       "hidePanel": false
     },
     {
@@ -438,7 +459,7 @@
         "x": 0,
         "y": 3,
         "w": 12,
-        "h": 2
+        "h": 3
       },
       "title": "Events By Route, Totals",
       "parentSearchId": "c1k9nc2vs"
@@ -490,7 +511,7 @@
       "type": "list.table",
       "layout": {
         "x": 0,
-        "y": 5,
+        "y": 6,
         "w": 12,
         "h": 2
       },
@@ -506,7 +527,7 @@
           "connectNulls": "Leave gaps",
           "stack": false,
           "dataFields": [],
-          "seriesCount": 2
+          "seriesCount": 1
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -526,16 +547,14 @@
         },
         "timestats": true,
         "horizontalChart": false,
-        "axis": {
-          "yAxis": []
-        },
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_IN=sum(mb_in) by worker_group"
+        "axis": {},
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(mb_in) by name"
       },
       "search": {
         "type": "inline",
         "earliest": "$timepick.earliest",
         "latest": "$timepick.latest",
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_IN=sum(mb_in) by worker_group",
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(mb_in) by name",
         "timezone": "$timepick.timezone"
       },
       "horizontalChart": false,
@@ -543,7 +562,7 @@
       "type": "chart.line",
       "layout": {
         "x": 0,
-        "y": 7,
+        "y": 8,
         "w": 6,
         "h": 4
       },
@@ -558,7 +577,7 @@
           "connectNulls": "Leave gaps",
           "stack": false,
           "dataFields": [],
-          "seriesCount": 2
+          "seriesCount": 1
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -578,16 +597,14 @@
         },
         "timestats": true,
         "horizontalChart": false,
-        "axis": {
-          "yAxis": []
-        },
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats Events_IN=sum(events_in) by worker_group"
+        "axis": {},
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(events_in) by name"
       },
       "search": {
         "type": "inline",
         "earliest": "$timepick.earliest",
         "latest": "$timepick.latest",
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats Events_IN=sum(events_in) by worker_group",
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(events_in) by name",
         "timezone": "$timepick.timezone"
       },
       "horizontalChart": false,
@@ -595,7 +612,7 @@
       "type": "chart.line",
       "layout": {
         "x": 6,
-        "y": 7,
+        "y": 8,
         "w": 6,
         "h": 4
       },
@@ -610,7 +627,7 @@
           "connectNulls": "Leave gaps",
           "stack": false,
           "dataFields": [],
-          "seriesCount": 2
+          "seriesCount": 1
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -630,16 +647,14 @@
         },
         "timestats": true,
         "horizontalChart": false,
-        "axis": {
-          "yAxis": []
-        },
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_OUT=sum(mb_in) by worker_group"
+        "axis": {},
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(mb_out) by name"
       },
       "search": {
         "type": "inline",
         "earliest": "$timepick.earliest",
         "latest": "$timepick.latest",
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out \n| extend worker_group=worker_group+\":\"+name\n| timestats MB_OUT=sum(mb_in) by worker_group",
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(mb_out) by name",
         "timezone": "$timepick.timezone"
       },
       "horizontalChart": false,
@@ -647,7 +662,7 @@
       "type": "chart.line",
       "layout": {
         "x": 0,
-        "y": 11,
+        "y": 12,
         "w": 6,
         "h": 4
       },
@@ -662,7 +677,7 @@
           "connectNulls": "Leave gaps",
           "stack": false,
           "dataFields": [],
-          "seriesCount": 2
+          "seriesCount": 1
         },
         "xAxis": {
           "labelOrientation": 0,
@@ -682,16 +697,14 @@
         },
         "timestats": true,
         "horizontalChart": false,
-        "axis": {
-          "yAxis": []
-        },
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out\n| extend worker_group=worker_group+\":\"+name\n| timestats Events_OUT=sum(events_out) by worker_group"
+        "axis": {},
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(events_out) by name"
       },
       "search": {
         "type": "inline",
         "earliest": "$timepick.earliest",
         "latest": "$timepick.latest",
-        "query": "dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'$route_re$') and match_regex(worker_group,@'$group_re$')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out\n| extend worker_group=worker_group+\":\"+name\n| timestats Events_OUT=sum(events_out) by worker_group",
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats sum(events_out) by name",
         "timezone": "$timepick.timezone"
       },
       "horizontalChart": false,
@@ -699,30 +712,14 @@
       "type": "chart.line",
       "layout": {
         "x": 6,
-        "y": 11,
+        "y": 12,
         "w": 6,
         "h": 4
       },
       "title": "OUT Events By Route, Over Time"
     },
     {
-      "id": "mpb46a484",
-      "type": "chart.line",
-      "layout": {
-        "x": 0,
-        "y": 15,
-        "w": 12,
-        "h": 4
-      },
-      "title": "Total Reduction",
-      "search": {
-        "type": "inline",
-        "earliest": "-1d",
-        "latest": "now",
-        "query": "cribl dataset='cribl_metrics' metric in (\"route.in_bytes\",\"route.out_bytes\",\"route.in_events\",\"route.out_events\")\n| where match_regex(name,@'/.*/') and match_regex(worker_group,@'/.*/')\n| summarize bytes_in=sum(iff(metric==\"route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"route.in_events\",value,0))\n             by _time=bin(_time,1m), worker_group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats  MB_IN=sum(mb_in), MB_OUT=sum(mb_out)\n| extend REDUX=MB_IN-MB_OUT, ['REDUX%']=round(100*REDUX/MB_IN,2), REDUX=round(REDUX,2)\n| extend MB_IN=round(MB_IN,2), MB_OUT=round(MB_OUT,2) \n| where MB_IN>0 "
-      },
       "config": {
-        "type": "line",
         "shouldApplyUserChartSettings": false,
         "series": [
           {
@@ -761,8 +758,29 @@
         "legend": {
           "truncate": true
         },
-        "timestats": true
-      }
+        "timestats": true,
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats  MB_IN=sum(mb_in), MB_OUT=sum(mb_out)\n| extend REDUXMB=MB_IN-MB_OUT, ['REDUXMB%']=round(100*REDUXMB/MB_IN,2), REDUXMB=round(REDUXMB,2)\n| extend MB_IN=round(MB_IN,2), MB_OUT=round(MB_OUT,2) ",
+        "axis": {},
+        "yAxis": {
+          "scale": "Linear"
+        }
+      },
+      "search": {
+        "type": "inline",
+        "earliest": "$timepick.earliest",
+        "latest": "$timepick.latest",
+        "query": "dataset='default_metrics' _metric in (\"cribl.logstream.route.in_bytes\",\"cribl.logstream.route.out_bytes\",\"cribl.logstream.route.in_events\",\"cribl.logstream.route.out_events\") group=\"$group\" name=\"$route\"\n| extend metric=_metric , value=_value \n| summarize bytes_in=sum(iff(metric==\"cribl.logstream.route.in_bytes\",value,0)), \n            bytes_out=sum(iff(metric==\"cribl.logstream.route.out_bytes\",value,0)),\n            events_out=sum(iff(metric==\"cribl.logstream.route.out_events\",value,0)),\n            events_in=sum(iff(metric==\"cribl.logstream.route.in_events\",value,0))\n             by _time, group, name\n| extend mb_in=bytes_in/1000/1000, mb_out=bytes_out/1000/1000\n| project-away bytes_in, bytes_out | timestats  MB_IN=sum(mb_in), MB_OUT=sum(mb_out)\n| extend REDUXMB=MB_IN-MB_OUT, ['REDUXMB%']=round(100*REDUXMB/MB_IN,2), REDUXMB=round(REDUXMB,2)\n| extend MB_IN=round(MB_IN,2), MB_OUT=round(MB_OUT,2) ",
+        "timezone": "$timepick.timezone"
+      },
+      "id": "mpb46a484",
+      "type": "chart.line",
+      "layout": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 4
+      },
+      "title": "Total Reduction"
     }
   ],
   "refreshRate": 1800000
