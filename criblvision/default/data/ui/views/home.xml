@@ -33,6 +33,7 @@
       <label>Instance Type</label>
       <choice value="all_instances">All Instances</choice>
       <choice value="all_leaders">All Leaders</choice>
+      <choice value="all_fleets">All Fleets</choice>
       <choice value="all_worker_groups">All Worker Groups</choice>
       <choice value="all_single">All Single Instances</choice>
       <fieldForLabel>label</fieldForLabel>
@@ -49,6 +50,9 @@
         <condition label="All Leaders">
           <set token="worker_group_event_filter">instance_type=leader</set>
         </condition>
+        <condition label="All Fleets">
+          <set token="worker_group_event_filter">instance_type=managed-edge</set>
+        </condition>
         <condition label="All Worker Groups">
           <set token="worker_group_event_filter">instance_type=worker</set>
         </condition>
@@ -56,7 +60,7 @@
           <set token="worker_group_event_filter">instance_type=single</set>
         </condition>
         <condition>
-          <set token="worker_group_event_filter">instance_type=worker worker_group="$worker_group$"</set>
+          <set token="worker_group_event_filter">instance_type IN (managed-edge, worker) worker_group="$worker_group$"</set>
         </condition>
       </change>
       <default>all_instances</default>
