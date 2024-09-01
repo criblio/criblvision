@@ -20,10 +20,21 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search>
+    <done>
+      <eval token="show_lookup_editor">if($result.count$ == 1, "true", null())</eval>
+    </done>
+    <query>| rest /servicesNS/-/-/apps/local 
+| where title == "lookup_editor" AND disabled == 0
+| stats count</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
   <init>
     <set token="show_leader_overview">true</set>
     <set token="show_worker_overview">true</set>
     <set token="show_single_overview">true</set>
+    <set token="show_managed_edge_overview">true</set>
   </init>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
@@ -84,6 +95,10 @@
           #cribl_stream_asset_piechart {
             width: 25% !important;
           }
+          #environment_trellis .facets-container{
+            display: flex !important;
+            justify-content: center !important;
+          }
         </style>
       </html>
     </panel>
@@ -100,10 +115,14 @@
           </done>
         </search>
         <option name="colorMode">block</option>
-        <option name="drilldown">none</option>
+        <option name="drilldown">all</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="underLabel">Active vs Total Leader Nodes</option>
         <option name="useColors">1</option>
+        <drilldown>
+          <set token="selected_instance_type">leader</set>
+          <set token="selected_instance_type_printable">Leader Nodes</set>
+        </drilldown>
       </single>
     </panel>
     <panel depends="$show_worker_overview$">
@@ -116,9 +135,13 @@
             <eval token="show_worker_overview">if($result.total$ &gt; 0, "true", null())</eval>
           </done>
         </search>
-        <option name="drilldown">none</option>
+        <option name="drilldown">all</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="underLabel">Active vs Total Worker Nodes</option>
+        <drilldown>
+          <set token="selected_instance_type">worker</set>
+          <set token="selected_instance_type_printable">Worker Nodes</set>
+        </drilldown>
       </single>
     </panel>
     <panel depends="$show_single_overview$">
@@ -131,9 +154,32 @@
             <eval token="show_single_overview">if($result.total$ &gt; 0, "true", null())</eval>
           </done>
         </search>
-        <option name="drilldown">none</option>
+        <option name="drilldown">all</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="underLabel">Active vs Total Single Nodes</option>
+        <drilldown>
+          <set token="selected_instance_type">single</set>
+          <set token="selected_instance_type_printable">Single Nodes</set>
+        </drilldown>
+      </single>
+    </panel>
+    <panel depends="$show_managed_edge_overview$">
+      <single>
+        <search base="overview_base_search">
+          <query>
+| where instance_type == "managed-edge"
+| table value total</query>
+          <done>
+            <eval token="show_managed_edge_overview">if($result.total$ &gt; 0, "true", null())</eval>
+          </done>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="underLabel">Active vs Total Edge Nodes</option>
+        <drilldown>
+          <set token="selected_instance_type">managed-edge</set>
+          <set token="selected_instance_type_printable">Edge Nodes</set>
+        </drilldown>
       </single>
     </panel>
   </row>
@@ -141,11 +187,11 @@
     <panel depends="$show_leader_overview$">
       <chart>
         <title>Leader Node Log Activity</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time leader</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Leader Node(s)</option>
         <option name="charting.chart">area</option>
@@ -156,11 +202,11 @@
     <panel depends="$show_worker_overview$">
       <chart>
         <title>Worker Node Log Activity</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time worker</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Worker Node(s)</option>
         <option name="charting.chart">area</option>
@@ -171,17 +217,54 @@
     <panel depends="$show_single_overview$">
       <chart>
         <title>Single Node Log Activity</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time single</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.text">Active Single Node(s)</option>
         <option name="charting.chart">area</option>
         <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
+    </panel>
+    <panel depends="$show_managed_edge_overview$">
+      <chart>
+        <title>Edge Node Log Activity</title>
+        <search base="annotation_search" type="annotation"></search>
+        <search base="active_assets_base_search">
+          <query>
+| table _time managed_edge</query>
+        </search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Active Edge Node(s)</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+  </row>
+  <row depends="$selected_instance_type$">
+    <panel id="environment_trellis">
+      <single>
+        <title>Active vs Total $selected_instance_type_printable$ by Environment</title>
+        <search>
+          <query>| inputlookup cribl_stream_assets
+| search $environment_filter$
+| stats count(eval(status == "active")) AS active count AS total BY environment instance_type
+| eval value = tostring(active, "commas")." / ".tostring(total, "commas")
+| where instance_type == "$selected_instance_type$"
+| chart values(value) AS value BY environment</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">1</option>
+      </single>
     </panel>
   </row>
   <row>
@@ -237,6 +320,15 @@
         <option name="charting.drilldown">none</option>
         <option name="charting.fieldColors">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</option>
       </chart>
+    </panel>
+  </row>
+  <row depends="$show_lookup_editor$">
+    <panel>
+      <html>
+        <div style="text-align: center">
+          <a href="/app/lookup_editor/lookup_edit?namespace=criblvision&amp;lookup=cribl_stream_assets.csv&amp;type=csv&amp;transform=cribl_stream_assets" class="btn btn-primary">Update the Cribl Stream Asset Lookup</a>
+        </div>
+      </html>
     </panel>
   </row>
 </form>
