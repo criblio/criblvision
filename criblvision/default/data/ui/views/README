@@ -141,7 +141,7 @@ If you are using multiple sourcetypes for your internal Cribl logs and would lik
 [(?::){0}your_wildcarded_sourcetype]
 ```
 
-If configuring manually, update the `$SPLUNK_HOME/etc/apps/local/app.conf` configuration file to tell Splunk that this app has been configured:
+If configuring manually, update the `$SPLUNK_HOME/etc/apps/criblvision/local/app.conf` configuration file to tell Splunk that this app has been configured:
 
 ```
 [install]
