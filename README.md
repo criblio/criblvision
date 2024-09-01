@@ -5,7 +5,7 @@
 Version 3.x of the CriblVision app introduces a new Cribl Stream asset lookup to replace the previous Worker Group lookup. This will cause dashboards to behave unexpectedly until the cutover to the new lookup is made. If you are upgrading from version 2.x of CriblVision then the following steps will be required to make this cutover:
 
 1. Install version 3.x of CriblVision
-2. Run the CriblVision setup age again:
+2. Run the CriblVision setup page again:
     1. From the **Apps** dropdown, select **Manage Apps**
     2. Selected the **Set up** action for CriblVision
     3. Follow the instructions on the setup page
@@ -111,6 +111,13 @@ If you are using multiple sourcetypes for your internal Cribl logs and would lik
 
 ```
 [(?::){0}your_wildcarded_sourcetype]
+```
+
+If configuring manually, update the `$SPLUNK_HOME/etc/apps/local/app.conf` configuration file to tell Splunk that this app has been configured:
+
+```
+[install]
+is_configured = true
 ```
 
 ### Alerts
