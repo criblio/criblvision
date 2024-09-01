@@ -210,6 +210,9 @@ definition = env</pre>
 LOOKUP-cribl_stream_workers = cribl_stream_assets host AS host OUTPUTNEW instance_type AS instance_type worker_group AS worker_group</pre>
             <p>If you are using multiple sourcetypes for your internal Cribl logs and would like to use a wildcarded props definition over configuring multiple automated lookups, you can use the following stanza template:</p>
             <pre>[(?::){0}your_wildcarded_sourcetype]</pre>
+            <p>If configuring manually, update the <code>$SPLUNK_HOME/etc/apps/local/app.conf</code> configuration file to tell Splunk that this app has been configured:</p>
+            <pre>[install]
+is_configured = true</pre>
           </div>
           <hr class="break-line" />
         </div>
