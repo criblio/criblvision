@@ -187,7 +187,7 @@
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard displays an overview of the byte/event I/O across either Routes or Pipelines, along with any reduction in bytes/events observed. A breakdown of I/O per Route/Pipeline is provided to investigate the reduction (or lack thereof) across Cribl Stream.</p>
           <p>The internal Cribl Stream metrics do not report bytes I/O metrics for Pipelines, therefore only information relating to event I/O is presented for Pipelines.</p>
-          <p>The <code>Pipeline (Redux Stats)</code> option is to view the metrics provided by the Cribl Redux Stats Pack, created by the talented Jon Rust (search for "Cribl Redux Stats" in the <a href="https://packs.cribl.io" target="_blank">Packs Dispensary</a>). This Pack generates additional byte/event I/O metrics for instrumented Pipelines. It takes into account JSON objects, strings, the entire <code>__e</code> event, and <code>_raw</code> field in an attempt to get the most accurate byte size and count possible. If you are looking to leverage these metrics, please read read the README in the Cribl Redux Stats Pack to understand the instrumentation process and the performance costs.</p>
+          <p>The <code>Pipeline (Redux Stats)</code> option is to view the metrics provided by the Cribl Redux Stats Pack, created by the talented Jon Rust (search for "Cribl Redux Stats" in the <a href="https://packs.cribl.io" target="_blank">Packs Dispensary</a>). This Pack generates additional byte/event I/O metrics for instrumented Pipelines. It takes into account JSON objects, strings, the entire <code>__e</code> event, and <code>_raw</code> field in an attempt to get the most accurate byte size and count possible. It also provides metrics that detail the time taken for events to be processed by the instrumented Pipelines It a If you are looking to leverage these metrics, please read read the README in the Cribl Redux Stats Pack to understand the instrumentation process and the performance costs.</p>
         </div>
       </html>
     </panel>
@@ -527,6 +527,7 @@
           <query>
 | table _time Bytes*</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Bytes I/O</option>
         <option name="charting.chart">area</option>
@@ -542,6 +543,7 @@
           <query>
 | table _time Events*</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
@@ -559,6 +561,7 @@
           <query>
 | table _time "Raw Bytes*"</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Bytes I/O</option>
         <option name="charting.chart">area</option>
@@ -575,6 +578,7 @@
           <query>
 | table _time "Event Bytes*"</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Bytes I/O</option>
         <option name="charting.chart">area</option>
@@ -590,6 +594,7 @@
         <search base="redux_io_time_summary_base_search">
           <query>| table _time "Events In" "Events Out"</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
@@ -814,6 +819,73 @@
         </format>
         <format type="color" field="Events Reduced %">
           <colorPalette type="expression">if(value &lt;= 0, "#D41F1F", "#118832")</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_redux$">
+    <panel>
+      <input type="multiselect" token="time_taken_aggregations" searchWhenChanged="true">
+        <label>Time Taken Aggregations</label>
+        <choice value="min(time_taken_min) AS time_taken_min">Min</choice>
+        <choice value="avg(time_taken_min) AS time_taken_avg">Avg</choice>
+        <choice value="max(time_taken_max) AS time_taken_max">Max</choice>
+        <choice value="max(time_taken_p90) AS time_taken_p90">P90</choice>
+        <choice value="max(time_taken_sd) AS time_taken_sd">Std Dev</choice>
+        <default>min(time_taken_min) AS time_taken_min,avg(time_taken_min) AS time_taken_avg,max(time_taken_max) AS time_taken_max</default>
+        <initialValue>min(time_taken_min) AS time_taken_min,avg(time_taken_min) AS time_taken_avg,max(time_taken_max) AS time_taken_max</initialValue>
+        <delimiter> </delimiter>
+      </input>
+      <chart>
+        <title>Pipeline Processing TImes (ms) Over Time</title>
+        <search depends="$show_redux$">
+          <query>| mstats $time_taken_aggregations$ WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $metric_group_by$=$selected$ BY host cribl_pipe span=auto fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search cribl_pipe != "cribl_reduction_metrics" $worker_group_event_filter$
+| stats max(*) AS * BY _time
+| rename time_taken_min AS Min time_taken_avg AS Avg time_taken_max AS Max time_taken_p90 AS Perc90 time_taken_sd AS "Std Dev"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Milliseconds</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row depends="$show_redux$">
+    <panel>
+      <table>
+        <title>Breakdown of Pipeline Processing Times (ms)</title>
+        <search depends="$show_redux$">
+          <query>| mstats min(time_taken_min) AS time_taken_min avg(time_taken_avg) AS time_taken_avg max(time_taken_max) AS time_taken_max max(time_taken_sd) AS time_taken_sd max(time_taken_p90) AS time_taken_p90 WHERE `set_cribl_metrics_index` $environment_filter$ $metric$=$selected$ BY host $metric_group_by$ fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search $metric_group_by$ != "cribl_reduction_metrics" instance_type IN (worker, single)
+| stats max(*) AS * BY $metric_group_by$ instance_type worker_group
+| table $metric_group_by$ instance_type worker_group time_taken_min time_taken_avg time_taken_max time_taken_p90 time_taken_sd
+| rename cribl_pipe AS Pipeline instance_type AS "Instance Type" worker_group AS "Worker Group" time_taken_min AS Minimum time_taken_avg AS Average time_taken_max AS Maximum time_taken_p90 AS "90th Percentile" time_taken_sd AS "Standard Deviation"</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rowNumbers">true</option>
+        <format type="number" field="Minimum">
+          <option name="unit">ms</option>
+        </format>
+        <format type="number" field="Average">
+          <option name="unit">ms</option>
+        </format>
+        <format type="number" field="Maximum">
+          <option name="unit">ms</option>
+        </format>
+        <format type="number" field="90th Percentile">
+          <option name="unit">ms</option>
+        </format>
+        <format type="number" field="Standard Deviation">
+          <option name="unit">ms</option>
         </format>
       </table>
     </panel>
