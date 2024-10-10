@@ -1,6 +1,6 @@
 <form theme="dark" version="1.1">
   <label>Route/Pipeline Reductions</label>
-  <search id="io_summary_base_search">
+  <search id="internal_io_summary_base_search" depends="$show_internal$">
     <query>| mstats sum(`set_cribl_metrics_prefix($metric$.*)`) AS * WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $metric_group_by$=$selected$ BY host group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
@@ -8,7 +8,15 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
-  <search id="io_time_summary_base_search">
+  <search id="redux_io_summary_base_search" depends="$show_redux$">
+    <query>| mstats sum(e_*) AS e_* sum(raw_*) AS raw_* sum(count_*) AS count_* WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $metric_group_by$=$selected$ BY host cribl_pipe fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search cribl_pipe != "cribl_reduction_metrics" $worker_group_event_filter$
+| stats sum(*) AS *</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="internal_io_time_summary_base_search" depends="$show_internal$">
     <query>| mstats sum(`set_cribl_metrics_prefix($metric$.*)`) AS * WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $metric_group_by$=$selected$ BY host group span=auto fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
@@ -17,11 +25,28 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
-  <search id="io_breakdown_base_search">
+  <search id="redux_io_time_summary_base_search" depends="$show_redux$">
+    <query>| mstats sum(e_*) AS e_* sum(raw_*) AS raw_* sum(count_*) AS count_* WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $metric_group_by$=$selected$ BY host cribl_pipe span=auto fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search cribl_pipe != "cribl_reduction_metrics" $worker_group_event_filter$
+| stats sum(*) AS * BY _time
+| rename e_length_orig AS "Event Bytes In" e_length_post AS "Event Bytes Out" raw_length_orig AS "Raw Bytes In" raw_length_post AS "Raw Bytes Out" count_orig AS "Events In" count_post AS "Events Out"</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="internal_io_breakdown_base_search" depends="$show_internal$">
     <query>| mstats sum(`set_cribl_metrics_prefix($metric$.*)`) AS * WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $metric_group_by$=$selected$ BY host group $metric_group_by$ fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sum(*_bytes) AS *_bytes sum(*_events) AS *_events BY $metric_group_by$ instance_type worker_group</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="redux_io_breakdown_base_search" depends="$show_redux$">
+    <query>| mstats sum(e_*) AS e_* sum(raw_*) AS raw_* sum(count_*) AS count_* WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $metric_group_by$=$selected$ BY host group $metric_group_by$ fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search cribl_pipe != "cribl_reduction_metrics" $worker_group_event_filter$
+| stats sum(*) AS * BY $metric_group_by$ instance_type worker_group</query>
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
@@ -117,10 +142,14 @@
       <label>Show Routes or Pipelines</label>
       <choice value="route">Route</choice>
       <choice value="pipe">Pipeline</choice>
+      <choice value="cribl_pipe">Pipeline (Redux Stats)</choice>
       <change>
         <condition>
-          <eval token="metric_group_by">if(label == "Route", "name", "id")</eval>
-          <eval token="show_byte_io">if(label == "Route", "true", null())</eval>
+          <eval token="metric_group_by">case(label == "Route", "name", label == "Pipeline", "id", label == "Pipeline (Redux Stats)", "cribl_pipe", true(), null())</eval>
+          <eval token="metric_expression">if(label == "Route" OR label == "Pipeline", "sum(`set_cribl_metrics_prefix(".$metric$.".*)`) AS *", "sum(e_*) AS e_* sum(raw_*) AS raw_* sum(count_*) AS count_*")</eval>
+          <eval token="show_internal">if(label == "Route" OR label == "Pipeline", "true", null())</eval>
+          <eval token="show_internal_byte_io">if(label == "Route", "true", null())</eval>
+          <eval token="show_redux">if(label == "Pipeline (Redux Stats)", "true", null())</eval>
           <eval token="selected_label">label</eval>
         </condition>
       </change>
@@ -135,7 +164,8 @@
       <fieldForLabel>$metric_group_by$</fieldForLabel>
       <fieldForValue>$metric_group_by$</fieldForValue>
       <search>
-        <query>| mstats sum(`set_cribl_metrics_prefix($metric$.*)`) AS * WHERE `set_cribl_metrics_index` BY $metric_group_by$</query>
+        <query>| mstats $metric_expression$ WHERE `set_cribl_metrics_index` BY $metric_group_by$
+| where $metric_group_by$ != "cribl_reduction_metrics"</query>
         <earliest>-15m</earliest>
         <latest>now</latest>
       </search>
@@ -156,16 +186,17 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard displays an overview of the byte/event I/O across either Routes or Pipelines, along with any reduction in bytes/events observed. A breakdown of I/O per Route/Pipeline is provided to investigate the reduction (or lack thereof) across Cribl Stream.</p>
-          <p><b>Note:</b>Pipelines do not report bytes I/O metrics, therefore only information relating to event I/O is presented for Pipelines.</p>
+          <p>The internal Cribl Stream metrics do not report bytes I/O metrics for Pipelines, therefore only information relating to event I/O is presented for Pipelines.</p>
+          <p>The <code>Pipeline (Redux Stats)</code> option is to view the metrics provided by the Cribl Redux Stats Pack, created by the talented Jon Rust (search for "Cribl Redux Stats" in the <a href="https://packs.cribl.io" target="_blank">Packs Dispensary</a>). This Pack generates additional byte/event I/O metrics for instrumented Pipelines. It takes into account JSON objects, strings, the entire <code>__e</code> event, and <code>_raw</code> field in an attempt to get the most accurate byte size and count possible. If you are looking to leverage these metrics, please read read the README in the Cribl Redux Stats Pack to understand the instrumentation process and the performance costs.</p>
         </div>
       </html>
     </panel>
   </row>
-  <row>
-    <panel depends="$show_byte_io$">
+  <row depends="$show_internal$">
+    <panel depends="$show_internal_byte_io$">
       <single>
         <title>Total Bytes In</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | table in_bytes</query>
         </search>
@@ -177,10 +208,10 @@
         <option name="useColors">1</option>
       </single>
     </panel>
-    <panel depends="$show_byte_io$">
+    <panel depends="$show_internal_byte_io$">
       <single>
         <title>Total Bytes Out</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | table out_bytes</query>
         </search>
@@ -195,7 +226,7 @@
     <panel>
       <single>
         <title>Total Events In</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | table in_events</query>
         </search>
@@ -209,7 +240,7 @@
     <panel>
       <single>
         <title>Total Events Out</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | table out_events</query>
         </search>
@@ -221,11 +252,101 @@
       </single>
     </panel>
   </row>
-  <row>
-    <panel depends="$show_byte_io$">
+  <row depends="$show_redux$">
+    <panel>
+      <single>
+        <title>Total Raw Bytes In</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| table raw_length_orig</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xB88073","0xB88073"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="unit">B</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Raw Bytes Out</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| table raw_length_post</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xE38E6F","0xE38E6F"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="unit">B</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Event Bytes In</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| table e_length_orig</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xB88073","0xB88073"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="unit">B</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Event Bytes Out</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| table e_length_post</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xE38E6F","0xE38E6F"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="unit">B</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Events In</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| table count_orig</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x2A6293","0x2A6293"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Events Out</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| table count_post</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x78A1C1","0x78A1C1"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row depends="$show_internal$">
+    <panel depends="$show_internal_byte_io$">
       <single>
         <title>Total Bytes Reduced</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | eval bytes_reduced = in_bytes - out_bytes
 | table bytes_reduced</query>
@@ -239,10 +360,10 @@
         <option name="useColors">1</option>
       </single>
     </panel>
-    <panel depends="$show_byte_io$">
+    <panel depends="$show_internal_byte_io$">
       <single>
         <title>Percentage of Bytes Reduced</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | eval bytes_reduced_pct = ((in_bytes - out_bytes) / in_bytes) * 100
 | table bytes_reduced_pct</query>
@@ -260,7 +381,7 @@
     <panel>
       <single>
         <title>Total Events Reduced</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | eval events_reduced = in_events - out_events
 | table events_reduced</query>
@@ -276,7 +397,7 @@
     <panel>
       <single>
         <title>Percentage of Events Reduced</title>
-        <search base="io_summary_base_search">
+        <search base="internal_io_summary_base_search">
           <query>
 | eval events_reduced_pct = ((in_events - out_events) / in_events) * 100
 | table events_reduced_pct</query>
@@ -292,11 +413,117 @@
       </single>
     </panel>
   </row>
-  <row>
-    <panel depends="$show_byte_io$">
+  <row depends="$show_redux$">
+    <panel>
+      <single>
+        <title>Total Raw Bytes Reduced</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| eval raw_bytes_reduced = raw_length_orig - raw_length_post
+| table raw_bytes_reduced</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xd41f1f","0x118832"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">B</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Percentage of Raw Bytes Reduced</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| eval raw_bytes_reduced_pct = ((raw_length_orig - raw_length_post) / raw_length_orig) * 100
+| table raw_bytes_reduced_pct</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xd41f1f","0x118832"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">%</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Event Bytes Reduced</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| eval e_bytes_reduced = e_length_orig - e_length_post
+| table e_bytes_reduced</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xd41f1f","0x118832"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">B</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Percentage of Event Bytes Reduced</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| eval e_bytes_reduced_pct = ((e_length_orig - e_length_post) / e_length_orig) * 100
+| table e_bytes_reduced_pct</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xd41f1f","0x118832"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">%</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Events Reduced</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| eval events_reduced = count_orig - count_post
+| table events_reduced</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0xd41f1f","0x118832"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Percentage of Events Reduced</title>
+        <search base="redux_io_summary_base_search">
+          <query>
+| eval events_reduced_pct = ((count_orig - count_post) / count_orig) * 100
+| table events_reduced_pct</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0xd41f1f","0x118832"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unit">%</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row depends="$show_internal$">
+    <panel depends="$show_internal_byte_io$">
       <chart>
         <title>Bytes I/O Over Time</title>
-        <search base="io_time_summary_base_search">
+        <search base="internal_io_time_summary_base_search">
           <query>
 | table _time Bytes*</query>
         </search>
@@ -311,7 +538,7 @@
     <panel>
       <chart>
         <title>Events I/O Over Time</title>
-        <search base="io_time_summary_base_search">
+        <search base="internal_io_time_summary_base_search">
           <query>
 | table _time Events*</query>
         </search>
@@ -324,11 +551,60 @@
       </chart>
     </panel>
   </row>
-  <row depends="$show_byte_io$">
+  <row depends="$show_redux$">
+    <panel>
+      <chart>
+        <title>Raw Bytes I/O Over Time</title>
+        <search base="redux_io_time_summary_base_search">
+          <query>
+| table _time "Raw Bytes*"</query>
+        </search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Bytes I/O</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"Raw Bytes In":"0xB88073","Raw Bytes Out":"0xE38E6F"}</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Raw Event I/O Over Time</title>
+        <search base="redux_io_time_summary_base_search">
+          <query>
+| table _time "Event Bytes*"</query>
+        </search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Bytes I/O</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"Event Bytes In":"0xB88073","Event Bytes Out":"0xE38E6F"}</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Events I/O Over Time</title>
+        <search base="redux_io_time_summary_base_search">
+          <query>| table _time "Events In" "Events Out"</query>
+        </search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Events I/O</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"Events In":"0x2A6293","Events Out":"0x78A1C1"}</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row depends="$show_internal$,$show_internal_byte_io$">
     <panel>
       <table>
         <title>Breakdown of Bytes I/O by $selected_label$</title>
-        <search base="io_breakdown_base_search">
+        <search base="internal_io_breakdown_base_search">
           <query>
 | eval bytes_reduced = in_bytes - out_bytes, bytes_reduced_pct = (bytes_reduced / in_bytes) * 100
 | table $metric_group_by$ instance_type worker_group in_bytes out_bytes bytes_reduced bytes_reduced_pct
@@ -369,15 +645,146 @@
       </table>
     </panel>
   </row>
-  <row>
+  <row depends="$show_redux$">
+    <panel>
+      <table>
+        <title>Breakdown of Raw Bytes I/O by $selected_label$</title>
+        <search base="redux_io_breakdown_base_search">
+          <query>| eval raw_bytes_reduced = raw_length_orig - raw_length_post, raw_bytes_reduced_pct = (raw_bytes_reduced / raw_length_orig) * 100
+| table $metric_group_by$ instance_type worker_group raw_length_orig raw_length_post raw_bytes_reduced raw_bytes_reduced_pct
+| rename name AS Route id AS Pipeline cribl_pipe AS Pipeline instance_type AS "Instance Type" worker_group AS "Worker Group" raw_length_orig AS "Raw Bytes In" raw_length_post AS "Raw Bytes Out" raw_bytes_reduced AS "Raw Bytes Reduced" raw_bytes_reduced_pct AS "Raw Bytes Reduced %"</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Raw Bytes In">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <format type="number" field="Raw Bytes Out">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <format type="number" field="Raw Bytes Reduced">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <format type="number" field="Raw Bytes Reduced %">
+          <option name="unit">%</option>
+        </format>
+        <format type="color" field="Raw Bytes In">
+          <colorPalette type="expression">"#B88073"</colorPalette>
+        </format>
+        <format type="color" field="Raw Bytes Out">
+          <colorPalette type="expression">"#E38E6F"</colorPalette>
+        </format>
+        <format type="color" field="Raw Bytes Reduced">
+          <colorPalette type="expression">if(value &lt;= 0, "#D41F1F", "#118832")</colorPalette>
+        </format>
+        <format type="color" field="Raw Bytes Reduced %">
+          <colorPalette type="expression">if(value &lt;= 0, "#D41F1F", "#118832")</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_redux$">
+    <panel>
+      <table>
+        <title>Breakdown of Event Bytes I/O by $selected_label$</title>
+        <search base="redux_io_breakdown_base_search">
+          <query>
+| eval e_bytes_reduced = e_length_orig - e_length_post, e_bytes_reduced_pct = (e_bytes_reduced / e_length_orig) * 100
+| table $metric_group_by$ instance_type worker_group e_length_orig e_length_post e_bytes_reduced e_bytes_reduced_pct
+| rename name AS Route id AS Pipeline cribl_pipe AS Pipeline instance_type AS "Instance Type" worker_group AS "Worker Group" e_length_orig AS "Event Bytes In" e_length_post AS "Event Bytes Out" e_bytes_reduced AS "Event Bytes Reduced" e_bytes_reduced_pct AS "Event Bytes Reduced %"
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Event Bytes In">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <format type="number" field="Event Bytes Out">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <format type="number" field="Event Bytes Reduced">
+          <option name="precision">0</option>
+          <option name="unit">B</option>
+        </format>
+        <format type="number" field="Event Bytes Reduced %">
+          <option name="unit">%</option>
+        </format>
+        <format type="color" field="Event Bytes In">
+          <colorPalette type="expression">"#B88073"</colorPalette>
+        </format>
+        <format type="color" field="Event Bytes Out">
+          <colorPalette type="expression">"#E38E6F"</colorPalette>
+        </format>
+        <format type="color" field="Event Bytes Reduced">
+          <colorPalette type="expression">if(value &lt;= 0, "#D41F1F", "#118832")</colorPalette>
+        </format>
+        <format type="color" field="Event Bytes Reduced %">
+          <colorPalette type="expression">if(value &lt;= 0, "#D41F1F", "#118832")</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_internal$">
     <panel>
       <table>
         <title>Breakdown of Event I/O by $selected_label$</title>
-        <search base="io_breakdown_base_search">
+        <search base="internal_io_breakdown_base_search">
           <query>
 | eval events_reduced = in_events - out_events, events_reduced_pct = (events_reduced / in_events) * 100
 | table $metric_group_by$ instance_type worker_group in_events out_events events_reduced events_reduced_pct
 | rename name AS Route id AS Pipeline instance_type AS "Instance Type" worker_group AS "Worker Group" in_events AS "Events In" out_events AS "Events Out" events_reduced AS "Events Reduced" events_reduced_pct AS "Events Reduced %"
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Events In">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="Events Out">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="Events Reduced">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="Events Reduced %">
+          <option name="unit">%</option>
+        </format>
+        <format type="color" field="Events In">
+          <colorPalette type="expression">"#2A6293"</colorPalette>
+        </format>
+        <format type="color" field="Events Out">
+          <colorPalette type="expression">"#78A1C1"</colorPalette>
+        </format>
+        <format type="color" field="Events Reduced">
+          <colorPalette type="expression">if(value &lt;= 0, "#D41F1F", "#118832")</colorPalette>
+        </format>
+        <format type="color" field="Events Reduced %">
+          <colorPalette type="expression">if(value &lt;= 0, "#D41F1F", "#118832")</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row depends="$show_redux$">
+    <panel>
+      <table>
+        <title>Breakdown of Event I/O by $selected_label$</title>
+        <search base="redux_io_breakdown_base_search">
+          <query>
+| eval events_reduced = count_orig - count_post, events_reduced_pct = (events_reduced / count_orig) * 100
+| table $metric_group_by$ instance_type worker_group count_orig count_post events_reduced events_reduced_pct
+| rename name AS Route id AS Pipeline cribl_pipe AS Pipeline instance_type AS "Instance Type" worker_group AS "Worker Group" count_orig AS "Events In" count_post AS "Events Out" events_reduced AS "Events Reduced" events_reduced_pct AS "Events Reduced %"
           </query>
         </search>
         <option name="drilldown">none</option>
