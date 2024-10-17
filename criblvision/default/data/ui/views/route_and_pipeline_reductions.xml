@@ -187,7 +187,9 @@
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard displays an overview of the byte/event I/O across either Routes or Pipelines, along with any reduction in bytes/events observed. A breakdown of I/O per Route/Pipeline is provided to investigate the reduction (or lack thereof) across Cribl Stream.</p>
           <p>The internal Cribl Stream metrics do not report bytes I/O metrics for Pipelines, therefore only information relating to event I/O is presented for Pipelines.</p>
-          <p>The <code>Pipeline (Redux Stats)</code> option is to view the metrics provided by the Cribl Redux Stats Pack, created by the talented Jon Rust (search for "Cribl Redux Stats" in the <a href="https://packs.cribl.io" target="_blank">Packs Dispensary</a>). This Pack generates additional byte/event I/O metrics for instrumented Pipelines. It takes into account JSON objects, strings, the entire <code>__e</code> event, and <code>_raw</code> field in an attempt to get the most accurate byte size and count possible. It also provides metrics that detail the time taken for events to be processed by the instrumented Pipelines It a If you are looking to leverage these metrics, please read read the README in the Cribl Redux Stats Pack to understand the instrumentation process and the performance costs.</p>
+          <p>The <code>Pipeline (Redux Stats)</code> option is to view the metrics provided by the Cribl Redux Stats Pack, created by the talented Jon Rust (search for "Cribl Redux Stats" in the <a href="https://packs.cribl.io" target="_blank">Packs Dispensary</a>). This Pack generates additional byte/event I/O metrics for instrumented Pipelines. It takes into account JSON objects, strings, the entire <code>__e</code> event, and <code>_raw</code> field in an attempt to get the most accurate byte size and count possible. It also provides metrics that detail the time taken for events to be processed by the instrumented Pipelines.</p>
+          <p>
+            <span style="color:#FF5733;font-weight:bold;">Using the Cribl Redux Stats Pack can have a performance impact on your environment.</span> If you are looking to leverage these metrics, please read the README in the Cribl Redux Stats Pack to understand the instrumentation process and the performance costs.</p>
         </div>
       </html>
     </panel>
@@ -523,11 +525,11 @@
     <panel depends="$show_internal_byte_io$">
       <chart>
         <title>Bytes I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="internal_io_time_summary_base_search">
           <query>
 | table _time Bytes*</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Bytes I/O</option>
         <option name="charting.chart">area</option>
@@ -539,11 +541,11 @@
     <panel>
       <chart>
         <title>Events I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="internal_io_time_summary_base_search">
           <query>
 | table _time Events*</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
@@ -557,11 +559,11 @@
     <panel>
       <chart>
         <title>Raw Bytes I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>
 | table _time "Raw Bytes*"</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Bytes I/O</option>
         <option name="charting.chart">area</option>
@@ -573,12 +575,12 @@
     </panel>
     <panel>
       <chart>
-        <title>Raw Event I/O Over Time</title>
+        <title>Raw Event Bytes I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>
 | table _time "Event Bytes*"</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Bytes I/O</option>
         <option name="charting.chart">area</option>
@@ -591,10 +593,10 @@
     <panel>
       <chart>
         <title>Events I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>| table _time "Events In" "Events Out"</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
