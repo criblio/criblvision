@@ -574,11 +574,11 @@
     <panel depends="$show_internal_byte_io$">
       <chart>
         <title>$bytes_unit_label$ I/O Over Time</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="internal_io_time_summary_base_search">
           <query>
 | table _time $bytes_unit_label$*</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">$bytes_unit_label$ I/O</option>
         <option name="charting.chart">area</option>
@@ -590,11 +590,11 @@
     <panel>
       <chart>
         <title>Events I/O Over Time</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="internal_io_time_summary_base_search">
           <query>
 | table _time Events*</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
@@ -608,11 +608,11 @@
     <panel>
       <chart>
         <title>Raw $bytes_unit_label$ I/O Over Time</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>
 | table _time "Raw $bytes_unit_label$*"</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">$bytes_unit_label$ I/O</option>
         <option name="charting.chart">area</option>
@@ -625,11 +625,11 @@
     <panel>
       <chart>
         <title>Raw Event $bytes_unit_label$ I/O Over Time</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>
 | table _time "Event $bytes_unit_label$*"</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">$bytes_unit_label$ I/O</option>
         <option name="charting.chart">area</option>
@@ -642,10 +642,10 @@
     <panel>
       <chart>
         <title>Events I/O Over Time</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>| table _time "Events In" "Events Out"</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
@@ -892,8 +892,9 @@
         <search depends="$show_redux$">
           <query>| mstats $time_taken_aggregations$ WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $metric_group_by$=$selected$ BY host cribl_pipe span=auto fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
-| search cribl_pipe != "cribl_reduction_metrics" $worker_group_event_filter$
+| search cribl_pipe !="cribl_reduction_metrics" $worker_group_event_filter$
 | stats max(*) AS * BY _time
+| fields - cribl_pipe host instance_type worker_group
 | rename time_taken_min AS Min time_taken_avg AS Avg time_taken_max AS Max time_taken_p90 AS Perc90 time_taken_sd AS "Std Dev"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
