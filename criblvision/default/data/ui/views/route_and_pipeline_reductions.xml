@@ -1,4 +1,9 @@
 <form theme="dark" version="1.1">
+  <init>
+    <set token="metric">route</set>
+    <set token="metric_group_by">name</set>
+    <set token="metric_expression">sum(`set_cribl_metrics_prefix(route.*)`) AS *</set>
+  </init>
   <label>Route/Pipeline Reductions</label>
   <search>
     <done>
@@ -160,8 +165,8 @@
       <choice value="cribl_pipe">Pipeline (Redux Stats)</choice>
       <change>
         <condition>
-          <eval token="metric_group_by">case(label == "Route", "name", label == "Pipeline", "id", label == "Pipeline (Redux Stats)", "cribl_pipe", true(), null())</eval>
           <eval token="metric_expression">if(label == "Route" OR label == "Pipeline", "sum(`set_cribl_metrics_prefix(".$metric$.".*)`) AS *", "sum(e_*) AS e_* sum(raw_*) AS raw_* sum(count_*) AS count_*")</eval>
+          <eval token="metric_group_by">case(label == "Route", "name", label == "Pipeline", "id", label == "Pipeline (Redux Stats)", "cribl_pipe", true(), null())</eval>
           <eval token="show_internal">if(label == "Route" OR label == "Pipeline", "true", null())</eval>
           <eval token="show_internal_byte_io">if(label == "Route", "true", null())</eval>
           <eval token="show_redux">if(label == "Pipeline (Redux Stats)", "true", null())</eval>
