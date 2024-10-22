@@ -5,6 +5,29 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search id="bytes_summary_io_base_search">
+    <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS *_bytes WHERE `set_cribl_metrics_index` $environment_filter$
+| foreach *_bytes [ eval `process_bytes(&lt;&lt;FIELD&gt;&gt;, "$bytes_unit_abbreviated_label$")` ]
+| eval bytes_reduction = out_bytes - in_bytes, bytes_reduction_pct = (bytes_reduction / in_bytes) * -100</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search id="bytes_time_summary_io_base_search">
+    <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS *_bytes WHERE `set_cribl_metrics_index` $environment_filter$ span=auto
+| foreach *_bytes [ eval `process_bytes(&lt;&lt;FIELD&gt;&gt;, "$bytes_unit_abbreviated_label$")` ]
+| rename in_bytes AS "$bytes_unit_label$ In" out_bytes AS "$bytes_unit_label$ Out"</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <search>
+    <done>
+      <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
+    </done>
+    <query>| makeresults | eval bytes_unit_abbreviated_label = upper(`set_bytes_unit`)
+    </query>
+    <earliest>-1m@m</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" searchWhenChanged="false" token="time">
       <label>Time Range</label>
@@ -34,14 +57,25 @@
       <default>*</default>
       <initialValue>*</initialValue>
     </input>
-    <input type="dropdown" token="unit" searchWhenChanged="true">
-      <label>Unit</label>
-      <choice value="bytes">Bytes</choice>
-      <choice value="KB">KB</choice>
-      <choice value="MB">MB</choice>
-      <choice value="GB">GB</choice>
-      <default>GB</default>
-      <initialValue>GB</initialValue>
+    <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
+      <label>Bytes Unit</label>
+      <default>$init_bytes_unit_abbreviated_label$</default>
+      <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
+      <fieldForLabel>unit</fieldForLabel>
+      <fieldForValue>abbreviated_unit</fieldForValue>
+      <search>
+        <query>| inputlookup bytes_units</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition>
+          <eval token="bytes_unit_abbreviated_label">value</eval>
+          <eval token="bytes_unit_label">label</eval>
+          <eval token="bytes_precision_single">if(lower(value) == "b", "0", "0.000")</eval>
+          <eval token="bytes_precision_table">if(lower(value) == "b", "0", "3")</eval>
+        </condition>
+      </change>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -71,98 +105,68 @@
   </row>
   <row>
     <panel>
-      <title>Cribl Stream $unit$ In</title>
+      <title>Cribl Stream $bytes_unit_label$ In</title>
       <single>
-        <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=1h
-| stats sum(`set_cribl_metrics_prefix(route.in_bytes)`) AS bytes
-| eval KB=round(bytes/1024, 4)
-| eval MB=round(bytes/1024/1024, 4)
-| eval GB=round(bytes/1024/1024/1024, 4)
-| fields $unit$</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="colorMode">none</option>
-        <option name="drilldown">none</option>
-        <option name="numberPrecision">0.00</option>
-        <option name="rangeColors">["0xdc4e41","0x27efe6"]</option>
-        <option name="rangeValues">[0]</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="underLabel">$unit$ IN</option>
-        <option name="unit">$unit$</option>
-        <option name="useColors">1</option>
-      </single>
-    </panel>
-    <panel>
-      <title>Cribl Stream $unit$ Out</title>
-      <single>
-        <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=1h
-| stats sum(`set_cribl_metrics_prefix(route.out_bytes)`) AS bytes
-| eval KB=round(bytes/1024, 4)
-| eval MB=round(bytes/1024/1024, 4)
-| eval GB=round(bytes/1024/1024/1024, 4)
-| fields $unit$</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="drilldown">none</option>
-        <option name="numberPrecision">0.00</option>
-        <option name="rangeColors">["0xdc4e41","0xa303df"]</option>
-        <option name="rangeValues">[0]</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="underLabel">$unit$ OUT</option>
-        <option name="unit">$unit$</option>
-        <option name="useColors">1</option>
-      </single>
-    </panel>
-    <panel>
-      <title>Cribl Stream $unit$ Volume Reduction</title>
-      <single>
-        <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index` $environment_filter$
-| eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
-| eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
-| eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
-| fields $unit$_in $unit$_out
-| eval Volume_Reduction = $unit$_out - $unit$_in
-| fields Volume_Reduction</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <sampleRatio>1</sampleRatio>
+        <search base="bytes_summary_io_base_search">
+          <query>
+| table in_bytes</query>
         </search>
         <option name="colorMode">block</option>
         <option name="drilldown">none</option>
-        <option name="numberPrecision">0.00</option>
+        <option name="numberPrecision">$bytes_precision_single$</option>
+        <option name="rangeColors">["0xB88073","0xB88073"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">$bytes_unit_label$ IN</option>
+        <option name="unit">$bytes_unit_abbreviated_label$</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Cribl Stream $bytes_unit_label$ Out</title>
+      <single>
+        <search base="bytes_summary_io_base_search">
+          <query>
+| table out_bytes</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">$bytes_precision_single$</option>
+        <option name="rangeColors">["0xE38E6F","0xE38E6F"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">$bytes_unit_label$ OUT</option>
+        <option name="unit">$bytes_unit_abbreviated_label$</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Cribl Stream $bytes_unit_label$ Volume Reduction</title>
+      <single>
+        <search base="bytes_summary_io_base_search">
+          <query>
+| table bytes_reduction</query>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">$bytes_precision_single$</option>
         <option name="rangeColors">["0x53a051","0xf8be34"]</option>
         <option name="rangeValues">[0]</option>
         <option name="refresh.display">progressbar</option>
         <option name="trellis.enabled">0</option>
         <option name="trellis.scales.shared">1</option>
         <option name="trellis.size">medium</option>
-        <option name="underLabel">$unit$_out - $unit$_in</option>
-        <option name="unit">$unit$</option>
+        <option name="underLabel">$bytes_unit_label$ OUT - $bytes_unit_label$ IN</option>
+        <option name="unit">$bytes_unit_abbreviated_label$</option>
         <option name="useColors">1</option>
       </single>
     </panel>
     <panel>
-      <title>Cribl Stream $unit$ Volume Reduction %</title>
+      <title>Cribl Stream $bytes_unit_label$ Volume Reduction %</title>
       <single>
-        <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.*_bytes)`) AS bytes_* WHERE `set_cribl_metrics_index` $environment_filter$
-| eval KB_in=round(bytes_in/1024, 4), KB_out=round(bytes_out/1024, 4)
-| eval MB_in=round(bytes_in/1024/1024, 4), MB_out=round(bytes_out/1024/1024, 4)
-| eval GB_in=round(bytes_in/1024/1024/1024, 4), GB_out=round(bytes_out/1024/1024/1024, 4)
-| fields $unit$_in $unit$_out
-| eval Volume_Reduction = ($unit$_in - $unit$_out)
-| eval Volume_Reduction_perc = (Volume_Reduction / $unit$_in)*100
-| fields Volume_Reduction_perc</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <sampleRatio>1</sampleRatio>
+        <search base="bytes_summary_io_base_search">
+          <query>
+| table bytes_reduction_pct</query>
         </search>
         <option name="colorMode">block</option>
         <option name="drilldown">none</option>
@@ -170,7 +174,7 @@
         <option name="rangeColors">["0xdc4e41","0x53a051"]</option>
         <option name="rangeValues">[0]</option>
         <option name="refresh.display">progressbar</option>
-        <option name="underLabel">$unit$ Reduction %</option>
+        <option name="underLabel">$bytes_unit_label$ Reduction %</option>
         <option name="unit">%</option>
         <option name="useColors">1</option>
       </single>
@@ -178,47 +182,36 @@
   </row>
   <row>
     <panel>
-      <title>Cribl Stream $unit$ In</title>
+      <title>Cribl Stream $bytes_unit_label$ In Over Time</title>
       <chart>
-        <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.in_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=15m
-| timechart sum(`set_cribl_metrics_prefix(route.in_bytes)`) AS bytes span=15m
-| table _time bytes
-| eval KB=round(bytes/1024, 4)
-| eval MB=round(bytes/1024/1024, 4)
-| eval GB=round(bytes/1024/1024/1024, 4)
-| chart list($unit$) as $unit$_in over _time</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
+        <search base="bytes_time_summary_io_base_search">
+          <query>
+| table _time "$bytes_unit_label$ In"
+          </query>
         </search>
         <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">area</option>
         <option name="charting.drilldown">all</option>
+        <option name="charting.fieldColors">{"$bytes_unit_label$ In":"0xB88073"}</option>
         <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
     <panel>
-      <title>Cribl Stream $unit$ Out</title>
+      <title>Cribl Stream $bytes_unit_label$ Out Over Time</title>
       <chart>
-        <search>
-          <query>| mstats sum(`set_cribl_metrics_prefix(route.out_bytes)`) prestats=true WHERE `set_cribl_metrics_index` $environment_filter$ span=15m
-| timechart sum(`set_cribl_metrics_prefix(route.out_bytes)`) AS bytes span=15m
-| table _time bytes
-| eval KB=round(bytes/1024, 4)
-| eval MB=round(bytes/1024/1024, 4)
-| eval GB=round(bytes/1024/1024/1024, 4)
-| chart list($unit$) as $unit$_out over _time</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-          <sampleRatio>1</sampleRatio>
+        <search base="bytes_time_summary_io_base_search">
+          <query>
+| table _time "$bytes_unit_label$ Out"
+          </query>
         </search>
         <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">area</option>
-        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.showDataLabels">none</option>
         <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"$bytes_unit_label$ Out":"0xE38E6F"}</option>
         <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
       </chart>
@@ -226,7 +219,7 @@
   </row>
   <row>
     <panel>
-      <title>Splunk License $unit$ Used</title>
+      <title>Splunk License $bytes_unit_label$ Used</title>
       <input type="dropdown" token="idx_select" searchWhenChanged="true">
         <label>Include/Exclude Cribl_Stream_Metrics Index</label>
         <choice value="index=*">Include</choice>
@@ -239,13 +232,12 @@
           <query>index=_internal source=*license_usage.log type=Usage pool=*
 | rename idx AS index
 | search $idx_select$
-| stats sum(b) as bytes_used by pool poolsz
-| rename poolsz as bytes_poolsz
-| eval KB_used=round(bytes_used/1024, 4), MB_used=round(bytes_used/1024/1024, 4), GB_used=round(bytes_used/1024/1024/1024, 4)
-| eval KB_poolsz=round(bytes_poolsz/1024, 4) , MB_poolsz=round(bytes_poolsz/1024/1024, 4) , GB_poolsz=round(bytes_poolsz/1024/1024/1024, 4)
-| rename pool as Pool $unit$_used as "$unit$ license used" $unit$_poolsz as "$unit$ License Capacity"
-| fields Pool "$unit$ license used" "$unit$ License Capacity"
-| sort Pool</query>
+| stats sum(b) AS bytes_used BY pool poolsz
+| rename poolsz AS bytes_poolsz
+| foreach bytes_*  [ eval `process_bytes(&lt;&lt;FIELD&gt;&gt;, "$bytes_unit_abbreviated_label$")` ]
+| fields pool bytes_*
+| sort pool
+| rename pool AS Pool bytes_used AS "$bytes_unit_abbreviated_label$ License Used" bytes_poolsz AS "$bytes_unit_abbreviated_label$ License Capacity"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -256,19 +248,17 @@
       </chart>
     </panel>
     <panel>
-      <title>Splunk License $unit$ Used by Index</title>
+      <title>Splunk License $bytes_unit_label$ Used by Index</title>
       <table>
         <search>
           <query>index=_internal source=*license_usage.log type=Usage pool=*
 | rename idx AS index
 | search $idx_select$
-| stats sum(b) as b by pool index
-| eval KB_used=round(b/1024, 4), MB_used=round(b/1024/1024, 4), GB_used=round(b/1024/1024/1024, 4)
-| rename b as bytes_used
-| addcoltotals $unit$_used labelfield=index label="TOTAL $unit$'s USED:"
-| rename index as Index pool as "License Pool" $unit$_used as "$unit$'s Used"
-| fields "License Pool" Index "$unit$'s Used"
-| sort - "$unit$'s Used"</query>
+| stats sum(b) as bytes_used by pool index
+| eval `process_bytes(bytes_used, "$bytes_unit_abbreviated_label$")`
+| fields index pool bytes_used
+| sort bytes_used
+| rename index as Index pool as "License Pool" bytes_used as "$bytes_unit_label$ Used"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -277,10 +267,13 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">none</option>
         <option name="percentagesRow">false</option>
-        <option name="refresh.display">progressbar</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
         <option name="wrap">true</option>
+        <format type="number" field="$bytes_unit_label$ Used">
+          <option name="unit">$bytes_unit_abbreviated_label$</option>
+          <option name="precision">$bytes_precision_table$</option>
+        </format>
       </table>
     </panel>
   </row>
