@@ -1,5 +1,14 @@
 <form theme="dark" version="1.1">
   <label>Cribl Stream Sizing Calculator</label>
+  <search>
+    <done>
+      <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
+    </done>
+    <query>| makeresults | eval bytes_unit_abbreviated_label = upper(`set_bytes_unit`)
+    </query>
+    <earliest>-1m@m</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time">
       <label>Time Range</label>
@@ -112,6 +121,26 @@
       <choice value="480">ARM64</choice>
       <default>200</default>
     </input>
+    <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
+      <label>Bytes Unit</label>
+      <default>$init_bytes_unit_abbreviated_label$</default>
+      <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
+      <fieldForLabel>unit</fieldForLabel>
+      <fieldForValue>abbreviated_unit</fieldForValue>
+      <search>
+        <query>| inputlookup bytes_units</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition>
+          <eval token="bytes_unit_abbreviated_label">value</eval>
+          <eval token="bytes_unit_label">label</eval>
+          <eval token="bytes_precision_single">if(lower(value) == "b", "0", "0.000")</eval>
+          <eval token="bytes_precision_table">if(lower(value) == "b", "0", "3")</eval>
+        </condition>
+      </change>
+    </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
       <choice value="show">Show</choice>
@@ -174,41 +203,44 @@
           <done>
             <set token="processingLimitPerCPU">$result.processingLimitPerCPU$</set>
           </done>
-          <query>| makeresults | eval processingLimitPerCPU=(($cpuType$ * $cpuSpeed$) / 3)</query>
+          <query>| makeresults 
+| eval processingLimitPerCPU = (($cpuType$ * $cpuSpeed$) / 3) * pow(1024, 3)
+| eval `process_bytes(processingLimitPerCPU, "$bytes_unit_abbreviated_label$")`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
-        <option name="underLabel">GB/day</option>
+        <option name="underLabel">$bytes_unit_abbreviated_label$ / Day</option>
       </single>
     </panel>
     <panel>
       <title>Estimated Total Throughput per Worker Node</title>
       <single>
         <search>
-          <query>| makeresults | eval EstimatedLimit=($processingLimitPerCPU$ * $workerProcessCount$)</query>
+          <query>| makeresults 
+| eval EstimatedLimit = ($processingLimitPerCPU$ * $workerProcessCount$)</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
-        <option name="underLabel">GB/day</option>
+        <option name="underLabel">$bytes_unit_abbreviated_label$ / day</option>
       </single>
     </panel>
   </row>
   <row>
     <panel>
-      <title>Total Throughput (inBytes + outBytes) in GB</title>
+      <title>Total Throughput (inBytes + outBytes) in $bytes_unit_abbreviated_label$</title>
       <chart>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
-| eval totalGB=round((('inBytes' + 'outBytes') / 1024 / 1024 / 1024), 0)
-| timechart span=1d max(totalGB) AS "Total Throughput (GB)"</query>
+| eval total = inBytes + outBytes, `process_bytes(total, "$bytes_unit_abbreviated_label$")`
+| timechart span=1d max(total) AS "Total Throughput ($bytes_unit_abbreviated_label$)"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -227,9 +259,8 @@
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="server" message="_raw stats"
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
-| eval inGB=round(('inBytes' / 1024 / 1024 / 1024), 0)
-| eval outGB=round(('outBytes' / 1024 / 1024 / 1024), 0)
-| eval calculation=(round(((('inGB' + 'outGB') * 1024) / $processingLimitPerCPU$), 0) + 1)
+| eval total = inBytes + outBytes, `process_bytes(total, "$bytes_unit_abbreviated_label$")`
+| eval calculation=(round((total / $processingLimitPerCPU$), 0) + 1)
 | timechart span=1d max(calculation) AS "Estimated Worker Processes Required"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -252,31 +283,30 @@
 | bin span=1d _time
 | stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
 | eval date = strftime(_time, "%Y-%m-%d")
-| eval inGB = round((inBytes / 1024 / 1024 / 1024), 0)
-| eval outGB = round((outBytes / 1024 / 1024 / 1024), 0)
-| eval totalGB = (inGB + outGB)
-| eval wpRequired = (round(('totalGB' / $processingLimitPerCPU$), 0) + 1)
-| table date inGB outGB totalGB wpRequired
-| rename date AS Date inGB AS "GB In" outGB AS "GB Out" totalGB AS "Total GB" wpRequired AS "Estimated Worker Processes Required"</query>
+| foreach *Bytes [ eval `process_bytes(&lt;&lt;FIELD&gt;&gt;, "$bytes_unit_abbreviated_label$")` ]
+| eval totalBytes = inBytes + outBytes
+| eval wpRequired = (round((totalBytes / $processingLimitPerCPU$), 0) + 1)
+| table date inBytes outBytes totalBytes wpRequired
+| rename date AS Date inBytes AS "$bytes_unit_abbreviated_label$ In" outBytes AS "$bytes_unit_abbreviated_label$ Out" totalBytes AS "Total $bytes_unit_abbreviated_label$" wpRequired AS "Estimated Worker Processes Required"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
-        <format type="number" field="GB In">
-          <option name="precision">0</option>
-          <option name="unit">GB</option>
-        </format>
-        <format type="number" field="GB Out">
-          <option name="precision">0</option>
-          <option name="unit">GB</option>
-        </format>
-        <format type="number" field="Total GB">
-          <option name="precision">0</option>
-          <option name="unit">GB</option>
-        </format>
         <format type="number" field="Estimated Worker Processes Required">
           <option name="precision">0</option>
+        </format>
+        <format type="number" field="$bytes_unit_abbreviated_label$ In">
+          <option name="precision">$bytes_precision_table$</option>
+          <option name="unit">$bytes_unit_abbreviated_label$</option>
+        </format>
+        <format type="number" field="$bytes_unit_abbreviated_label$ Out">
+          <option name="precision">$bytes_precision_table$</option>
+          <option name="unit">$bytes_unit_abbreviated_label$</option>
+        </format>
+        <format type="number" field="Total $bytes_unit_abbreviated_label$">
+          <option name="precision">$bytes_precision_table$</option>
+          <option name="unit">$bytes_unit_abbreviated_label$</option>
         </format>
       </table>
     </panel>
