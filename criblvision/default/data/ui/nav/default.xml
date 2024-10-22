@@ -10,6 +10,7 @@
   </collection>
   <collection label="Configuration">
     <view name="sources_and_destinations_overview" />
+    <view name="route_and_pipeline_reductions" />
     <view name="splunk_destination_troubleshooting" />
   </collection>
   <collection label="Performance">
