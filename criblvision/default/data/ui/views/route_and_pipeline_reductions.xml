@@ -191,7 +191,7 @@
       </search>
     </input>
     <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
-      <label>Bytes Unit:</label>
+      <label>Bytes Unit</label>
       <default>$init_bytes_unit_abbreviated_label$</default>
       <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
       <fieldForLabel>unit</fieldForLabel>
