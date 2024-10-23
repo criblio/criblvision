@@ -167,7 +167,9 @@
           <done>
             <set token="max_cpuPerc">$result.max_cpuPerc$</set>
           </done>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats"
+          <query>| mstats avg(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats avg(cpuPerc) AS cpuPerc</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -203,11 +205,12 @@
           <done>
             <eval token="max_memRss">tostring($result.max_memRss$, "commas")</eval>
           </done>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats"
-| bin _time span=1m
-| stats sum(mem.rss) AS memRss BY _time host instance_type worker_group
-| eval memRss = round(memRss * pow(1024, 2), 0), `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`
-| stats avg(memRss) AS memRss</query>
+          <query>| mstats avg(`set_cribl_metrics_prefix(system.mem_rss)`) AS memRss WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group 
+| search $worker_group_event_filter$ $worker_group_metric_filter$
+| stats sum(memRss) AS memRss BY host
+| stats avg(memRss) AS memRss
+| eval `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -240,13 +243,15 @@
     <panel>
       <title>CPU Perc (Avg) Breakdown by Host over Time</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_cpu_perc$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats"
+          <query>| mstats avg(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value` span=1m
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search $worker_group_event_filter$ $worker_group_metric_filter$
 | timechart avg(cpuPerc) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Avg CPU (%)</option>
         <option name="charting.chart">area</option>
@@ -260,7 +265,9 @@
       <title>CPU Perc (Avg) Breakdown by Host</title>
       <table>
         <search depends="$show_cpu_perc$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats"
+          <query>| mstats avg(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats avg(cpuPerc) AS cpuPerc BY host instance_type worker_group
 | lookup cribl_stream_assets host OUTPUTNEW environment
 | table host environment instance_type worker_group cpuPerc
@@ -290,16 +297,17 @@
     <panel>
       <title>Memory Usage (Avg) Breakdown by Host over Time</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_mem_usage$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats"
-| bin _time span=1m 
-| stats sum(mem.rss) AS memRss BY _time host instance_type worker_group
-| eval memRss = round(memRss * pow(1024, 2), 0), `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`
-| timechart avg(memRss) BY host</query>
+          <query>| mstats avg(`set_cribl_metrics_prefix(system.mem_rss)`) AS memRss WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value` span=1m
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group 
+| search $worker_group_event_filter$ $worker_group_metric_filter$
+| stats sum(memRss) AS memRss BY _time host
+| eval `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`
+| timechart max(memRss) BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Avg Memory Usage ($bytes_unit_abbreviated_label$)</option>
         <option name="charting.chart">area</option>
@@ -313,11 +321,11 @@
       <title>Memory Usage (Avg) Breakdown by Host</title>
       <table>
         <search depends="$show_mem_usage$">
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=server message="_raw stats"
-| bin _time span=1m 
-| stats sum(mem.rss) AS memRss BY _time host instance_type worker_group 
-| stats avg(memRss) AS memRss BY host instance_type worker_group
-| eval memRss = round(memRss * pow(1024, 2), 0), `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`
+          <query>| mstats avg(`set_cribl_metrics_prefix(system.mem_rss)`) AS memRss WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value`
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type worker_group 
+| search $worker_group_event_filter$ $worker_group_metric_filter$
+| stats sum(memRss) AS memRss BY host environment instance_type worker_group
+| eval `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`
 | lookup cribl_stream_assets host OUTPUTNEW environment 
 | rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" memRss AS "Memory Usage" 
 | `get_environment_hosts(Environment)`</query>
@@ -483,6 +491,7 @@
     <panel>
       <title>Unhealthy Sources over Time</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_sources$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY host input group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -491,7 +500,6 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsY.majorUnit">1</option>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Status</option>
@@ -546,6 +554,7 @@
     <panel>
       <title>Unhealthy Destinations over Time</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY host output group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -554,7 +563,6 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsY.majorUnit">1</option>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Status</option>
@@ -628,6 +636,7 @@
     <panel id="total_pq_size_timeline">
       <title>PQ Size by Host (Last 15 Minutes)</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_total_pq_size$">
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ span=auto BY host group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -637,7 +646,6 @@
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">PQ Size ($bytes_unit_abbreviated_label$)</option>
         <option name="charting.chart">line</option>
@@ -802,13 +810,13 @@
     <panel id="worker_process_reset_timeline">
       <title>Worker Process Restarts by Host over Time</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_worker_process_restarts$">
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=cribl* message="restarting worker process" 
 | timechart count BY host</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Worker Process Restarts</option>
         <option name="charting.chart">area</option>
@@ -838,6 +846,7 @@
     <panel id="backpressured_destinations_timeline">
       <title>Destinations with Backpressure over Time</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_backpressured_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group span=auto fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -846,7 +855,6 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Back Pressure</option>
         <option name="charting.axisY.minimumNumber">0</option>
@@ -887,6 +895,7 @@
     <panel id="blocked_destinations_timeline">
       <title>Blocked Destinations over Time</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_blocked_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group span=auto fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -895,7 +904,6 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Back Pressure</option>
         <option name="charting.axisY.abbreviation">none</option>
@@ -937,6 +945,7 @@
     <panel id="pq_engaged_timeline">
       <title>Sources/Destinations with PQ Engaged over Time (Last 15 Minutes)</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search depends="$show_pq_engaged$">
           <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host input output group span=auto fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -948,7 +957,6 @@
           <earliest>-15m</earliest>
           <latest>now</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">PQs Engaged</option>
         <option name="charting.chart">area</option>
