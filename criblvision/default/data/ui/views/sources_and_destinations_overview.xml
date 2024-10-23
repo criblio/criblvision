@@ -15,6 +15,15 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search>
+    <done>
+      <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
+    </done>
+    <query>| makeresults | eval bytes_unit_abbreviated_label = upper(`set_bytes_unit`)
+    </query>
+    <earliest>-1m@m</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -136,6 +145,26 @@
         <eval token="full_selected">if($label$ == "All" OR isnull($label$), "*", $label$)</eval>
       </change>
     </input>
+    <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
+      <label>Bytes Unit</label>
+      <default>$init_bytes_unit_abbreviated_label$</default>
+      <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
+      <fieldForLabel>unit</fieldForLabel>
+      <fieldForValue>abbreviated_unit</fieldForValue>
+      <search>
+        <query>| inputlookup bytes_units</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition>
+          <eval token="bytes_unit_abbreviated_label">value</eval>
+          <eval token="bytes_unit_label">label</eval>
+          <eval token="bytes_precision_single">if(lower(value) == "b", "0", "0.000")</eval>
+          <eval token="bytes_precision_table">if(lower(value) == "b", "0", "3")</eval>
+        </condition>
+      </change>
+    </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
       <choice value="show">Show</choice>
@@ -164,19 +193,21 @@
   <row>
     <panel>
       <single>
-        <title>Total Bytes $type_printable$</title>
+        <title>Total $bytes_unit_label$ $type_printable$</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
-| stats sum($type$_bytes) AS $type$_bytes</query>
+| stats sum($type$_bytes) AS $type$_bytes
+| eval `process_bytes($type$_bytes, "$bytes_unit_abbreviated_label$")`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
+        <option name="numberPrecision">$bytes_precision_single$</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="refresh.display">progressbar</option>
-        <option name="unit">B</option>
+        <option name="unit">$bytes_unit_abbreviated_label$</option>
       </single>
     </panel>
     <panel>
@@ -198,18 +229,19 @@
   <row>
     <panel>
       <chart>
-        <title>Total Bytes $type_printable$ over Time</title>
+        <title>Total $bytes_unit_label$ $type_printable$ over Time</title>
         <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY host group $type$put fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
+| eval `process_bytes($type$_bytes, "$bytes_unit_abbreviated_label$")`
 | timechart sum($type$_bytes) BY $type$put</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisTitleY.text">Bytes</option>
+        <option name="charting.axisTitleY.text">$bytes_unit_label$</option>
         <option name="charting.chart">area</option>
         <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.chart.stackMode">stacked</option>
