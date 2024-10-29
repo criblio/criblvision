@@ -1,3 +1,8 @@
+#Caution: These dashboards are not current. The latest version of these dashboards can be found in the CriblVision Search pack here: https://packs.cribl.io/packs/cribl-criblvision-for-stream
+
+Please use the search pack instead of these dashboards. 
+
+
 # Welcome to CriblVision for CriblSearch. 
 
 Born from the same minds that brought you the Criblvision app for Splunk. You asked and we delivered! 
