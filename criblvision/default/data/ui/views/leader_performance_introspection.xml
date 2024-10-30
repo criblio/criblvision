@@ -4,6 +4,15 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search>
+    <done>
+      <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
+    </done>
+    <query>| makeresults | eval bytes_unit_abbreviated_label = upper(`set_bytes_unit`)
+    </query>
+    <earliest>-1m@m</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -48,6 +57,26 @@
       <change>
         <condition>
           <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
+    </input>
+    <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
+      <label>Bytes Unit</label>
+      <default>$init_bytes_unit_abbreviated_label$</default>
+      <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
+      <fieldForLabel>unit</fieldForLabel>
+      <fieldForValue>abbreviated_unit</fieldForValue>
+      <search>
+        <query>| inputlookup bytes_units</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition>
+          <eval token="bytes_unit_abbreviated_label">value</eval>
+          <eval token="bytes_unit_label">label</eval>
+          <eval token="bytes_precision_single">if(lower(value) == "b", "0", "0.000")</eval>
+          <eval token="bytes_precision_table">if(lower(value) == "b", "0", "3")</eval>
         </condition>
       </change>
     </input>
@@ -113,7 +142,9 @@
       <single>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ instance_type=leader channel=ProcessMetrics cid IN ("api")
-| stats avg(mem.rss) as memRss</query>
+| stats avg(mem.rss) as memRss
+| eval memRss = memRss * pow(1024, 2)
+| eval `process_bytes(memRss, $bytes_unit_abbreviated_label$)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -121,7 +152,7 @@
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
-        <option name="numberPrecision">0.00</option>
+        <option name="numberPrecision">$bytes_precision_single$</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
         <option name="refresh.display">progressbar</option>
@@ -133,7 +164,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="underLabel">mem.rss</option>
-        <option name="unit">MB</option>
+        <option name="unit">$bytes_unit_abbreviated_label$</option>
         <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
@@ -144,6 +175,7 @@
     <panel>
       <title>Leader CPU by API Process</title>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ instance_type=leader channel=ProcessMetrics cid IN ("api", "service:*")
 | timechart limit=1000 useother=f max(cpuPerc) AS max_cpuPerc by cid</query>
@@ -151,7 +183,6 @@
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
         <option name="charting.axisTitleX.text">Time</option>
@@ -203,6 +234,7 @@
         <default></default>
       </input>
       <chart>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ instance_type=leader source IN ("*/access.log", "*/access1.log", "*/access2.log", "*/access3.log", "*/access4.log") response_time=*
 | timechart limit=1000 useother=f sum(response_time) AS sum_response_time $splitby$</query>
@@ -210,7 +242,6 @@
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
         <option name="charting.axisTitleX.text">Time</option>
