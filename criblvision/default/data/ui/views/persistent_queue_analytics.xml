@@ -4,6 +4,15 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search>
+    <done>
+      <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
+    </done>
+    <query>| makeresults | eval bytes_unit_abbreviated_label = upper(`set_bytes_unit`)
+    </query>
+    <earliest>-1m@m</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -94,6 +103,26 @@
         </condition>
       </change>
     </input>
+    <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
+      <label>Bytes Unit</label>
+      <default>$init_bytes_unit_abbreviated_label$</default>
+      <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
+      <fieldForLabel>unit</fieldForLabel>
+      <fieldForValue>abbreviated_unit</fieldForValue>
+      <search>
+        <query>| inputlookup bytes_units</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition>
+          <eval token="bytes_unit_abbreviated_label">value</eval>
+          <eval token="bytes_unit_label">label</eval>
+          <eval token="bytes_precision_single">if(lower(value) == "b", "0", "0.000")</eval>
+          <eval token="bytes_precision_table">if(lower(value) == "b", "0", "3")</eval>
+        </condition>
+      </change>
+    </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
       <choice value="show">Show</choice>
@@ -155,13 +184,14 @@
       </single>
     </panel>
     <panel>
-      <title>Latest Persistent Queue Size</title>
+      <title>Latest Persistent Queue Size (in $bytes_unit_abbreviated_label$)</title>
       <single>
         <search>
           <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host input output group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
-| stats sum(pq_size) AS total_pq_size</query>
+| stats sum(pq_size) AS total_pq_size
+| eval `process_bytes(total_pq_size, "$bytes_unit_abbreviated_label$")`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -169,7 +199,7 @@
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
-        <option name="numberPrecision">0</option>
+        <option name="numberPrecision">$bytes_precision_single$</option>
         <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
         <option name="refresh.display">progressbar</option>
@@ -180,7 +210,7 @@
         <option name="trellis.size">medium</option>
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
-        <option name="unit">B</option>
+        <option name="unit">$bytes_unit_abbreviated_label$</option>
         <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
@@ -198,7 +228,8 @@
 | rex field=pq "(?&lt;type&gt;[^:]+):(?&lt;technology&gt;[^:]+):(?&lt;pq&gt;.*)"
 | eval type = if(type == "input", "Source", "Destination")
 | stats sum(pq_size) AS pq_size BY type pq group
-| rename type AS Type pq AS "Persistent Queue" group AS "Worker Group" pq_size AS "PQ Size (B)"</query>
+| eval `process_bytes(pq_size, "$bytes_unit_abbreviated_label$")`
+| rename type AS Type pq AS "Persistent Queue" group AS "Worker Group" pq_size AS "PQ Size ($bytes_unit_abbreviated_label$)"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -211,9 +242,9 @@
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
-        <format type="number" field="PQ Size (B)">
-          <option name="precision">0</option>
-          <option name="unit">B</option>
+        <format type="number" field="PQ Size ($bytes_unit_abbreviated_label$)">
+          <option name="precision">$bytes_precision_table$</option>
+          <option name="unit">$bytes_unit_abbreviated_label$</option>
         </format>
       </table>
     </panel>
@@ -227,7 +258,7 @@
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | foreach *put [ eval &lt;&lt;FIELD&gt;&gt; = if(&lt;&lt;FIELD&gt;&gt; == `set_unknown_worker_group_value`, null(), "&lt;&lt;FIELD&gt;&gt;:".&lt;&lt;FIELD&gt;&gt;) ]
-| eval pq = coalesce(input, output)
+| eval pq = coalesce(input, output), `process_bytes(pq_size, "$bytes_unit_abbreviated_label$")`
 | timechart sum(pq_size) useother=false BY pq</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -238,7 +269,7 @@
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.text">PQ Size (B)</option>
+        <option name="charting.axisTitleY.text">PQ Size ($bytes_unit_abbreviated_label$)</option>
         <option name="charting.axisTitleY.visibility">visible</option>
         <option name="charting.axisTitleY2.visibility">visible</option>
         <option name="charting.axisX.abbreviation">none</option>

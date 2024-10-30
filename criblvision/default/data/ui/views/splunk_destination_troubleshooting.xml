@@ -12,6 +12,15 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search>
+    <done>
+      <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
+    </done>
+    <query>| makeresults | eval bytes_unit_abbreviated_label = upper(`set_bytes_unit`)
+    </query>
+    <earliest>-1m@m</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -119,6 +128,26 @@
       <choice value="[ | mstats sum(`set_cribl_metrics_prefix(health.outputs)`) WHERE `set_cribl_metrics_index` output IN (splunk:*, splunk_lb:*) BY output | rex field=output &quot;[^:]+:(?&lt;channel&gt;[^:]+)&quot; | eval channel = &quot;output:&quot;.channel | table channel ]">All</choice>
       <initialValue>[ | mstats sum(`set_cribl_metrics_prefix(health.outputs)`) WHERE `set_cribl_metrics_index` output IN (splunk:*, splunk_lb:*) BY output | rex field=output "[^:]+:(?&lt;channel&gt;[^:]+)" | eval channel = "output:".channel | table channel ]</initialValue>
     </input>
+    <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
+      <label>Bytes Unit</label>
+      <default>$init_bytes_unit_abbreviated_label$</default>
+      <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
+      <fieldForLabel>unit</fieldForLabel>
+      <fieldForValue>abbreviated_unit</fieldForValue>
+      <search>
+        <query>| inputlookup bytes_units</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition>
+          <eval token="bytes_unit_abbreviated_label">value</eval>
+          <eval token="bytes_unit_label">label</eval>
+          <eval token="bytes_precision_single">if(lower(value) == "b", "0", "0.000")</eval>
+          <eval token="bytes_precision_table">if(lower(value) == "b", "0", "3")</eval>
+        </condition>
+      </change>
+    </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
       <choice value="show">Show</choice>
@@ -218,8 +247,9 @@
         <search>
           <query>index=_internal sourcetype=splunkd component=SQSSmartbusInputWorker log_level=WARN "Invalid subsecond field"
 | rex "bytesRemaining\=(?&lt;bytes_remaining&gt;\d+)"
-| stats count AS "Number of Events" sum(bytes_remaining) AS "Bytes Remaining"
-| fillnull value=0 "Bytes Remaining"</query>
+| eval `process_bytes(bytes_remaining, "$bytes_unit_abbreviated_label$")`
+| stats count AS "Number of Events" sum(bytes_remaining) AS "$bytes_unit_label$ Remaining"
+| fillnull value=0 "$bytes_unit_label$ Remaining"</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
@@ -228,9 +258,9 @@
         <format type="number" field="Subsecond Error Count">
           <option name="precision">0</option>
         </format>
-        <format type="number" field="Bytes Remaining">
-          <option name="precision">0</option>
-          <option name="unit">B</option>
+        <format type="number" field="$bytes_unit_label$ Remaining">
+          <option name="precision">$bytes_precision_table$</option>
+          <option name="unit">$bytes_unit_abbreviated_label$</option>
         </format>
         <format type="number" field="Number of Events">
           <option name="precision">0</option>

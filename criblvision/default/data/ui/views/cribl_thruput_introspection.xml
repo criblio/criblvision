@@ -5,6 +5,15 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search>
+    <done>
+      <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
+    </done>
+    <query>| makeresults | eval bytes_unit_abbreviated_label = upper(`set_bytes_unit`)
+    </query>
+    <earliest>-1m@m</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" searchWhenChanged="true" token="time">
       <label>Time Range</label>
@@ -116,6 +125,26 @@
       </change>
       <prefix>span=</prefix>
     </input>
+    <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
+      <label>Bytes Unit</label>
+      <default>$init_bytes_unit_abbreviated_label$</default>
+      <initialValue>$init_bytes_unit_abbreviated_label$</initialValue>
+      <fieldForLabel>unit</fieldForLabel>
+      <fieldForValue>abbreviated_unit</fieldForValue>
+      <search>
+        <query>| inputlookup bytes_units</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition>
+          <eval token="bytes_unit_abbreviated_label">value</eval>
+          <eval token="bytes_unit_label">label</eval>
+          <eval token="bytes_precision_single">if(lower(value) == "b", "0", "0.000")</eval>
+          <eval token="bytes_precision_table">if(lower(value) == "b", "0", "3")</eval>
+        </condition>
+      </change>
+    </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
       <choice value="show">Show</choice>
@@ -174,7 +203,6 @@
     <panel>
       <chart>
         <title>Total Events Out</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.out_events")`) AS out_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY host group output fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -184,9 +212,11 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Event Count</option>
         <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
@@ -196,20 +226,22 @@
   <row>
     <panel>
       <chart>
-        <title>Total Bytes Out</title>
-        <search base="annotation_search" type="annotation"></search>
+        <title>Total $bytes_unit_label$ Out</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.out_bytes")`) AS out_bytes  WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $output_token$ $mstats_span$ BY host group output fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
-| timechart sum("out_bytes") $timechart_span$ useother=false BY output WHERE max in top5
+| eval `process_bytes(out_bytes, "$bytes_unit_abbreviated_label$")`
+| timechart sum(out_bytes) $timechart_span$ useother=false BY output WHERE max in top5
 | fields - _span*</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisTitleY.text">Bytes</option>
+        <option name="charting.axisTitleY.text">$bytes_unit_label$ Out</option>
         <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
@@ -275,7 +307,6 @@
     <panel>
       <chart>
         <title>Total Events In</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.in_events")`) AS in_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $input_token$ $mstats_span$ BY $splitby$ host group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -285,9 +316,11 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Event Count</option>
         <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
@@ -298,7 +331,6 @@
     <panel>
       <chart>
         <title>CPU Percentage by Worker Process</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("system.cpu_perc")`) AS cpu_perc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $mstats_span$ BY host cribl_wp
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
@@ -308,9 +340,11 @@
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">CPU %</option>
         <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
@@ -320,20 +354,22 @@
   <row>
     <panel>
       <chart>
-        <title>Total Bytes In</title>
-        <search base="annotation_search" type="annotation"></search>
+        <title>Total $bytes_unit_label$ In</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix("total.in_bytes")`) AS in_bytes  WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $input_token$ $mstats_span$ BY $splitby$ host group fillnull_value=`set_unknown_worker_group_value`
 | lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
 | search $worker_group_event_filter$ $worker_group_metric_filter$
-| timechart sum("in_bytes") $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
+| eval `process_bytes(in_bytes, "$bytes_unit_abbreviated_label$")`
+| timechart sum(in_bytes) $timechart_span$ useother=false BY $splitby$ WHERE max in top$limit$
 | fields - _span*</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
-        <option name="charting.axisTitleY.text">Bytes</option>
+        <option name="charting.axisTitleY.text">$bytes_unit_label$ In</option>
         <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.legend.placement">bottom</option>
         <option name="refresh.display">progressbar</option>
