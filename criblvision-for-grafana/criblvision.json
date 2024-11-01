@@ -1,4 +1,67 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_LOKI",
+      "label": "loki",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.3.0"
+    },
+    {
+      "type": "datasource",
+      "id": "loki",
+      "name": "Loki",
+      "version": "1.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -24,9 +87,8 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 2,
+  "id": null,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "collapsed": false,
@@ -87,12 +149,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2+security-01",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -124,7 +186,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(sum(increase(cribl_logstream_total_out_bytes{group=\"$group\", instance=\"$host\"}[$__range])) / 1000 / 1000 ,  \"job\", \"out MBytes\", \"job\", \"(.*)\")",
@@ -150,7 +212,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "label_replace(sum(increase(cribl_logstream_total_out_events{group=\"$group\", instance=\"$host\"}[$__range])) ,  \"job\", \"out Events\", \"job\", \"(.*)\")",
@@ -245,11 +307,12 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -347,11 +410,12 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -448,11 +512,12 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -520,12 +585,12 @@
         "frameIndex": 0,
         "showHeader": true
       },
-      "pluginVersion": "11.2.2+security-01",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "exemplar": true,
@@ -593,12 +658,12 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "11.2.2+security-01",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "${logs}"
+            "uid": "${DS_LOKI}"
           },
           "editorMode": "code",
           "expr": "{service=\"Cribl\"} |= `` | json | logfmt | host=`$host` and group = `$group` and (level=\"error\" or level=\"warn\") and channel=\"clustercomm\"",
@@ -683,12 +748,12 @@
         "frameIndex": 0,
         "showHeader": true
       },
-      "pluginVersion": "11.2.2+security-01",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -768,12 +833,12 @@
         "frameIndex": 0,
         "showHeader": true
       },
-      "pluginVersion": "11.2.2+security-01",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "${logs}"
+            "uid": "${DS_LOKI}"
           },
           "editorMode": "code",
           "expr": "{service=\"Cribl\"} |= `` | json | logfmt | host = `$host` | message=~\".+arting.+\" and channel =~ \"[cC]ribl\"",
@@ -888,12 +953,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -991,12 +1056,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1050,7 +1115,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1142,12 +1208,12 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "11.2.2+security-01",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "${logs}"
+            "uid": "${DS_LOKI}"
           },
           "editorMode": "code",
           "expr": "{service=\"Cribl\"} |= `` | json | host = `$host` | level = `error`",
@@ -1205,7 +1271,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1297,12 +1364,12 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "11.2.2+security-01",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "${logs}"
+            "uid": "${DS_LOKI}"
           },
           "editorMode": "code",
           "expr": "{service=\"Cribl\"} |= `` | json | host = `$host` | level = `error`",
@@ -1433,7 +1500,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "${logs}"
+            "uid": "${DS_LOKI}"
           },
           "editorMode": "code",
           "expr": "{service=\"Cribl\"} |= `` | json | host = `$host` | level = `info`",
@@ -1531,7 +1598,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1603,7 +1670,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -1675,7 +1742,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1748,7 +1815,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1821,7 +1888,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1919,7 +1986,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2015,7 +2082,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2124,7 +2191,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2220,7 +2287,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2316,7 +2383,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2348,7 +2415,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "(sum(increase(cribl_logstream_route_in_bytes{group=\"$group\", instance=\"$host\"}[$__range])) \r\n- sum(increase(cribl_logstream_route_out_bytes{group=\"$group\", instance=\"$host\"}[$__range])))\r\n/ (1000 * 1000)",
@@ -2441,7 +2508,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "100 * \r\n(sum(increase(cribl_logstream_route_in_bytes{group=\"$group\", instance=\"$host\"}[$__range])) \r\n- sum(increase(cribl_logstream_route_out_bytes{group=\"$group\", instance=\"$host\"}[$__range])))\r\n/ sum(increase(cribl_logstream_route_in_bytes{group=\"$group\", instance=\"$host\"}[$__range]))",
@@ -2551,7 +2618,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2652,7 +2719,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2753,7 +2820,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2849,7 +2916,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2950,7 +3017,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${metrics}"
+            "uid": "${DS_PROMETHEUS}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -2968,62 +3035,42 @@
       "type": "timeseries"
     }
   ],
-  "schemaVersion": 39,
+  "refresh": "",
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "prometheus",
-          "value": "de00p3rmj198gd"
-        },
-        "hide": 0,
+        "current": {},
         "includeAll": false,
         "label": "Metrics Source",
-        "multi": false,
         "name": "metrics",
         "options": [],
         "query": "prometheus",
-        "queryValue": "",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "type": "datasource"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "loki",
-          "value": "ce02dqlw9z8qob"
-        },
-        "hide": 0,
+        "current": {},
         "includeAll": false,
         "label": "Log Source",
-        "multi": false,
         "name": "logs",
         "options": [],
         "query": "loki",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "type": "datasource"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "Home",
-          "value": "Home"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
           "uid": "${metrics}"
         },
         "definition": "label_values(cribl_logstream_system_cpu_perc,group)",
-        "hide": 0,
         "includeAll": false,
         "label": "Group",
-        "multi": false,
         "name": "group",
         "options": [],
         "query": {
@@ -3033,25 +3080,17 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "grafana",
-          "value": "grafana"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${metrics}"
+          "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(cribl_logstream_system_cpu_perc{group=\"$group\"},instance)",
-        "hide": 0,
         "includeAll": false,
         "label": "Host",
-        "multi": false,
         "name": "host",
         "options": [],
         "query": {
@@ -3061,8 +3100,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       }
     ]
@@ -3071,24 +3108,10 @@
     "from": "now-6h",
     "to": "now"
   },
-  "timepicker": {
-    "hidden": false,
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ]
-  },
+  "timepicker": {},
   "timezone": "browser",
   "title": "CriblVision",
   "uid": "ae00pcjtktji8a",
-  "version": 61,
+  "version": 1,
   "weekStart": ""
 }
