@@ -6,7 +6,7 @@ This Grafana dashboard was created by Cribl Support Engineers to help customers 
 
 #### Logs and Metrics
 
-Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer to the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this Source. 
+Cribl internal logs and metrics must be enabled and forwarded to Prometheus(metrics) and Loki(logs) destinations in order for all of the panels to populate with events. Refer to the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this Source. 
 
 For this dashboard, you will need a Loki instance as well as a Prometheus instance with Remote Write enabled with the following flag: `--enable-feature=remote-write-receiver`
 
