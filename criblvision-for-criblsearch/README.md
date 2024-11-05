@@ -110,7 +110,7 @@ Click on Macros -> Add two macros with the following names and definitions
 
   
 
-The dropdowns in these worker groups rely on lookup called envrionment_assets which you will have to create. Follow the instructions below.
+The dropdowns in these worker groups rely on lookup called environment_assets which you will have to create. Follow the instructions below.
 
   
 
