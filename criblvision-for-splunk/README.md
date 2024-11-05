@@ -1,4 +1,4 @@
-# CriblVision
+# CriblVision for Splunk
 
 ## Upgrading to Version 3.x
 
@@ -147,7 +147,11 @@ This app ships with a number of disabled alerts that can be used to alert when i
 ### Using This App
 
 In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "How to Use" toggle that reveals a description and instructions for that view. We recommend starting with the Health Check view and selecting a single Worker Group or Worker Node from the provided filters.
-            
+
+## Troubleshooting
+
+CriblVision for Splunk is a community-supported Splunk Add-on. If you have any questions or queries, please reach out in the #criblvision [https://cribl-community.slack.com/](Community Slack) channel.
+
 ## About
 
 * **Author:** Johan Woger 
