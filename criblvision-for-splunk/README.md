@@ -144,6 +144,10 @@ This app ships with a number of disabled alerts that can be used to alert when i
 
 </table>
 
+### The CriblVision for Splunk Pack
+
+The CriblVision for Splunk Pack is a companion to this Splunk app. It **is not** a requirement to use the Pack to receive value from this app. The Pack is only required if you would like to take advantage of the Collector Jobs that the Pack provides templates for.
+
 ### Using This App
 
 In addition to this overview page, this app provides several views intended to aid a Cribl admin in troubleshooting and assessing the health of a Cribl deployment. Every view is equipped with a "How to Use" toggle that reveals a description and instructions for that view. We recommend starting with the Health Check view and selecting a single Worker Group or Worker Node from the provided filters.
