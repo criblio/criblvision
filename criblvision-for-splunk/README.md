@@ -150,7 +150,7 @@ In addition to this overview page, this app provides several views intended to a
 
 ## Troubleshooting
 
-CriblVision for Splunk is a community-supported Splunk Add-on. If you have any questions or queries, please reach out in the #criblvision [https://cribl-community.slack.com/](Community Slack) channel.
+CriblVision for Splunk is a community-supported Splunk Add-on. If you have any questions or queries, please reach out in the #criblvision [Community Slack](https://cribl-community.slack.com/) channel.
 
 ## About
 
