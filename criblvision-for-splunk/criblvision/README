@@ -144,6 +144,13 @@ This app ships with a number of disabled alerts that can be used to alert when i
 
 </table>
 
+### Reports - Summary Indexing
+
+This app contains the ability to summarize Cribl's internal metrics on data throughput in order to provide a historical reference for metrics that is readily accessible and performant. These searches summarize total bytes and events by input and output which allows for a look at per-component look at data thruput. Turn these searches on to enable use of the Cribl Thruput Summary dashboard:
+
+* Summary Gen - Cribl Thruput - Inputs
+* Summary Gen - Cribl Thruput - Outputs
+
 ### The CriblVision for Splunk Pack
 
 The CriblVision for Splunk Pack is a companion to this Splunk app. It **is not** a requirement to use the Pack to receive value from this app. The Pack is only required if you would like to take advantage of the Collector Jobs that the Pack provides templates for.
