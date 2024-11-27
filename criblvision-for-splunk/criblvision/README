@@ -10,7 +10,7 @@ Version 3.x of the CriblVision app introduces a new Cribl Stream asset lookup to
     2. Selected the **Set up** action for CriblVision
     3. Follow the instructions on the setup page
 3. Run the **Populate Cribl Stream Assets Lookup** report by either:
-    * Clicking the button on the landing page 
+    * Clicking the button on the landing page
     * Clicking the link in the navigation bar
 4. Double check that any alerts that were enabled are still enabled
 
@@ -27,9 +27,10 @@ This Splunk app was designed as a troubleshooting tool and monitoring aid for Cr
 In the ancient art of troubleshooting, context is key - whether the problem is of a technical nature, or merely one related to existence itself.
 
 Without a clear understanding of the circumstances surrounding an issue, it becomes challenging to identify the root cause and provide an effective solution. Context provides valuable information about a specific environment, and every environment is unique; when using this app, it is wise to ask yourself the following questions:
- * *What is the current issue you are attempting to troubleshoot?*
- * *Are there any recent configuration changes that were made before the issue started?*
- * *Were there any specific user interactions that may have contributed to the start of the issue? **Example:** Increase in data throughput, new Sources or Destinations, change in architecture, etc.*
+
+* *What is the current issue you are attempting to troubleshoot?*
+* *Are there any recent configuration changes that were made before the issue started?*
+* *Were there any specific user interactions that may have contributed to the start of the issue? **Example:** Increase in data throughput, new Sources or Destinations, change in architecture, etc.*
 
 Answers to the above questions, and many others, will help narrow down the scope of the investigation, enabling you and your team to focus their efforts on the relevant areas. Additionally, contexts aids in replicating the problem, as it enables Support Engineers to understand the exact conditions under which the issue occurs. Knowledge of the environment, along with the context of use-cases and integrations, and ensure that the troubleshooting process is efficient and accurate.
 
@@ -59,7 +60,7 @@ This app ships with 4 macros which must be edited in accordance with your Splunk
 
 For manual configuration of the macro definitions through the CLI, append and update the following to `$SPLUNK_HOME/etc/apps/criblvision/local/macros.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/macros.conf` on Search Head Deployers for a Search Head Cluster:
 
-```
+```conf
 [set_cribl_internal_log_index]
 definition = index=cribl_logs
 
@@ -78,7 +79,7 @@ definition = env
 
 #### Leader Logs
 
-Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently *NOT* sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to `/opt/cribl/log/*`. For more information on how to deploy a Cribl Edge Node, please refer to our documentation [here](href="https://docs.cribl.io/edge/deploy-planning">).
+Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently *NOT* sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to `/opt/cribl/log/*`. For more information on how to deploy a Cribl Edge Node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning).
 
 If sending directly to Splunk from the Edge Node, it is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk.
 
@@ -87,35 +88,35 @@ If sending directly to Splunk from the Edge Node, it is recommended to use the H
 After installing or upgrading the CriblVision application, run the `Populate Cribl Stream Worker Lookup` Report to repopulate the `cribl_stream_workers` lookup. This can be done by selecting "Populate Cribl Stream Worker Lookup" from the navigation menu. This report is scheduled to run every hour, but can be updated to meet your requirements.
 
 **Note:** When the report is initially run, you may see an error stating that the `cribl_stream_workers.csv` lookup file does not exist. This will not impact the search. Once the search is completed for the first time, the lookup file will be initiated and the results of the search will be written to it.
-            
+
 #### Automatic Lookups
 
 This app uses an automatic lookup to enrich events with the Worker Group (the `worker_group` field) on events from a Worker Node in a distributed environment. For more on automatic lookups, see Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/DefineanautomaticlookupinSplunkWeb).
 
 When configuring an automatic lookup from the Splunk UI, ensure that the following values are set before clicking the `Save` button:
 
- * **Lookup table**: `cribl_stream_workers`
- * **Apply to:** `sourcetype`
- * **named:** Your Cribl log sourcetype *Note:* You cannot use wildcards in this definition
- * **Lookup input fields:** `worker` = `host`
- * **Lookup output fields:** `worker_group` = `worker_group`
+* **Lookup table**: `cribl_stream_workers`
+* **Apply to:** `sourcetype`
+* **named:** Your Cribl log sourcetype *Note:* You cannot use wildcards in this definition
+* **Lookup input fields:** `worker` = `host`
+* **Lookup output fields:** `worker_group` = `worker_group`
 
  For manual configuration of the automatic lookup definiton(s) through the CLI, append and update the following stanza to `$SPLUNK_HOME/etc/apps/criblvision/local/props.conf` on standalone Search Heads or `$SPLUNK_HOME/etc/shcluster/apps/criblvision/local/props.conf` on Search Head Deployers for a Search Head Cluster:
 
-```
+```conf
 [your_sourcetype]
 LOOKUP-cribl_stream_workers = cribl_stream_workers worker AS host OUTPUTNEW worker_group AS worker_group`</pre>
 ```
 
 If you are using multiple sourcetypes for your internal Cribl logs and would like to use a wildcarded props definition over configuring multiple automated lookups, you can use the following stanza template:
 
-```
+```conf
 [(?::){0}your_wildcarded_sourcetype]
 ```
 
 If configuring manually, update the `$SPLUNK_HOME/etc/apps/criblvision/local/app.conf` configuration file to tell Splunk that this app has been configured:
 
-```
+```conf
 [install]
 is_configured = true
 ```
@@ -158,10 +159,10 @@ CriblVision for Splunk is a community-supported Splunk Add-on. If you have any q
 
 ## About
 
-* **Author:** Johan Woger 
-* **Co-Authors:** Jeremy Prescott, Martin Prado, David Sheridan, Christopher Owen 
-* **Honorable Mentions:** George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at [https://github.com/arcsector](https://github.com/arcsector)) 
-* Ben Marcus - General Testing. 
+* **Author:** Johan Woger
+* **Co-Authors:** Jeremy Prescott, Martin Prado, David Sheridan, Christopher Owen
+* **Honorable Mentions:** George (Trey) Haraksin - For his initial ideas on thruput introspection (check out his other projects at [https://github.com/arcsector](https://github.com/arcsector))
+* Ben Marcus - General Testing.
 * Brendan Dalpe - Guru of many things.
 * Brandon McCombs - General Testing.
-* Chris Owens - General testing and contributor. 
+* Chris Owens - General testing and contributor.
