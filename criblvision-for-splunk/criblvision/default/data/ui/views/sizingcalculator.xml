@@ -9,6 +9,15 @@
     <earliest>-1m@m</earliest>
     <latest>now</latest>
   </search>
+  <search id="throughput_base_search">
+    <query>| mstats sum(`set_cribl_metrics_prefix(total.*_bytes)`) AS *_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value` span=1d
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search $worker_group_event_filter$ $worker_group_metric_filter$
+| timechart span=1d sum(*_bytes) AS *_bytes
+| eval total = in_bytes + out_bytes, `process_bytes(total, "$bytes_unit_abbreviated_label$")`</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time">
       <label>Time Range</label>
@@ -52,16 +61,29 @@
       </search>
       <change>
         <condition label="All Instances">
-          <set token="worker_group_event_filter">instance_type IN (worker, single)</set>
+          <set token="worker_group_event_filter">instance_type IN (managed-edge, single, worker)</set>
+          <set token="worker_group_metric_pre_filter"></set>
+          <set token="worker_group_metric_filter">group=*</set>
+        </condition>
+        <condition label="All Fleets">
+          <set token="worker_group_event_filter">instance_type=managed-edge</set>
+          <set token="worker_group_metric_pre_filter">group=*</set>
+          <set token="worker_group_metric_filter">group=*</set>
         </condition>
         <condition label="All Worker Groups">
           <set token="worker_group_event_filter">instance_type=worker</set>
+          <set token="worker_group_metric_pre_filter">group=*</set>
+          <set token="worker_group_metric_filter">group=*</set>
         </condition>
         <condition label="All Single Instances">
           <set token="worker_group_event_filter">instance_type=single</set>
+          <set token="worker_group_metric_pre_filter"></set>
+          <set token="worker_group_metric_filter">group=`set_unknown_worker_group_value`</set>
         </condition>
         <condition>
-          <set token="worker_group_event_filter">instance_type=worker worker_group="$worker_group$"</set>
+          <set token="worker_group_event_filter">instance_type IN (managed-edge, worker) worker_group="$worker_group$"</set>
+          <set token="worker_group_metric_pre_filter">group="$worker_group$"</set>
+          <set token="worker_group_metric_filter">group="$worker_group$"</set>
         </condition>
       </change>
       <default>all_instances</default>
@@ -235,14 +257,10 @@
     <panel>
       <title>Total Throughput (inBytes + outBytes) in $bytes_unit_abbreviated_label$</title>
       <chart>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="server" message="_raw stats"
-| bin span=1d _time
-| stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
-| eval total = inBytes + outBytes, `process_bytes(total, "$bytes_unit_abbreviated_label$")`
-| timechart span=1d max(total) AS "Total Throughput ($bytes_unit_abbreviated_label$)"</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
+        <search base="throughput_base_search">
+          <query>
+| table _time total
+| rename total AS "Total Throughput ($bytes_unit_abbreviated_label$)"</query>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">line</option>
@@ -255,15 +273,11 @@
     <panel>
       <title>Estimated Worker Processes Required</title>
       <chart>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="server" message="_raw stats"
-| bin span=1d _time
-| stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
-| eval total = inBytes + outBytes, `process_bytes(total, "$bytes_unit_abbreviated_label$")`
+        <search base="throughput_base_search">
+          <query>
 | eval calculation=(round((total / $processingLimitPerCPU$), 0) + 1)
+| table _time calculation
 | timechart span=1d max(calculation) AS "Estimated Worker Processes Required"</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
         </search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.chart">line</option>
@@ -278,18 +292,13 @@
     <panel>
       <title>Estimated Worker Processes Required, Based on DAILY Throughput over the Selected Time Range</title>
       <table>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="server" message="_raw stats"
-| bin span=1d _time
-| stats sum(inBytes) AS inBytes sum(outBytes) AS outBytes by _time
+        <search base="throughput_base_search">
+          <query>
 | eval date = strftime(_time, "%Y-%m-%d")
-| foreach *Bytes [ eval `process_bytes(&lt;&lt;FIELD&gt;&gt;, "$bytes_unit_abbreviated_label$")` ]
-| eval totalBytes = inBytes + outBytes
-| eval wpRequired = (round((totalBytes / $processingLimitPerCPU$), 0) + 1)
-| table date inBytes outBytes totalBytes wpRequired
-| rename date AS Date inBytes AS "$bytes_unit_abbreviated_label$ In" outBytes AS "$bytes_unit_abbreviated_label$ Out" totalBytes AS "Total $bytes_unit_abbreviated_label$" wpRequired AS "Estimated Worker Processes Required"</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
+| foreach *_bytes [ eval `process_bytes(&lt;&lt;FIELD&gt;&gt;, "$bytes_unit_abbreviated_label$")` ]
+| eval wp_required = (round((total / $processingLimitPerCPU$), 0) + 1)
+| table date in_bytes out_bytes total wp_required
+| rename date AS Date in_bytes AS "$bytes_unit_abbreviated_label$ In" out_bytes AS "$bytes_unit_abbreviated_label$ Out" total AS "Total $bytes_unit_abbreviated_label$" wp_required AS "Estimated Worker Processes Required"</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -316,16 +325,17 @@
       <title>Percentage, over the Selected Time Range, that a Worker Process Exceeded 90%  cpuPerc Usage</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="server" message="_raw stats"
-| bin span=1m _time
-| stats max(cpuPerc) AS cpuPerc BY _time cid
+          <query>| mstats max(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value` span=1d
+| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| search $worker_group_event_filter$ $worker_group_metric_filter$
+| stats max(cpuPerc) AS cpuPerc BY _time cribl_wp
 | eval percentage=if(cpuPerc &gt;= 90, 1, 0)
-| stats sum(percentage) AS percentage count BY cid
+| stats sum(percentage) AS percentage count BY cribl_wp
 | eval percentage=round(((percentage * 100) / count), 2)
-| eval workerProcess=ltrim(cid, "w")
+| eval workerProcess=ltrim(cribl_wp, "w")
 | sort 0 workerProcess
-| fields cid percentage
-| rename cid AS CID percentage AS Percentage</query>
+| table workerProcess percentage
+| rename workerProcess AS "Worker Process" percentage AS Percentage</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
