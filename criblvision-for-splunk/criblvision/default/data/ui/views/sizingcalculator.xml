@@ -206,8 +206,8 @@
           <done>
             <set token="workerProcessCount">$result.WorkerProcessCount$</set>
           </done>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel="server" message="_raw stats"
-| stats dc(cid) AS WorkerProcessCount BY host
+          <query>| mstats sum(`set_cribl_metrics_prefix(total.*_bytes)`) AS *_bytes WHERE `set_cribl_metrics_index` BY host cribl_wp
+| stats dc(cribl_wp) AS WorkerProcessCount BY host
 | stats sum(WorkerProcessCount) AS WorkerProcessCount</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
