@@ -1,5 +1,27 @@
 <form theme="dark" version="1.1">
   <label>Commit and Deploy Audit Logs</label>
+  <search id="commit_and_deploy_base_search">
+    <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` ((source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") ((action=commit type=git id!="") OR (action=deploy type=groups id!=""))) OR channel=GitCommitLogs)
+| rex field=message "(?&lt;username&gt;[^:]+):\s(?&lt;message&gt;.*)"
+| eval worker_group_deploy = if(action == "deploy", id, null()),
+       worker_group_commit = if(channel == "GitCommitLogs", worker_group, null()),
+       instance_type_deploy = if(action == "deploy", id, null()),
+       instance_type_commit = if(channel == "GitCommitLogs", worker_group, null()),
+       leader_host = if(channel == "GitCommitLogs", null(), host),
+       commit_version = case(action == "deploy", version, action == "commit", id, isnotnull(hash), substr(hash, 0, 7), true(), null()),
+       commit_time = if(action == "commit" OR channel == "GitCommitLogs", strftime(_time, "%Y-%m-%d %H:%M:%S"), null()),
+       deploy_time = if(action == "deploy", strftime(_time, "%Y-%m-%d %H:%M:%S"), null()),
+       is_deployed = if(isnotnull(deploy_time), "true", null()),
+       message = if(username == "revert to", username.": ".message, message),
+       username = if(username != "revert to", username, null())
+| fields worker_group* instance_type leader_host user* commit_* deploy_time is_deployed message files.*
+| stats earliest(_time) AS _time values(*) AS * BY commit_version
+| rename leader_host AS host
+| search $host_filter$ $worker_group_event_filter$
+</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
@@ -29,7 +51,7 @@
       <default>*</default>
       <initialValue>*</initialValue>
     </input>
-    <input type="dropdown" token="host">
+    <input type="dropdown" token="host" searchWhenChanged="false">
       <label>Leader Host</label>
       <fieldForLabel>label</fieldForLabel>
       <fieldForValue>host</fieldForValue>
@@ -47,23 +69,46 @@
         </condition>
       </change>
     </input>
-    <input type="radio" token="FilesCreated" searchWhenChanged="true">
-      <label>Show Files Created</label>
-      <choice value="FilesCreated">Yes</choice>
-      <choice value="">No</choice>
-      <default></default>
+    <input type="dropdown" token="worker_group" searchWhenChanged="true">
+      <label>Worker Group / Fleet</label>
+      <choice value="all_instances">All Instances</choice>
+      <choice value="all_fleets">All Fleets</choice>
+      <choice value="all_worker_groups">All Worker Groups</choice>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Instances">
+          <set token="worker_group_event_filter">instance_type IN (leader, managed-edge, worker)</set>
+        </condition>
+        <condition label="All Fleets">
+          <set token="worker_group_event_filter">instance_type=managed-edge</set>
+        </condition>
+        <condition label="All Worker Groups">
+          <set token="worker_group_event_filter">instance_type=worker</set>
+        </condition>
+        <condition>
+          <set token="worker_group_event_filter">instance_type IN (managed-edge, worker) worker_group="$worker_group$"</set>
+        </condition>
+      </change>
+      <default>all_instances</default>
+      <initialValue>all_instances</initialValue>
     </input>
-    <input type="radio" token="FilesModified" searchWhenChanged="true">
-      <label>Show Files Modified</label>
-      <choice value="FilesModified">Yes</choice>
-      <choice value="">No</choice>
-      <default></default>
-    </input>
-    <input type="radio" token="FilesDeleted" searchWhenChanged="true">
-      <label>Show Files Deleted</label>
-      <choice value="FilesDeleted">Yes</choice>
-      <choice value="">No</choice>
-      <default></default>
+    <input type="multiselect" token="file_changes" searchWhenChanged="true">
+      <label>File Changes</label>
+      <choice value="files_created">Created</choice>
+      <choice value="files_deleted">Deleted</choice>
+      <choice value="files_modified">Modified</choice>
+      <delimiter>  </delimiter>
+      <change>
+        <condition>
+          <eval token="file_change_filter">coalesce($file_changes$, "")</eval>
+        </condition>
+      </change>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -85,26 +130,105 @@
     <panel depends="$show_details$">
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>This dashboard is designed to show a breakdown of commits and deploys from the Leader Node. You can select to have files created, modified, or deleted shown. This is useful to audit what recent configuration changes might have been deployed before an issue started. </p>
+          <p>This dashboard is designed to show a breakdown of commits and deploys from your Leader Node(s). You can select to have files created, modified, or deleted shown via the File Changes input. A timeline of the commits/deploys over the selected time range is provided. The summary table provides context for each commit. Clicking on a created/modified/deleted file will drilldown into the the configuration updates made to that file in that commit. This is useful to audit what recent configuration changes might have been deployed before an issue started and what those changes were.</p>
+          <p><b>NB:</b> The CriblVision for Splunk Pack v1.1.1+ is required with the Git Commit Logs Collector Job configured to make full use of this dashboard.</p>
         </div>
       </html>
     </panel>
   </row>
   <row>
     <panel>
-      <table>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ source IN ("*/audit.log", "*/audit1.log", "*/audit2.log", "*/audit3.log", "*/audit4.log") (action=commit AND type=git AND id!="") OR (action=deploy AND type=groups AND id!="") 
-| eval WorkerGroup=case(action="deploy", id), CommitVersion=case(action="deploy", version, action="commit", id), DeployTime=case(action="deploy", time), CommitTime=case(action="commit", time), isDeployed=if(action="deploy", "1", "0")
-| stats values(user) AS User values(WorkerGroup) AS WorkerGroup values(CommitTime) AS CommitTime values(files.created{}) AS FilesCreated values(files.modified{}) AS FilesModified values(files.deleted{}) AS FilesDeleted max(isDeployed) AS isDeployed values(DeployTime) AS DeployTime latest(_time) AS _time by CommitVersion
-| sort 0 - _time
-| table User WorkerGroup CommitVersion CommitTime $FilesCreated$ $FilesModified$ $FilesDeleted$ isDeployed DeployTime
-| fillnull value="-" User WorkerGroup CommitVersion CommitTime $FilesCreated$ $FilesModified$ $FilesDeleted$ isDeployed DeployTime</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
+      <chart>
+        <title>Commit and Deploy Breakdown Over Time</title>
+        <search base="commit_and_deploy_base_search">
+          <query>| timechart sum(eval(isnotnull(commit_time))) AS commit_count sum(eval(isnotnull(deploy_time))) AS deploy_count
+| rename commit_count AS "Commit Count" deploy_count AS "Deploy Count"</query>
         </search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Count</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"Commit Count":"#0D74E7","Deploy Count":"2FBB4F"}</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Commit and Deploy Summary Table</title>
+        <search base="commit_and_deploy_base_search">
+          <query>
+| sort - _time
+| rename "files.*{}" AS files_*
+| eval worker_group = coalesce(worker_group_deploy, worker_group_commit, worker_group)
+| lookup cribl_stream_assets worker_group OUTPUT instance_type
+| eval instance_type = mvdedup(instance_type),
+       user = case(isnotnull(user) AND isnotnull(username), user." (".username.")", isnotnull(user) AND isnull(username), user, isnull(user) AND isnotnull(username), username, true(), "unknown user"),
+       commit_version = if(len(commit_version) &gt; 7, substr(commit_version, 0, 7), commit_version)
+| fields - _time username worker_group_*
+| table user worker_group instance_type commit_time commit_version message $file_change_filter$ is_deployed deploy_time
+| rename user AS User worker_group AS "Worker Group" instance_type AS "Instance Type" commit_time AS "Commit Time" commit_version AS "Commit Version" message AS "Commit Message" files_created AS "Files Created" files_deleted AS "Files Deleted" files_modified AS "Files Modified" is_deployed AS "Is Deployed" deploy_time AS "Deploy Time"</query>
+        </search>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="rowNumbers">true</option>
+        <drilldown>
+          <condition field="User"></condition>
+          <condition field="Worker Group"></condition>
+          <condition field="Instance Type"></condition>
+          <condition field="Commit Time"></condition>
+          <condition field="Commit Version"></condition>
+          <condition field="Commit Message"></condition>
+          <condition field="Files Created">
+            <set token="selected_file">$click.value2$</set>
+            <set token="selected_commit">$row.Commit Version$</set>
+          </condition>
+          <condition field="Files Deleted">
+            <set token="selected_file">$click.value2$</set>
+            <set token="selected_commit">$row.Commit Version$</set>
+          </condition>
+          <condition field="Files Modified">
+            <set token="selected_file">$click.value2$</set>
+            <set token="selected_commit">$row.Commit Version$</set>
+          </condition>
+          <condition field="Is Deployed"></condition>
+          <condition field="Deploy Time"></condition>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$selected_file$">
+    <panel>
+      <table>
+        <title>Changes Made to "$selected_file$" in Commit Version "$selected_commit$"</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` hash="$selected_commit$*"
+| spath path=changes{} output=changes
+| table changes
+| eval changes = mvfilter(like(changes, "%$selected_file$%"))
+| mvexpand changes
+| spath input=changes path=blocks{} output=change
+| table change
+| mvexpand change
+| spath input=change path=header output=header
+| spath input=change path=block{} output=changes
+| mvexpand changes
+| streamstats current=f last(header) AS last_header
+| eval header = if(header == last_header, "", header)
+| table header changes
+| rename header AS Header changes AS Changes</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">100</option>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+        <format type="color" field="Changes">
+          <colorPalette type="expression">if(like(value, "+%"), "#97F295", "#FFB6BA")</colorPalette>
+        </format>
       </table>
     </panel>
   </row>
