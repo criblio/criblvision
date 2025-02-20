@@ -189,6 +189,8 @@
         <earliest>-15m</earliest>
         <latest>now</latest>
       </search>
+      <prefix>"</prefix>
+      <suffix>"</suffix>
     </input>
     <input type="dropdown" token="bytes_unit" searchWhenChanged="true">
       <label>Bytes Unit</label>
@@ -579,11 +581,11 @@
     <panel depends="$show_internal_byte_io$">
       <chart>
         <title>$bytes_unit_label$ I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="internal_io_time_summary_base_search">
           <query>
 | table _time $bytes_unit_label$*</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">$bytes_unit_label$ I/O</option>
         <option name="charting.chart">area</option>
@@ -595,11 +597,11 @@
     <panel>
       <chart>
         <title>Events I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="internal_io_time_summary_base_search">
           <query>
 | table _time Events*</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
@@ -613,11 +615,11 @@
     <panel>
       <chart>
         <title>Raw $bytes_unit_label$ I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>
 | table _time "Raw $bytes_unit_label$*"</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">$bytes_unit_label$ I/O</option>
         <option name="charting.chart">area</option>
@@ -630,11 +632,11 @@
     <panel>
       <chart>
         <title>Raw Event $bytes_unit_label$ I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>
 | table _time "Event $bytes_unit_label$*"</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">$bytes_unit_label$ I/O</option>
         <option name="charting.chart">area</option>
@@ -647,10 +649,10 @@
     <panel>
       <chart>
         <title>Events I/O Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search base="redux_io_time_summary_base_search">
           <query>| table _time "Events In" "Events Out"</query>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Events I/O</option>
         <option name="charting.chart">area</option>
