@@ -2,7 +2,8 @@
   <view name="welcome" default='true' />
   <view name="health_check" />
   <collection label="Analytics">
-  	<view name="home" />
+  	<view name="log_analytics" />
+    <view name="log_viewer" />
   	<view name="stats" />
   </collection>
   <collection label="Assets">
