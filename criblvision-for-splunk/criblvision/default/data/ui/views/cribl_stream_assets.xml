@@ -302,7 +302,7 @@
         </format>
         <drilldown>
           <eval token="worker_group_drilldown">case('row.Instance Type' == "leader", "all_leaders", 'row.Instance Type' == "single", "all_single", true(), 'row.Worker Group')</eval>
-          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
+          <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
         </drilldown>
       </table>
     </panel>
