@@ -1,5 +1,6 @@
 <form theme="dark" version="1.1">
-  <label>Log Analytics</label>
+  <label>Log Analytics (DEPRECATED)</label>
+  <description>This dashboard is deprecated and will be removed in a later release.</description>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
       <label>Time Range</label>
