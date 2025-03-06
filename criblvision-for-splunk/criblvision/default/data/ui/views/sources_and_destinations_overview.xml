@@ -7,14 +7,6 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
-  <search id="messages_base_search">
-    <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ channel="$type$put:$selected$" $worker_group_event_filter$ level=* 
-| stats count sparkline(count) AS sparkline BY channel message level
-| sort - count
-| rename channel AS Channel message AS Messages count AS Count sparkline AS Sparkline</query>
-    <earliest>$time.earliest$</earliest>
-    <latest>$time.latest$</latest>
-  </search>
   <search>
     <done>
       <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
@@ -314,74 +306,9 @@
   </row>
   <row>
     <panel>
-      <table>
-        <title>Error Messages for Channel "$type$put:$selected$"</title>
-        <search base="messages_base_search">
-          <query>
-| where level == "error"
-| fields - level</query>
-        </search>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
-      </table>
-    </panel>
-    <panel>
-      <table>
-        <title>Warning Messages for Channel "$type$put:$selected$"</title>
-        <search base="messages_base_search">
-          <query>
-| where level == "warn"
-| fields - level</query>
-        </search>
-        <option name="drilldown">none</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
-      </table>
-    </panel>
-    <panel>
-      <table>
-        <title>Info Messages for Channel "$type$put:$selected$"</title>
-        <search base="messages_base_search">
-          <query>
-| where level == "info"
-| fields - level</query>
-        </search>
-        <option name="drilldown">none</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <input type="multiselect" token="levels" searchWhenChanged="true">
-        <label>Levels</label>
-        <choice value="debug">Debug</choice>
-        <choice value="info">Info</choice>
-        <choice value="warn">Warn</choice>
-        <choice value="error">Error</choice>
-        <default>error,warn</default>
-        <prefix>level IN (</prefix>
-        <suffix>)</suffix>
-        <initialValue>error,warn</initialValue>
-        <valuePrefix>"</valuePrefix>
-        <valueSuffix>"</valueSuffix>
-        <delimiter>, </delimiter>
-      </input>
-      <event>
-        <title>Events for Channel "$type$put:$selected$"</title>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=$type$put:$selected$ $levels$</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-        </search>
-        <option name="list.drilldown">none</option>
-      </event>
+      <html>
+        <a href="/app/criblvision/log_analytics?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$environment$&amp;form.worker_group=$worker_group$&amp;form.host=$host$&amp;channel=$type$put:$selected$" class="btn btn-primary" style="width: 100%" target="_blank">Jump to the Log Analytics Dashboard for "$type$put:$selected$" Logs</a>
+      </html>
     </panel>
   </row>
 </form>
