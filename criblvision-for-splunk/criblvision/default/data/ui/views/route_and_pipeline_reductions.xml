@@ -232,11 +232,6 @@
           <p>The <code>Pipeline (Redux Stats)</code> option is to view the metrics provided by the Cribl Redux Stats Pack, created by the talented Jon Rust (search for "Cribl Redux Stats" in the <a href="https://packs.cribl.io" target="_blank">Packs Dispensary</a>). This Pack generates additional byte/event I/O metrics for instrumented Pipelines. It takes into account JSON objects, strings, the entire <code>__e</code> event, and <code>_raw</code> field in an attempt to get the most accurate byte size and count possible. It also provides metrics that detail the time taken for events to be processed by the instrumented Pipelines.</p>
           <p>
             <span style="color:#FF5733;font-weight:bold;">Using the Cribl Redux Stats Pack can have a performance impact on your environment.</span> If you are looking to leverage these metrics, please read the README in the Cribl Redux Stats Pack to understand the instrumentation process and the performance costs.</p>
-            
-            <h2>Bytes Unit Label: $bytes_unit_label$</h2>
-            <h2>Bytes Unit Label (Abv): $bytes_unit_abbreviated_label$</h2>
-            <h2>Bytes Precision (Single): $bytes_precision_single$</h2>
-            <h2>Bytes Precision (Table): $bytes_precision_table$</h2>
         </div>
       </html>
     </panel>
