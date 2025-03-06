@@ -187,11 +187,11 @@
     <panel depends="$show_leader_overview$">
       <chart>
         <title>Leader Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time leader</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Leader Node(s)</option>
         <option name="charting.chart">area</option>
@@ -202,11 +202,11 @@
     <panel depends="$show_worker_overview$">
       <chart>
         <title>Worker Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time worker</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Worker Node(s)</option>
         <option name="charting.chart">area</option>
@@ -217,11 +217,11 @@
     <panel depends="$show_single_overview$">
       <chart>
         <title>Single Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time single</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.text">Active Single Node(s)</option>
@@ -233,11 +233,11 @@
     <panel depends="$show_managed_edge_overview$">
       <chart>
         <title>Edge Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time managed_edge</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.text">Active Edge Node(s)</option>
@@ -296,10 +296,10 @@
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
-        <fields>Host,Environment,"Instance Type","Worker Group","Latest Activity Time","Latest Shutdown Time",Status</fields>
         <format type="color" field="Status">
           <colorPalette type="map">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</colorPalette>
         </format>
+        <fields>["Host","Environment","Instance Type","Worker Group","Latest Activity Time","Latest Shutdown Time","Status"]</fields>
         <drilldown>
           <eval token="worker_group_drilldown">case('row.Instance Type' == "leader", "all_leaders", 'row.Instance Type' == "single", "all_single", true(), 'row.Worker Group')</eval>
           <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
