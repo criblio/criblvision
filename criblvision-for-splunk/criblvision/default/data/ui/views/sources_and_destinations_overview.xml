@@ -177,7 +177,7 @@
     <panel depends="$show_details$">
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>This dashboard displays an overview of log based statistics for all of your configured Sources and Destinations. It shows a breakdown of the bytes/event throughputs and the health of the selected Sources/Destinations. It also contains a breakdown of the <code>error</code>, <code>warn</code>, and <code>info</code> messages as well as filtering the full list of events for the selected Sources/Destinations presented in reverse chronological order. It is useful for getting a high level overview of the health of your Sources/Destinations.</p>
+          <p>This dashboard displays an overview of log based statistics for all of your configured Sources and Destinations. It shows a breakdown of the bytes/event throughputs and the health of the selected Sources/Destinations, which is useful for getting a high level overview of the health of your Sources/Destinations. For a more detailed view, the button at the bottom of this dashboard will drilldown to the <a href="/app/criblvision/log_analytics">Log Analytics dashboard</a> and automatically filter on the Sources/Destinations that are currently selected.</p>
         </div>
       </html>
     </panel>
