@@ -14,6 +14,8 @@
     <eval token="error_selected">if(match($levels$, "error"), "true", null())</eval>
     <eval token="debug_selected">if(match($levels$, "debug"), "true", null())</eval>
     <eval token="silly_selected">if(match($levels$, "silly"), "true", null())</eval>
+    <eval token="channel_filter">if(isnotnull($channel$), "channel IN (".$channel$.")", "")</eval>
+    <eval token="show_channel_panel">if($channel$ != "", "true", null())</eval>
   </init>
   <fieldset submitButton="true" autoRun="false">
     <input type="time" token="time" searchWhenChanged="true">
@@ -192,17 +194,24 @@
       </html>
     </panel>
   </row>
+  <row depends="$show_channel_panel$">
+    <panel>
+      <html>
+        <h1 style="text-align: center">Channel(s): "$channel$"</h1>
+      </html>
+    </panel>
+  </row>
   <row>
     <panel id="log_level_timechart">
       <chart>
         <title>Log Level Breakdown Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$
 | timechart count BY level</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Count</option>
         <option name="charting.chart">column</option>
@@ -217,7 +226,7 @@
       <chart>
         <title>Log Level Breakdown</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$
 | stats count BY level
 | rename level AS Level count AS Count</query>
           <earliest>$time.earliest$</earliest>
@@ -235,7 +244,7 @@
       <table>
         <title>Error Log Breakdown</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=error $log_type_filter$
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=error $log_type_filter$ $channel_filter$
 | eval reason = coalesce('reason.message', 'error.message', 'err.message', reason, error, "unknown")
 | stats count sparkline BY $split_by_filter$
 | sort - count
@@ -244,6 +253,7 @@
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
         <option name="totalsRow">true</option>
         <format type="number" field="Count">
@@ -260,7 +270,7 @@
       <table>
         <title>Warning Log Breakdown</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=warn $log_type_filter$
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=warn $log_type_filter$ $channel_filter$
 | eval reason = coalesce('reason.message', 'error.message', 'err.message', reason, error, "unknown")
 | stats count sparkline BY $split_by_filter$
 | sort - count
@@ -269,6 +279,7 @@
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
         <option name="totalsRow">true</option>
         <format type="number" field="Count">
@@ -285,7 +296,7 @@
       <table>
         <title>Info Log Breakdown</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=info $log_type_filter$
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=info $log_type_filter$ $channel_filter$
 | eval reason = "unknown"
 | stats count sparkline BY $split_by_filter$
 | fields - reason
@@ -295,6 +306,7 @@
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
         <option name="totalsRow">true</option>
         <format type="number" field="Count">
@@ -311,7 +323,7 @@
       <table>
         <title>Debug Log Breakdown</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=debug $log_type_filter$
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=debug $log_type_filter$ $channel_filter$
 | eval reason = "unknown"
 | stats count sparkline BY $split_by_filter$
 | fields - reason
@@ -321,6 +333,7 @@
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
         <option name="totalsRow">true</option>
         <format type="number" field="Count">
@@ -337,7 +350,7 @@
       <table>
         <title>Silly Log Breakdown</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=silly $log_type_filter$
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=silly $log_type_filter$ $channel_filter$
 | eval reason = "unknown"
 | stats count sparkline BY $split_by_filter$
 | fields - reason
@@ -347,6 +360,7 @@
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
         <option name="totalsRow">true</option>
         <format type="number" field="Count">
