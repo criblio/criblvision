@@ -6,7 +6,7 @@
   </search>
   <search id="overview_base_search">
     <query>| inputlookup cribl_stream_assets
-| search $environment_filter$
+| search $environment_filter$ $status_filter$
 | stats count(eval(status == "active")) AS active count AS total BY instance_type
 | eval value = tostring(active, "commas")." / ".tostring(total, "commas")</query>
     <earliest>$time.earliest$</earliest>
@@ -64,6 +64,14 @@
       </change>
       <default>*</default>
       <initialValue>*</initialValue>
+    </input>
+    <input type="link" token="status_filter" searchWhenChanged="true">
+      <label>Show Inactive</label>
+      <choice value="=*">Yes</choice>
+      <choice value="!=inactive">No</choice>
+      <default>!=inactive</default>
+      <initialValue>!=inactive</initialValue>
+      <prefix>status</prefix>
     </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
@@ -285,11 +293,11 @@
         <title>Cribl Stream Asset Overview</title>
         <search>
           <query>| inputlookup cribl_stream_assets
-| search $status$ $environment_filter$
+| search $status$ $environment_filter$ $status_filter$
 | table host environment instance_type worker_group latest_activity_time latest_shutdown_time status
 | foreach latest_*_time 
     [ eval &lt;&lt;FIELD&gt;&gt; = strftime(&lt;&lt;FIELD&gt;&gt;, "%Y-%m-%dT%H:%M:%S.%3N") ]
-| eval action = case(status == "active", "set to inactive", status == "inactive", "set to active", true(), null()) 
+| eval action = if(status != "inactive", "set to inactive", "set to active") 
 | rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status action AS Action
 | `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
@@ -321,7 +329,7 @@
         <title>Cribl Stream Asset Status</title>
         <search>
           <query>| inputlookup cribl_stream_assets
-| search $environment_filter$
+| search $environment_filter$ $status_filter$
 | stats count BY status</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -329,6 +337,7 @@
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
         <option name="charting.fieldColors">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F,"inactive":#3C444D}</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>
