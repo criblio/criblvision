@@ -275,6 +275,7 @@
         <choice value="active">Active</choice>
         <choice value="missing">Missing</choice>
         <choice value="shutdown">Shutdown</choice>
+        <choice value="inactive">Inactive</choice>
         <default>*</default>
         <prefix>status="</prefix>
         <suffix>"</suffix>
@@ -288,7 +289,8 @@
 | table host environment instance_type worker_group latest_activity_time latest_shutdown_time status
 | foreach latest_*_time 
     [ eval &lt;&lt;FIELD&gt;&gt; = strftime(&lt;&lt;FIELD&gt;&gt;, "%Y-%m-%dT%H:%M:%S.%3N") ]
-| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status
+| eval action = case(status == "active", "set to inactive", status == "inactive", "set to active", true(), null()) 
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status action AS Action
 | `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -297,12 +299,20 @@
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
         <format type="color" field="Status">
-          <colorPalette type="map">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</colorPalette>
+          <colorPalette type="map">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F,"inactive":#3C444D}</colorPalette>
         </format>
-        <fields>["Host","Environment","Instance Type","Worker Group","Latest Activity Time","Latest Shutdown Time","Status"]</fields>
+        <fields>["Host","Environment","Instance Type","Worker Group","Latest Activity Time","Latest Shutdown Time","Status","Action"]</fields>
         <drilldown>
-          <eval token="worker_group_drilldown">case('row.Instance Type' == "leader", "all_leaders", 'row.Instance Type' == "single", "all_single", true(), 'row.Worker Group')</eval>
-          <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
+          <condition field="Action">
+            <eval token="new_status">if(match($row.Action$, "inactive"), "inactive", "active")</eval>
+            <eval token="selected_instance_type">'row.Instance Type'</eval>
+            <eval token="selected_worker_group">'row.Worker Group'</eval>
+            <link target="_blank">/app/criblvision/search?earliest=-15m&amp;latest=now&amp;q=%7C%20inputlookup%20cribl_stream_assets%20%7C%20eval%20status%20%3D%20if(host%20%3D%3D%20"$row.Host$"%20AND%20instance_type%20%3D%3D%20"$selected_instance_type$"%20AND%20worker_group%20%3D%3D%20"$selected_worker_group$"%2C%20"$new_status$"%2C%20status)%20%7C%20outputlookup%20cribl_stream_assets</link>
+          </condition>
+          <condition>
+            <eval token="worker_group_drilldown">case('row.Instance Type' == "leader", "all_leaders", 'row.Instance Type' == "single", "all_single", true(), 'row.Worker Group')</eval>
+            <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
+          </condition>
         </drilldown>
       </table>
     </panel>
@@ -318,7 +328,7 @@
         </search>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
-        <option name="charting.fieldColors">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</option>
+        <option name="charting.fieldColors">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F,"inactive":#3C444D}</option>
       </chart>
     </panel>
   </row>
