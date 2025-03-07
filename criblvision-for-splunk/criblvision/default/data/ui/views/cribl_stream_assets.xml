@@ -88,7 +88,13 @@
     <panel depends="$show_details$">
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>Fill this with information about how to use this dashboard.</p>
+          <p>This dashboard provides an overview of the Cribl Stream / Edge assets that are or have been monitored up until this point. If multiple Cribl Stream environments are being monitored, an environment filter is provided to view individual environments.</p>
+          <p>A Cribl Stream instance can be in any of the following states:</p>
+          <p><b>Active:</b> The instance is currently operational</p>
+          <p><b>Missing:</b> The instance is no longer operational and no signs of a shutdown have been detected</p>
+          <p><b>Shutdown:</b> The instance has been shut down and is no longer operational</p>
+          <p><b>Inactive:</b> The instance has been manually moved to be shown as inactive</p>
+          <p>An instance can be updated to be active/inactive by clicking the hyperlink in the <code>Action</code> column of the <b>Cribl Stream Asset Overview</b> table. It is recommneded to update instances to be inactive if an instance has been intentionally taken offline and is in a missing/shutdown state. Instances that are removed from the assets lookup will no longer appear in dashboard/alert results. Inactive instances are filtered out by default. This can be toggled with the Show Inactive filter. Clicking on any other cells than <code>Action</code> will drill down to the <a href="/app/criblvision/log_viewer">Log Viewer dashboard</a> to view the logs for that particular instance.</p>
         </div>
       </html>
     </panel>
