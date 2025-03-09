@@ -205,13 +205,14 @@
     <panel id="log_level_timechart">
       <chart>
         <title>Log Level Breakdown Over Time</title>
-        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$
+| `table_and_dedup(level)`
 | timechart count BY level</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Count</option>
         <option name="charting.chart">column</option>
@@ -227,6 +228,7 @@
         <title>Log Level Breakdown</title>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$
+| `table_and_dedup(level)`
 | stats count BY level
 | rename level AS Level count AS Count</query>
           <earliest>$time.earliest$</earliest>
@@ -245,7 +247,9 @@
         <title>Error Log Breakdown</title>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=error $log_type_filter$ $channel_filter$
-| eval reason = coalesce('reason.message', 'error.message', 'err.message', reason, error, "unknown")
+| rex "{\"message\":\"(?&lt;error_message&gt;.+?)\",\""
+| `table_and_dedup(channel message reason error reason.* error.* error_message)`
+| eval reason = coalesce(error_message ,'reason.message', 'error.message', 'err.message', reason, error, "unknown")
 | stats count sparkline BY $split_by_filter$
 | sort - count
 | rename channel AS Channel message AS Message reason AS Reason count AS Count sparkline AS Sparkline</query>
@@ -271,7 +275,9 @@
         <title>Warning Log Breakdown</title>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=warn $log_type_filter$ $channel_filter$
-| eval reason = coalesce('reason.message', 'error.message', 'err.message', reason, error, "unknown")
+| rex "{\"message\":\"(?&lt;error_message&gt;.+?)\",\""
+| `table_and_dedup(channel message reason error reason.* error.* error_message)`
+| eval reason = coalesce(error_message, 'reason.message', 'error.message', 'err.message', reason, error, "unknown")
 | stats count sparkline BY $split_by_filter$
 | sort - count
 | rename channel AS Channel message AS Message reason AS Reason count AS Count sparkline AS Sparkline</query>
@@ -297,6 +303,7 @@
         <title>Info Log Breakdown</title>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=info $log_type_filter$ $channel_filter$
+| `table_and_dedup(channel message)`
 | eval reason = "unknown"
 | stats count sparkline BY $split_by_filter$
 | fields - reason
@@ -324,6 +331,7 @@
         <title>Debug Log Breakdown</title>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=debug $log_type_filter$ $channel_filter$
+| `table_and_dedup(channel message)`
 | eval reason = "unknown"
 | stats count sparkline BY $split_by_filter$
 | fields - reason
@@ -351,6 +359,7 @@
         <title>Silly Log Breakdown</title>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=silly $log_type_filter$ $channel_filter$
+| `table_and_dedup(channel message)`
 | eval reason = "unknown"
 | stats count sparkline BY $split_by_filter$
 | fields - reason
