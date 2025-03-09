@@ -174,13 +174,14 @@
     <panel>
       <chart>
         <title>Log Level Breakdown Over Time</title>
+        <search base="annotation_search" type="annotation"></search>
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$ $message_filter$
+| `table_and_dedup(level)`
 | timechart count BY level</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Count</option>
         <option name="charting.chart">column</option>
@@ -188,6 +189,7 @@
         <option name="charting.drilldown">none</option>
         <option name="charting.fieldColors">{"info":"#2B95D6","warn":"#FAAD14","error":"#FF4D4F","debug":"#52C41A","silly":"#52C41A"}</option>
         <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>
