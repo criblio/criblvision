@@ -53,7 +53,8 @@
       <title>Successful Logins by User</title>
       <chart>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ channel=auth message="Successful login" 
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ channel=auth message="Successful login"
+| `table_and_dedup(user)`
 | timechart count limit=100 by user</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -71,8 +72,8 @@
       <title>Latest Configuration Updates by Worker</title>
       <table>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ message="finished config update" 
-| table _time worker version
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ message="finished config update"
+| `table_and_dedup(worker version)`
 | rename worker AS Worker version AS Version</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
