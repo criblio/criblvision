@@ -206,7 +206,7 @@
       <chart>
         <title>Log Level Breakdown Over Time</title>
         <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$`
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$
 | timechart count BY level</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
