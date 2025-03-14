@@ -7,14 +7,6 @@
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
-  <search id="messages_base_search">
-    <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ channel="$type$put:$selected$" $worker_group_event_filter$ level=* 
-| stats count sparkline(count) AS sparkline BY channel message level
-| sort - count
-| rename channel AS Channel message AS Messages count AS Count sparkline AS Sparkline</query>
-    <earliest>$time.earliest$</earliest>
-    <latest>$time.latest$</latest>
-  </search>
   <search>
     <done>
       <set token="init_bytes_unit_abbreviated_label">$result.bytes_unit_abbreviated_label$</set>
@@ -185,7 +177,7 @@
     <panel depends="$show_details$">
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>This dashboard displays an overview of log based statistics for all of your configured Sources and Destinations. It shows a breakdown of the bytes/event throughputs and the health of the selected Sources/Destinations. It also contains a breakdown of the <code>error</code>, <code>warn</code>, and <code>info</code> messages as well as filtering the full list of events for the selected Sources/Destinations presented in reverse chronological order. It is useful for getting a high level overview of the health of your Sources/Destinations.</p>
+          <p>This dashboard displays an overview of log based statistics for all of your configured Sources and Destinations. It shows a breakdown of the bytes/event throughputs and the health of the selected Sources/Destinations, which is useful for getting a high level overview of the health of your Sources/Destinations. For a more detailed view, the button at the bottom of this dashboard will drilldown to the <a href="/app/criblvision/log_analytics">Log Analytics dashboard</a> and automatically filter on the Sources/Destinations that are currently selected.</p>
         </div>
       </html>
     </panel>
@@ -314,74 +306,9 @@
   </row>
   <row>
     <panel>
-      <table>
-        <title>Error Messages for Channel "$type$put:$selected$"</title>
-        <search base="messages_base_search">
-          <query>
-| where level == "error"
-| fields - level</query>
-        </search>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
-      </table>
-    </panel>
-    <panel>
-      <table>
-        <title>Warning Messages for Channel "$type$put:$selected$"</title>
-        <search base="messages_base_search">
-          <query>
-| where level == "warn"
-| fields - level</query>
-        </search>
-        <option name="drilldown">none</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
-      </table>
-    </panel>
-    <panel>
-      <table>
-        <title>Info Messages for Channel "$type$put:$selected$"</title>
-        <search base="messages_base_search">
-          <query>
-| where level == "info"
-| fields - level</query>
-        </search>
-        <option name="drilldown">none</option>
-        <format type="number" field="Count">
-          <option name="precision">0</option>
-        </format>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <input type="multiselect" token="levels" searchWhenChanged="true">
-        <label>Levels</label>
-        <choice value="debug">Debug</choice>
-        <choice value="info">Info</choice>
-        <choice value="warn">Warn</choice>
-        <choice value="error">Error</choice>
-        <default>error,warn</default>
-        <prefix>level IN (</prefix>
-        <suffix>)</suffix>
-        <initialValue>error,warn</initialValue>
-        <valuePrefix>"</valuePrefix>
-        <valueSuffix>"</valueSuffix>
-        <delimiter>, </delimiter>
-      </input>
-      <event>
-        <title>Events for Channel "$type$put:$selected$"</title>
-        <search>
-          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=$type$put:$selected$ $levels$</query>
-          <earliest>$time.earliest$</earliest>
-          <latest>$time.latest$</latest>
-        </search>
-        <option name="list.drilldown">none</option>
-      </event>
+      <html>
+        <a href="/app/criblvision/log_analytics?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$environment$&amp;form.worker_group=$worker_group$&amp;form.host=$host$&amp;channel=$type$put:$selected$" class="btn btn-primary" style="width: 100%" target="_blank">Jump to the Log Analytics Dashboard for "$type$put:$selected$" Logs</a>
+      </html>
     </panel>
   </row>
 </form>

@@ -1,0 +1,377 @@
+<form theme="dark" version="1.1">
+  <label>Log Analytics</label>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <init>
+    <set token="level_filter">level IN ($levels$)</set>
+    <set token="log_type_filter">cid IN ($log_types$)</set>
+    <eval token="log_type_url_segment">if(match($log_types$, "api"), "form.log_types=api&amp;", "").if(match($log_types$, "cfg:"), "form.log_types=cfg*&amp;", "").if(match($log_types$, "w\d+"), "form.log_types=w*&amp;", "")</eval>
+    <set token="split_by_filter">$split_by$</set>
+    <eval token="info_selected">if(match($levels$, "info"), "true", null())</eval>
+    <eval token="warn_selected">if(match($levels$, "warn"), "true", null())</eval>
+    <eval token="error_selected">if(match($levels$, "error"), "true", null())</eval>
+    <eval token="debug_selected">if(match($levels$, "debug"), "true", null())</eval>
+    <eval token="silly_selected">if(match($levels$, "silly"), "true", null())</eval>
+    <eval token="channel_filter">if(isnotnull($channel$), "channel IN (".$channel$.")", "")</eval>
+    <eval token="show_channel_panel">if($channel$ != "", "true", null())</eval>
+  </init>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="worker_group" searchWhenChanged="true">
+      <label>Instance Type</label>
+      <choice value="all_instances">All Instances</choice>
+      <choice value="all_leaders">All Leaders</choice>
+      <choice value="all_fleets">All Fleets</choice>
+      <choice value="all_worker_groups">All Worker Groups</choice>
+      <choice value="all_single">All Single Instances</choice>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Instances">
+          <set token="worker_group_event_filter">instance_type=*</set>
+        </condition>
+        <condition label="All Leaders">
+          <set token="worker_group_event_filter">instance_type=leader</set>
+        </condition>
+        <condition label="All Fleets">
+          <set token="worker_group_event_filter">instance_type=managed-edge</set>
+        </condition>
+        <condition label="All Worker Groups">
+          <set token="worker_group_event_filter">instance_type=worker</set>
+        </condition>
+        <condition label="All Single Instances">
+          <set token="worker_group_event_filter">instance_type=single</set>
+        </condition>
+        <condition>
+          <set token="worker_group_event_filter">instance_type IN (managed-edge, worker) worker_group="$worker_group$"</set>
+        </condition>
+      </change>
+      <default>all_instances</default>
+      <initialValue>all_instances</initialValue>
+    </input>
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| `dashboard_host_filter($environment_filter|s$ $worker_group_event_filter|s$)`</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
+    </input>
+    <input type="multiselect" token="levels" searchWhenChanged="true">
+      <label>Levels</label>
+      <choice value="info">Info</choice>
+      <choice value="warn">Warn</choice>
+      <choice value="error">Error</choice>
+      <choice value="debug">Debug</choice>
+      <choice value="silly">Silly</choice>
+      <default>info,warn,error</default>
+      <delimiter>, </delimiter>
+      <change>
+        <condition>
+          <eval token="level_filter">if(isnotnull($levels$), "level IN (".$levels$.")", "level=undefined")</eval>
+          <eval token="info_selected">if(match($levels$, "info"), "true", null())</eval>
+          <eval token="warn_selected">if(match($levels$, "warn"), "true", null())</eval>
+          <eval token="error_selected">if(match($levels$, "error"), "true", null())</eval>
+          <eval token="debug_selected">if(match($levels$, "debug"), "true", null())</eval>
+          <eval token="silly_selected">if(match($levels$, "silly"), "true", null())</eval>
+        </condition>
+      </change>
+      <initialValue>info,warn,error</initialValue>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+    </input>
+    <input type="multiselect" token="log_types" searchWhenChanged="true">
+      <label>Log Types</label>
+      <choice value="api">API</choice>
+      <choice value="cfg:*">Config</choice>
+      <choice value="w*">Worker</choice>
+      <default>api,cfg:*,w*</default>
+      <initialValue>api,cfg*,w*</initialValue>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter>, </delimiter>
+      <change>
+        <condition>
+          <eval token="log_type_filter">if(isnotnull($log_types$), "cid IN (".$log_types$.")", "cid=undefined")</eval>
+          <eval token="log_type_url_segment">if(match($log_types$, "api"), "form.log_types=api&amp;", "").if(match($log_types$, "cfg:"), "form.log_types=cfg*&amp;", "").if(match($log_types$, "w\d+"), "form.log_types=w*&amp;", "")</eval>
+        </condition>
+      </change>
+    </input>
+    <input type="multiselect" token="split_by" searchWhenChanged="true">
+      <label>Split By</label>
+      <choice value="channel">Channel</choice>
+      <choice value="message">Message</choice>
+      <choice value="reason">Reason</choice>
+      <default>channel,message</default>
+      <initialValue>channel,message</initialValue>
+      <delimiter> </delimiter>
+      <change>
+        <condition>
+          <eval token="split_by_filter">coalesce($split_by$, "")</eval>
+        </condition>
+      </change>
+    </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
+  </fieldset>
+  <row depends="$HIDE_CSS$">
+    <panel>
+      <html>
+        <style>
+          #log_level_timechart {
+            width: 75% !important;
+          }
+          #log_level_piechart {
+            width: 25% !important;
+          }
+        </style>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard is interactive and intended for general troubleshooting. It displays a breakdown of the amount of internal Cribl Stream logs generated by the log level. It also displays a series of panels with <code>level</code> counts split by <code>channel</code>, <code>message</code>, and/or <code>reason</code> (NB: The <code>reason</code> column is only available for the <code>error</code> and <code>warn</code> levels). You can refine the panel results further by limiting the Log Types and Split By inputs. Clicking on any of the rows in the panels will drilldown to the <a href="/app/criblvision/log_viewer">Log Viewer dashboard</a>, containing a results table with the raw messages in syntax highlighted mode.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row depends="$show_channel_panel$">
+    <panel>
+      <html>
+        <h1 style="text-align: center">Channel(s): "$channel$"</h1>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel id="log_level_timechart">
+      <chart>
+        <title>Log Level Breakdown Over Time</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$
+| timechart count BY level</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Count</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"info":"#2B95D6","warn":"#FAAD14","error":"#FF4D4F","debug":"#52C41A","silly":"#52C41A"}</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel id="log_level_piechart">
+      <chart>
+        <title>Log Level Breakdown</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$
+| stats count BY level
+| rename level AS Level count AS Count</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"info":"#2B95D6","warn":"#FAAD14","error":"#FF4D4F","debug":"#52C41A","silly":"#52C41A"}</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row depends="$error_selected$">
+    <panel>
+      <table>
+        <title>Error Log Breakdown</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=error $log_type_filter$ $channel_filter$
+| rex "{\"message\":\"(?&lt;error_message&gt;.+?)\",\""
+| eval reason = coalesce(error_message ,'reason.message', 'error.message', 'err.message', reason, error, "unknown")
+| stats count sparkline BY $split_by_filter$
+| sort - count
+| rename channel AS Channel message AS Message reason AS Reason count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$environment$&amp;form.worker_group=$worker_group$&amp;form.host=$host$&amp;form.levels=error&amp;$log_type_url_segment|n$form.channel_filter=$row.Channel$&amp;form.message_filter=$row.Message$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$warn_selected$">
+    <panel>
+      <table>
+        <title>Warning Log Breakdown</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=warn $log_type_filter$ $channel_filter$
+| rex "{\"message\":\"(?&lt;error_message&gt;.+?)\",\""
+| eval reason = coalesce(error_message, 'reason.message', 'error.message', 'err.message', reason, error, "unknown")
+| stats count sparkline BY $split_by_filter$
+| sort - count
+| rename channel AS Channel message AS Message reason AS Reason count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$environment$&amp;form.worker_group=$worker_group$&amp;form.host=$host$&amp;form.levels=warn&amp;$log_type_url_segment|n$form.channel_filter=$row.Channel$&amp;form.message_filter=$row.Message$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$info_selected$">
+    <panel>
+      <table>
+        <title>Info Log Breakdown</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=info $log_type_filter$ $channel_filter$
+| eval reason = "unknown"
+| stats count sparkline BY $split_by_filter$
+| fields - reason
+| sort - count
+| rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$environment$&amp;form.worker_group=$worker_group$&amp;form.host=$host$&amp;form.levels=info&amp;$log_type_url_segment|n$form.channel_filter=$row.Channel$&amp;form.message_filter=$row.Message$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$debug_selected$">
+    <panel>
+      <table>
+        <title>Debug Log Breakdown</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=debug $log_type_filter$ $channel_filter$
+| eval reason = "unknown"
+| stats count sparkline BY $split_by_filter$
+| fields - reason
+| sort - count
+| rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$environment$&amp;form.worker_group=$worker_group$&amp;form.host=$host$&amp;form.levels=debug&amp;$log_type_url_segment|n$form.channel_filter=$row.Channel$&amp;form.message_filter=$row.Message$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row depends="$silly_selected$">
+    <panel>
+      <table>
+        <title>Silly Log Breakdown</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ level=silly $log_type_filter$ $channel_filter$
+| eval reason = "unknown"
+| stats count sparkline BY $split_by_filter$
+| fields - reason
+| sort - count
+| rename channel AS Channel message AS Message count AS Count sparkline AS Sparkline</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <format type="number" field="Count">
+          <option name="precision">0</option>
+        </format>
+        <drilldown>
+          <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$environment$&amp;form.worker_group=$worker_group$&amp;form.host=$host$&amp;form.levels=silly&amp;$log_type_url_segment|n$form.channel_filter=$row.Channel$&amp;form.message_filter=$row.Message$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

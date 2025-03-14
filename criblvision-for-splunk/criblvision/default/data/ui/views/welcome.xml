@@ -355,4 +355,44 @@ is_configured = true</pre>
       </html>
     </panel>
   </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
+          <h2>Potential for Duplicate Fields</h2>
+          <hr class="break-line" />
+          <p>The way the logs from the Internal Cribl Stream Log Source are formatted can result in fields getting extracted twice: once and index-time fields and again as search-time fields. This results in some fields at search-time being multi-value fields with duplicate data in them. This can be diagnosed by selecting a common field like <code>channel</code> from the Interesting Fields list and checking if the total percentage adds up to over 100%.</p>
+          <p>The following props have been included to work around this:</p>
+          <pre>[source::cribl]
+AUTO_KV_JSON = false</pre>
+          <p>This configuration will stop Splunk from parsing the fields at search-time for any event with the <code>cribl</code> source (the default source from the Internal Cribl Stream Logs Source). This will still allow internal logs collected via other means (e.g., an Edge Node on an Leader Node, the CriblStream for Splunk Pack) to extract fields at search-time, as they will not have the same source value.</p>
+          <hr class="break-line" />
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
+          <h2>Accurate Representation with Metrics</h2>
+          <hr class="break-line" />
+          <p>When comparing the results in CriblVision with the Monitoring Console in Cribl Stream, there can be some discrepancies in the accuracy between the two. By default, the Internal Cribl Stream Metrics Source rolls up metrics with the <code>cribl_metrics_rollup</code> Pipeline. To have the results in CriblVision match more closely with the Monitoring Console, update the Pre-Processing Pipeline on the Cribl Metrics Source to be the <code>passthru</code> Pipeline.</p>
+          <hr class="break-line" />
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <div class="welcome-container">
+          <h2>Having Issues?</h2>
+          <hr class="break-line" />
+          <p>Feel free to reach out in the #criblvision <a href="https://cribl-community.slack.com/">Community Slack</a> channel!</p>
+          <hr class="break-line" />
+        </div>
+      </html>
+    </panel>
+  </row>
 </dashboard>

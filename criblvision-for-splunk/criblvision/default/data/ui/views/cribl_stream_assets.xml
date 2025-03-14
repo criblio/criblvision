@@ -6,7 +6,7 @@
   </search>
   <search id="overview_base_search">
     <query>| inputlookup cribl_stream_assets
-| search $environment_filter$
+| search $environment_filter$ $status_filter$
 | stats count(eval(status == "active")) AS active count AS total BY instance_type
 | eval value = tostring(active, "commas")." / ".tostring(total, "commas")</query>
     <earliest>$time.earliest$</earliest>
@@ -65,6 +65,14 @@
       <default>*</default>
       <initialValue>*</initialValue>
     </input>
+    <input type="link" token="status_filter" searchWhenChanged="true">
+      <label>Show Inactive</label>
+      <choice value="=*">Yes</choice>
+      <choice value="!=inactive">No</choice>
+      <default>!=inactive</default>
+      <initialValue>!=inactive</initialValue>
+      <prefix>status</prefix>
+    </input>
     <input type="link" token="how_to_use">
       <label>How to Use</label>
       <choice value="show">Show</choice>
@@ -80,7 +88,13 @@
     <panel depends="$show_details$">
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
-          <p>Fill this with information about how to use this dashboard.</p>
+          <p>This dashboard provides an overview of the Cribl Stream / Edge assets that are or have been monitored up until this point. If multiple Cribl Stream environments are being monitored, an environment filter is provided to view individual environments.</p>
+          <p>A Cribl Stream instance can be in any of the following states:</p>
+          <p><b>Active:</b> The instance is currently operational</p>
+          <p><b>Missing:</b> The instance is no longer operational and no signs of a shutdown have been detected</p>
+          <p><b>Shutdown:</b> The instance has been shut down and is no longer operational</p>
+          <p><b>Inactive:</b> The instance has been manually moved to be shown as inactive</p>
+          <p>An instance can be updated to be active/inactive by clicking the hyperlink in the <code>Action</code> column of the <b>Cribl Stream Asset Overview</b> table. It is recommneded to update instances to be inactive if an instance has been intentionally taken offline and is in a missing/shutdown state. Instances that are removed from the assets lookup will no longer appear in dashboard/alert results. Inactive instances are filtered out by default. This can be toggled with the Show Inactive filter. Clicking on any other cells than <code>Action</code> will drill down to the <a href="/app/criblvision/log_viewer">Log Viewer dashboard</a> to view the logs for that particular instance.</p>
         </div>
       </html>
     </panel>
@@ -187,11 +201,11 @@
     <panel depends="$show_leader_overview$">
       <chart>
         <title>Leader Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time leader</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Leader Node(s)</option>
         <option name="charting.chart">area</option>
@@ -202,11 +216,11 @@
     <panel depends="$show_worker_overview$">
       <chart>
         <title>Worker Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time worker</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleY.text">Active Worker Node(s)</option>
         <option name="charting.chart">area</option>
@@ -217,11 +231,11 @@
     <panel depends="$show_single_overview$">
       <chart>
         <title>Single Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time single</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.text">Active Single Node(s)</option>
@@ -233,11 +247,11 @@
     <panel depends="$show_managed_edge_overview$">
       <chart>
         <title>Edge Node Log Activity</title>
-        <search base="annotation_search" type="annotation"></search>
         <search base="active_assets_base_search">
           <query>
 | table _time managed_edge</query>
         </search>
+        <search base="annotation_search" type="annotation"></search>
         <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.text">Active Edge Node(s)</option>
@@ -275,6 +289,7 @@
         <choice value="active">Active</choice>
         <choice value="missing">Missing</choice>
         <choice value="shutdown">Shutdown</choice>
+        <choice value="inactive">Inactive</choice>
         <default>*</default>
         <prefix>status="</prefix>
         <suffix>"</suffix>
@@ -284,11 +299,12 @@
         <title>Cribl Stream Asset Overview</title>
         <search>
           <query>| inputlookup cribl_stream_assets
-| search $status$ $environment_filter$
+| search $status$ $environment_filter$ $status_filter$
 | table host environment instance_type worker_group latest_activity_time latest_shutdown_time status
 | foreach latest_*_time 
     [ eval &lt;&lt;FIELD&gt;&gt; = strftime(&lt;&lt;FIELD&gt;&gt;, "%Y-%m-%dT%H:%M:%S.%3N") ]
-| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status
+| eval action = if(status != "inactive", "set to inactive", "set to active") 
+| rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" latest_activity_time AS "Latest Activity Time" latest_shutdown_time AS "Latest Shutdown Time" status AS Status action AS Action
 | `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
@@ -296,13 +312,21 @@
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <option name="rowNumbers">true</option>
-        <fields>Host,Environment,"Instance Type","Worker Group","Latest Activity Time","Latest Shutdown Time",Status</fields>
         <format type="color" field="Status">
-          <colorPalette type="map">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</colorPalette>
+          <colorPalette type="map">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F,"inactive":#3C444D}</colorPalette>
         </format>
+        <fields>["Host","Environment","Instance Type","Worker Group","Latest Activity Time","Latest Shutdown Time","Status","Action"]</fields>
         <drilldown>
-          <eval token="worker_group_drilldown">case('row.Instance Type' == "leader", "all_leaders", 'row.Instance Type' == "single", "all_single", true(), 'row.Worker Group')</eval>
-          <link target="_blank">/app/criblvision/home?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
+          <condition field="Action">
+            <eval token="new_status">if(match($row.Action$, "inactive"), "inactive", "active")</eval>
+            <eval token="selected_instance_type">'row.Instance Type'</eval>
+            <eval token="selected_worker_group">'row.Worker Group'</eval>
+            <link target="_blank">/app/criblvision/search?earliest=-15m&amp;latest=now&amp;q=%7C%20inputlookup%20cribl_stream_assets%20%7C%20eval%20status%20%3D%20if(host%20%3D%3D%20"$row.Host$"%20AND%20instance_type%20%3D%3D%20"$selected_instance_type$"%20AND%20worker_group%20%3D%3D%20"$selected_worker_group$"%2C%20"$new_status$"%2C%20status)%20%7C%20outputlookup%20cribl_stream_assets</link>
+          </condition>
+          <condition>
+            <eval token="worker_group_drilldown">case('row.Instance Type' == "leader", "all_leaders", 'row.Instance Type' == "single", "all_single", true(), 'row.Worker Group')</eval>
+            <link target="_blank">/app/criblvision/log_viewer?form.time.earliest=$time.earliest$&amp;form.time.latest=$time.latest$&amp;form.environment=$row.hosts$&amp;form.worker_group=$worker_group_drilldown$&amp;form.host=$row.Host$</link>
+          </condition>
         </drilldown>
       </table>
     </panel>
@@ -311,14 +335,15 @@
         <title>Cribl Stream Asset Status</title>
         <search>
           <query>| inputlookup cribl_stream_assets
-| search $environment_filter$
+| search $environment_filter$ $status_filter$
 | stats count BY status</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="charting.chart">pie</option>
         <option name="charting.drilldown">none</option>
-        <option name="charting.fieldColors">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F}</option>
+        <option name="charting.fieldColors">{"active":#118832,"shutdown":#1182F3,"missing":#D41F1F,"inactive":#3C444D}</option>
+        <option name="refresh.display">progressbar</option>
       </chart>
     </panel>
   </row>

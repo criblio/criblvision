@@ -1,0 +1,208 @@
+<form theme="dark" version="1.1">
+  <label>Log Viewer</label>
+  <init>
+    <set token="level_filter">level IN ($levels$)</set>
+    <set token="log_type_filter">cid IN ($log_types$)</set>
+  </init>
+  <search id="annotation_search" ref="Deployment Annotations">
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="environment" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="*">All Environments</choice>
+      <fieldForLabel>environment</fieldForLabel>
+      <fieldForValue>hosts</fieldForValue>
+      <search>
+        <query>| `dashboard_cribl_environment_filter`</query>
+        <earliest>-1m@m</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Environments">
+          <set token="environment_filter"></set>
+        </condition>
+        <condition>
+          <set token="environment_filter">host IN ($environment$)</set>
+        </condition>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="dropdown" token="worker_group" searchWhenChanged="true">
+      <label>Instance Type</label>
+      <choice value="all_instances">All Instances</choice>
+      <choice value="all_leaders">All Leaders</choice>
+      <choice value="all_fleets">All Fleets</choice>
+      <choice value="all_worker_groups">All Worker Groups</choice>
+      <choice value="all_single">All Single Instances</choice>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>worker_group</fieldForValue>
+      <search>
+        <query>| `dashboard_worker_group_filter($environment_filter|s$)`</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <change>
+        <condition label="All Instances">
+          <set token="worker_group_event_filter">instance_type=*</set>
+        </condition>
+        <condition label="All Leaders">
+          <set token="worker_group_event_filter">instance_type=leader</set>
+        </condition>
+        <condition label="All Fleets">
+          <set token="worker_group_event_filter">instance_type=managed-edge</set>
+        </condition>
+        <condition label="All Worker Groups">
+          <set token="worker_group_event_filter">instance_type=worker</set>
+        </condition>
+        <condition label="All Single Instances">
+          <set token="worker_group_event_filter">instance_type=single</set>
+        </condition>
+        <condition>
+          <set token="worker_group_event_filter">instance_type IN (managed-edge, worker) worker_group="$worker_group$"</set>
+        </condition>
+      </change>
+      <default>all_instances</default>
+      <initialValue>all_instances</initialValue>
+    </input>
+    <input type="dropdown" token="host">
+      <label>Host</label>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| `dashboard_host_filter($environment_filter|s$ $worker_group_event_filter|s$)`</query>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
+      </search>
+      <choice value="*">All Hosts</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <change>
+        <condition>
+          <set token="host_filter">host="$host$"</set>
+        </condition>
+      </change>
+    </input>
+    <input type="multiselect" token="levels" searchWhenChanged="true">
+      <label>Levels</label>
+      <choice value="info">Info</choice>
+      <choice value="warn">Warn</choice>
+      <choice value="error">Error</choice>
+      <choice value="debug">Debug</choice>
+      <choice value="silly">Silly</choice>
+      <default>info,warn,error</default>
+      <delimiter>, </delimiter>
+      <change>
+        <condition>
+          <eval token="level_filter">if(isnotnull($levels$), "level IN (".$levels$.")", "level=undefined")</eval>
+          <eval token="info_selected">if(match($levels$, "info"), "true", null())</eval>
+          <eval token="warn_selected">if(match($levels$, "warn"), "true", null())</eval>
+          <eval token="error_selected">if(match($levels$, "error"), "true", null())</eval>
+          <eval token="debug_selected">if(match($levels$, "debug"), "true", null())</eval>
+          <eval token="silly_selected">if(match($levels$, "silly"), "true", null())</eval>
+        </condition>
+      </change>
+      <initialValue>info,warn,error</initialValue>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+    </input>
+    <input type="multiselect" token="log_types" searchWhenChanged="true">
+      <label>Log Types</label>
+      <choice value="api">API</choice>
+      <choice value="cfg*">Config</choice>
+      <choice value="w*">Worker</choice>
+      <default>api,cfg*,w*</default>
+      <initialValue>api,cfg*,w*</initialValue>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter>, </delimiter>
+      <change>
+        <condition>
+          <eval token="log_type_filter">if(isnotnull($log_types$), "cid IN (".$log_type$.")", "cid=undefined")</eval>
+        </condition>
+      </change>
+    </input>
+    <input type="text" token="channel_filter" searchWhenChanged="true">
+      <label>Channel</label>
+      <default>*</default>
+      <prefix>channel="</prefix>
+      <suffix>"</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="text" token="message_filter" searchWhenChanged="true">
+      <label>Message</label>
+      <default>*</default>
+      <prefix>message="</prefix>
+      <suffix>"</suffix>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="link" token="how_to_use">
+      <label>How to Use</label>
+      <choice value="show">Show</choice>
+      <choice value="hide">Hide</choice>
+      <default>hide</default>
+      <initialValue>hide</initialValue>
+      <change>
+        <condition label="Show">
+          <set token="show_details">true</set>
+        </condition>
+        <condition>
+          <unset token="show_details"></unset>
+        </condition>
+      </change>
+    </input>
+  </fieldset>
+  <row>
+    <panel depends="$show_details$">
+      <html>
+        <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
+          <p>This dashboard is intended for general troubleshooting. It displays a breakdown of the amount of internal Cribl Stream logs generated by the log level. It also contains an event table showing the raw event messages in syntax highlighted mode. Inputs are provided to filter the results to only show the envrionments, instance types, hosts, log levels/types, channel, and event messages that you wish to see as part of your troubleshooting process.</p>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Log Level Breakdown Over Time</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$ $message_filter$
+| timechart count BY level</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <search base="annotation_search" type="annotation"></search>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Count</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.fieldColors">{"info":"#2B95D6","warn":"#FAAD14","error":"#FF4D4F","debug":"#52C41A","silly":"#52C41A"}</option>
+        <option name="charting.legend.placement">bottom</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <event>
+        <title>Cribl Stream Events</title>
+        <search>
+          <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $level_filter$ $log_type_filter$ $channel_filter$ $message_filter$</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="list.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </event>
+    </panel>
+  </row>
+</form>
