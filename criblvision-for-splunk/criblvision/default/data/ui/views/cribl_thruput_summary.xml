@@ -1,0 +1,179 @@
+<form version="1.1" theme="dark">
+  <label>Cribl Thruput Summary</label>
+  <description>Cribl Thruput Stats by Input and Output. Note that to enable the summaries for this dashboard, you must enable the two Summary Indexing searches in this app that start with "Summary Gen - Cribl Thruput"</description>
+  <init>
+    <set token="timechart_span"></set>
+  </init>
+  <fieldset submitButton="false">
+    <input type="time" searchWhenChanged="true" token="global_time_tok">
+      <label>Time Range</label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>@d</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="mstats_span">
+      <label>Time Span</label>
+      <choice value="auto">auto</choice>
+      <choice value="5s@s">5s</choice>
+      <choice value="10s@s">10s</choice>
+      <choice value="30s@s">30s</choice>
+      <choice value="1m@m">1m</choice>
+      <choice value="5m@m">5m</choice>
+      <choice value="10m@m">10m</choice>
+      <choice value="30m@m">30m</choice>
+      <choice value="1h@h">1h</choice>
+      <choice value="1d@d">1d</choice>
+      <choice value="1w@w">1w</choice>
+      <choice value="1mon@mon">1mon</choice>
+      <default>auto</default>
+      <change>
+        <eval token="timechart_span">if($value$ == "auto", "", "span=".$value$)</eval>
+        <eval token="mstats_span">"span=".$value$</eval>
+      </change>
+      <prefix>span=</prefix>
+      <initialValue>auto</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <input type="multiselect" token="output_token" searchWhenChanged="true">
+        <label>Outputs</label>
+        <choice value="*">All</choice>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+        <delimiter>, </delimiter>
+        <default></default>
+        <initialValue></initialValue>
+        <fieldForLabel>field</fieldForLabel>
+        <fieldForValue>field</fieldForValue>
+        <search>
+          <query>`set_cribl_internal_log_index` source=cribl_thruput_summary component=output
+| stats values(out_bytes_*) AS *
+| fieldsummary
+| table field</query>
+          <earliest>-48h@h</earliest>
+          <latest>now</latest>
+        </search>
+      </input>
+      <chart>
+        <title>Cribl Total Output Events</title>
+        <search>
+          <query>`set_cribl_internal_log_index` source=cribl_thruput_summary component=output
+| timechart max(out_events_*) AS *
+| table _time, $output_token$</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY2.abbreviation">auto</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.overlayFields">splunk_diff</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisEnd</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="displayview">analytics_workspace</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+      <chart>
+        <title>Cribl Total Output Bytes</title>
+        <search>
+          <query>`set_cribl_internal_log_index` source=cribl_thruput_summary component=output
+| timechart max(out_bytes_*) AS *
+| table _time, $output_token$</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsY.majorUnit">auto</option>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.axisY2.abbreviation">auto</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.overlayFields">splunk_diff</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisEnd</option>
+        <option name="charting.legend.mode">seriesCompare</option>
+        <option name="displayview">analytics_workspace</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Inputs</title>
+      <input type="multiselect" token="input_token" searchWhenChanged="true">
+        <label>Inputs</label>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+        <delimiter>, </delimiter>
+        <default></default>
+        <initialValue></initialValue>
+        <fieldForLabel>field</fieldForLabel>
+        <fieldForValue>field</fieldForValue>
+        <search>
+          <query>`set_cribl_internal_log_index` source=cribl_thruput_summary component=input
+| stats values(in_bytes_*) AS *
+| fieldsummary
+| table field</query>
+          <earliest>-48h</earliest>
+          <latest>now</latest>
+        </search>
+      </input>
+      <chart>
+        <title>Cribl Total Input Events</title>
+        <search>
+          <query>`set_cribl_internal_log_index` source=cribl_thruput_summary component=input
+| timechart max(in_events_*) AS *
+| table _time, $input_token$</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsY.majorUnit">auto</option>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisEnd</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="displayview">analytics_workspace</option>
+        <option name="refresh.display">progressbar</option>
+        
+      </chart>
+      <chart>
+        <title>Cribl Total Input Bytes</title>
+        <search>
+          <query>`set_cribl_internal_log_index` source=cribl_thruput_summary component=input
+| timechart max(in_bytes_*) AS *
+| table _time, $input_token$</query>
+          <earliest>$global_time_tok.earliest$</earliest>
+          <latest>$global_time_tok.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsY.majorUnit">auto</option>
+        <option name="charting.axisY.abbreviation">auto</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.gridLinesX.showMajorLines">1</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="displayview">analytics_workspace</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+</form>
