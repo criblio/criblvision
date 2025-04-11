@@ -229,7 +229,7 @@
         <search>
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $worker_group_event_filter$ $host_filter$ $destination_filter$ message="sender state change" state=DEAD
 | stats count BY host instance_type worker_group channel
-| lookup cribl_stream_assets host OUTPUTNEW environment
+| `cribl_stream_assets_lookup(environment)`
 | rex field=channel "output:(?&lt;output&gt;.*)"
 | table host environment instance_type worker_group output
 | rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" output AS Destination</query>
