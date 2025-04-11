@@ -168,7 +168,7 @@
             <set token="max_cpuPerc">$result.max_cpuPerc$</set>
           </done>
           <query>| mstats avg(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats avg(cpuPerc) AS cpuPerc</query>
           <earliest>$time.earliest$</earliest>
@@ -206,7 +206,7 @@
             <eval token="max_memRss">tostring($result.max_memRss$, "commas")</eval>
           </done>
           <query>| mstats avg(`set_cribl_metrics_prefix(system.mem_rss)`) AS memRss WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group 
+| `cribl_stream_assets_lookup(instance_type worker_group )`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sum(memRss) AS memRss BY host
 | stats avg(memRss) AS memRss
@@ -246,7 +246,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_cpu_perc$">
           <query>| mstats avg(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value` span=1m
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | timechart avg(cpuPerc) BY host</query>
           <earliest>$time.earliest$</earliest>
@@ -266,10 +266,10 @@
       <table>
         <search depends="$show_cpu_perc$">
           <query>| mstats avg(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats avg(cpuPerc) AS cpuPerc BY host instance_type worker_group
-| lookup cribl_stream_assets host OUTPUTNEW environment
+| `cribl_stream_assets_lookup(environment)`
 | table host environment instance_type worker_group cpuPerc
 | rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" cpuPerc AS "Avg CPU %"
 | `get_environment_hosts(Environment)`</query>
@@ -300,7 +300,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_mem_usage$">
           <query>| mstats avg(`set_cribl_metrics_prefix(system.mem_rss)`) AS memRss WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value` span=1m
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group 
+| `cribl_stream_assets_lookup(instance_type worker_group )`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sum(memRss) AS memRss BY _time host
 | eval `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`
@@ -322,11 +322,11 @@
       <table>
         <search depends="$show_mem_usage$">
           <query>| mstats avg(`set_cribl_metrics_prefix(system.mem_rss)`) AS memRss WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type worker_group 
+| `cribl_stream_assets_lookup(environment instance_type worker_group )`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sum(memRss) AS memRss BY host environment instance_type worker_group
 | eval `process_bytes(memRss, "$bytes_unit_abbreviated_label$")`
-| lookup cribl_stream_assets host OUTPUTNEW environment 
+| `cribl_stream_assets_lookup(environment )`
 | rename host AS Host environment AS Environment instance_type AS "Instance Type" worker_group AS "Worker Group" memRss AS "Memory Usage" 
 | `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
@@ -355,7 +355,7 @@
             <set token="unhealthy_sources">$result.unhealthy_sources$</set>
           </done>
           <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host input group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ health &gt; 0
 | stats dc(input) AS unhealthy_sources_count values(input) AS unhealthy_sources BY worker_group
 | stats dc(unhealthy_sources_count) AS unhealthy_sources_count values(unhealthy_sources) AS unhealthy_sources
@@ -382,7 +382,7 @@
             <set token="unhealthy_destinations">$result.unhealthy_destinations$</set>
           </done>
           <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ health &gt; 0
 | stats dc(output) AS unhealthy_destinations_count values(output) AS unhealthy_destinations BY worker_group
 | stats sum(unhealthy_destinations_count) AS unhealthy_destinations_count values(unhealthy_destinations) AS unhealthy_destinations
@@ -428,7 +428,7 @@
             <eval token="pq_not_configured">if($job.resultCount$ == 0, "true", null())</eval>
           </done>
           <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sum(total_pq_size) AS total_pq_size
 | eval `process_bytes(total_pq_size, "$bytes_unit_abbreviated_label$")`</query>
@@ -494,7 +494,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_sources$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY host input group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | timechart max(health) BY input</query>
           <earliest>$time.earliest$</earliest>
@@ -517,11 +517,11 @@
       <table>
         <search depends="$show_unhealthy_sources$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.inputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_sources$ span=auto BY input host group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sparkline(max(health)) AS sparkline BY host input group
 | rex field=input "(?&lt;technology&gt;[^:]+):(?&lt;input&gt;.*)"
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| `cribl_stream_assets_lookup(environment instance_type)`
 | table technology input host environment instance_type group sparkline
 | rename technology AS Technology input AS Source host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" sparkline AS "Health Sparkline"
 | `get_environment_hosts(Environment)`</query>
@@ -557,7 +557,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_unhealthy_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY host output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | timechart max(health) BY output</query>
           <earliest>$time.earliest$</earliest>
@@ -580,11 +580,11 @@
       <table>
         <search depends="$show_unhealthy_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("health.outputs")`) AS health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ $unhealthy_destinations$ span=auto BY host output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sparkline(max(health)) AS sparkline BY output host group
 | rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| `cribl_stream_assets_lookup(environment instance_type)`
 | table technology output host environment instance_type group sparkline
 | rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" sparkline AS "Health Sparkline"
 | `get_environment_hosts(Environment)`</query>
@@ -607,7 +607,7 @@
         <search depends="$show_cluster_communication_errors$">
           <query>`set_cribl_internal_log_index` `set_cribl_log_sourcetype` $environment_filter$ $host_filter$ $worker_group_event_filter$ channel=clustercomm level=warn OR level=error NOT message=metric*
 | stats count BY host worker_group
-| lookup cribl_stream_assets host OUTPUTNEW environment
+| `cribl_stream_assets_lookup(environment)`
 | rename host AS Host environment AS Environment worker_group AS "Worker Group" count AS "Cluster Communication Errors"
 | `get_environment_hosts(Environment)`</query>
           <earliest>$time.earliest$</earliest>
@@ -639,7 +639,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_total_pq_size$">
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ span=auto BY host group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | eval `process_bytes(pq_size, "$bytes_unit_abbreviated_label$")`
 | timechart sum(pq_size) BY host</query>
@@ -662,7 +662,7 @@
         <search depends="$show_total_pq_size$">
           <query>| mstats latest(`set_cribl_metrics_prefix("pq.queue_size")`) AS total_pq_size WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
 | search $worker_group_metric_filter$ total_pq_size &gt; 0
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| `cribl_stream_assets_lookup(environment instance_type)`
 | eval `process_bytes(total_pq_size, "$bytes_unit_abbreviated_label$")`
 | rename host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" total_pq_size AS "Total PQ Size"
 | `get_environment_hosts(Environment)`</query>
@@ -726,7 +726,7 @@
             <eval token="max_back_pressured">tostring($result.max_back_pressured$, "commas")</eval>
           </done>
           <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ back_pressured &gt; 0
 | stats dc(output) AS back_pressured_destinations BY worker_group
 | stats sum(back_pressured_destinations) AS back_pressured_destinations</query>
@@ -749,7 +749,7 @@
       <single>
         <search>
           <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ blocked &gt; 0
 | stats dc(output) AS blocked_destinations BY worker_group
 | stats sum(blocked_destinations) AS blocked_destinations</query>
@@ -771,7 +771,7 @@
       <single>
         <search>
           <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) as pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host input output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ pq_engaged &gt; 0
 | foreach *put [ eval &lt;&lt;FIELD&gt;&gt; = if(&lt;&lt;FIELD&gt;&gt; == `set_unknown_worker_group_value`, null(), "&lt;&lt;FIELD&gt;&gt;:".&lt;&lt;FIELD&gt;&gt;) ]
 | eval pq = coalesce(input, output)
@@ -849,7 +849,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_backpressured_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group span=auto fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ back_pressured!=0
 | timechart max(back_pressured) BY output</query>
           <earliest>$time.earliest$</earliest>
@@ -871,10 +871,10 @@
       <table>
         <search depends="$show_backpressured_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("backpressure.outputs")`) AS back_pressured WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ back_pressured &gt; 0
 | rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| `cribl_stream_assets_lookup(environment instance_type)`
 | table technology output host environment instance_type group
 | rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group"
 | `get_environment_hosts(Environment)`</query>
@@ -898,7 +898,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_blocked_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group span=auto fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ blocked!=0
 | timechart max(blocked) BY output</query>
           <earliest>$time.earliest$</earliest>
@@ -921,10 +921,10 @@
       <table>
         <search depends="$show_blocked_destinations$">
           <query>| mstats max(`set_cribl_metrics_prefix("blocked.outputs")`) AS blocked WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ blocked &gt; 0
 | rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| `cribl_stream_assets_lookup(environment instance_type)`
 | table technology output host environment instance_type group
 | rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group"
 | `get_environment_hosts(Environment)`</query>
@@ -948,7 +948,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search depends="$show_pq_engaged$">
           <query>| mstats max(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host input output group span=auto fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | foreach *put [ eval &lt;&lt;FIELD&gt;&gt; = if(&lt;&lt;FIELD&gt;&gt; == `set_unknown_worker_group_value`, null(), "&lt;&lt;FIELD&gt;&gt;:".&lt;&lt;FIELD&gt;&gt;) ]
 | eval pq = coalesce(input, output)
@@ -972,13 +972,13 @@
       <table>
         <search depends="$show_pq_engaged$">
           <query>| mstats sum(`set_cribl_metrics_prefix("pq.queue_size")`) AS pq_engaged WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host input output group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$ pq_engaged &gt; 0
 | foreach *put [ eval &lt;&lt;FIELD&gt;&gt; = if(&lt;&lt;FIELD&gt;&gt; == `set_unknown_worker_group_value`, null(), "&lt;&lt;FIELD&gt;&gt;:".&lt;&lt;FIELD&gt;&gt;) ]
 | eval pq = coalesce(input, output)
 | rex field=pq "(?&lt;type&gt;[^:]+):(?&lt;technology&gt;[^:]+):(?&lt;pq&gt;.*)"
 | eval type = if(type == "input", "Source", "Destination")
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| `cribl_stream_assets_lookup(environment instance_type)`
 | table technology type pq host environment instance_type group
 | rename technology AS Technology type AS Type pq AS PQ host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group"
 | `get_environment_hosts(Environment)`</query>
