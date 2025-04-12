@@ -521,7 +521,7 @@
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sparkline(max(health)) AS sparkline BY host input group
 | rex field=input "(?&lt;technology&gt;[^:]+):(?&lt;input&gt;.*)"
-| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
+| `cribl_stream_assets_lookup(environment instance_type)`
 | table technology input host environment instance_type group sparkline
 | rename technology AS Technology input AS Source host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" sparkline AS "Health Sparkline"
 | `get_environment_hosts(Environment)`</query>
@@ -584,7 +584,7 @@
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sparkline(max(health)) AS sparkline BY output host group
 | rex field=output "(?&lt;technology&gt;[^:]+):(?&lt;output&gt;.*)"
-| `cribl_stream_assets_lookup(environment instance_type)`
+| lookup cribl_stream_assets host OUTPUTNEW environment instance_type
 | table technology output host environment instance_type group sparkline
 | rename technology AS Technology output AS Destination host AS Host environment AS Environment instance_type AS "Instance Type" group AS "Worker Group" sparkline AS "Health Sparkline"
 | `get_environment_hosts(Environment)`</query>
