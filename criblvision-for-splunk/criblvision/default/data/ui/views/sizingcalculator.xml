@@ -11,7 +11,7 @@
   </search>
   <search id="throughput_base_search">
     <query>| mstats sum(`set_cribl_metrics_prefix(total.*_bytes)`) AS *_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value` span=1d
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | timechart span=1d sum(*_bytes) AS *_bytes
 | eval total = in_bytes + out_bytes, `process_bytes(total, "$bytes_unit_abbreviated_label$")`</query>
@@ -326,7 +326,7 @@
       <table>
         <search>
           <query>| mstats max(`set_cribl_metrics_prefix(system.cpu_perc)`) AS cpuPerc WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $worker_group_metric_pre_filter$ BY host group cribl_wp fillnull_value=`set_unknown_worker_group_value` span=1d
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats max(cpuPerc) AS cpuPerc BY _time cribl_wp
 | eval percentage=if(cpuPerc &gt;= 90, 1, 0)

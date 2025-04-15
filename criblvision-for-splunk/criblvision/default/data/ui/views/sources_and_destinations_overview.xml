@@ -188,7 +188,7 @@
         <title>Total $bytes_unit_label$ $type_printable$</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sum($type$_bytes) AS $type$_bytes
 | eval `process_bytes($type$_bytes, "$bytes_unit_abbreviated_label$")`</query>
@@ -207,7 +207,7 @@
         <title>Total Events $type_printable$</title>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) AS $type$_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ BY host group fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | stats sum($type$_events) AS $type$_events</query>
           <earliest>$time.earliest$</earliest>
@@ -225,7 +225,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_bytes)`) AS $type$_bytes WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY host group $type$put fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | eval `process_bytes($type$_bytes, "$bytes_unit_abbreviated_label$")`
 | timechart sum($type$_bytes) BY $type$put</query>
@@ -248,7 +248,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats sum(`set_cribl_metrics_prefix(total.$type$_events)`) AS $type$_events WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY host group $type$put fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | timechart sum($type$_events) BY $type$put</query>
           <earliest>$time.earliest$</earliest>
@@ -285,7 +285,7 @@
         <search base="annotation_search" type="annotation"></search>
         <search>
           <query>| mstats max(`set_cribl_metrics_prefix(health.$type$puts)`) AS $type$put_health WHERE `set_cribl_metrics_index` $environment_filter$ $host_filter$ $type$put="$full_selected$" $worker_group_metric_pre_filter$ span=auto BY host group $type$put fillnull_value=`set_unknown_worker_group_value`
-| lookup cribl_stream_assets host OUTPUTNEW instance_type worker_group
+| `cribl_stream_assets_lookup(instance_type worker_group)`
 | search $worker_group_event_filter$ $worker_group_metric_filter$
 | timechart max($type$put_health) BY $type$put</query>
           <earliest>$time.earliest$</earliest>
