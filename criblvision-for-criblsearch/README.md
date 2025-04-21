@@ -1,4 +1,4 @@
-# Caution: These dashboards are not current. The latest version of these dashboards can be found in the CriblVision Search pack here: https://packs.cribl.io/packs/cribl-criblvision-for-stream
+# Caution: These dashboards are not current. The latest version of these dashboards can be found in the CriblVision Search pack here: https://packs.cribl.io/packs/cribl-criblvision-for-stream There is no need to follow the instructions in this readme in order to use the search pack. 
 
 Please use the search pack instead of these dashboards. 
 
