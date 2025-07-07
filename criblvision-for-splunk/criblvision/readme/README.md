@@ -40,12 +40,6 @@ This app and its associated dashboards rely on a few components which you must c
 
 *Note:* On your initial entry into the application after it has been installed, you should be prompted to navigate to the setup page which will guide you through configuring the required macros. Once the `Save Configuration` button is pressed, the macro definitions will be saved, and automatic lookups will be created off the back of the provided sourcetype(s) to automatically enrich events with the Worker Group of the Worker Node from which that event came. If you are wanting to manually configure these (or you run into errors executing the setup page), the following instructions can be followed. You may experience errors when deploying this app within a Search Head Cluster or when changing the name of the app from `criblvision` to something else. For information on deploying to a Search Head Cluster, refer to Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/9.2.0/DistSearch/PropagateSHCconfigurationchanges#Deploy_a_configuration_bundle).
 
-#### Logs and Metrics
-
-Cribl internal logs and metrics must be enabled and forwarded to Splunk in order for all of the panels to populate with events. Refer to the documentation [here](https://docs.cribl.io/stream/sources-cribl-internal/#configuring-cribl-internal-logsmetrics-as-a-datasource) for instructions on configuring this Source. Be sure to configure a corresponding index and sourcetype field for logs and a corresponding index for metrics.
-
-It is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk from Cribl Stream. If using the Splunk 2 Splunk (S2S) protocol Destinations, you can view the Splunk S2S Troubleshooting dashboard to troubleshoot issues with potential dropped events or events experiencing subsecond timestamp issues.
-
 #### Macros
 
 This app ships with 4 macros which must be edited in accordance with your Splunk index naming schema. For more info on configuring macros, reference Splunk's documentation [here](https://docs.splunk.com/Documentation/SplunkCloud/9.0.2303/Knowledge/Definesearchmacros).
@@ -76,12 +70,6 @@ definition = cribl.logstream.$metric_name$
 [set_cribl_environment_field_name]
 definition = env
 ```
-
-#### Leader Logs
-
-Some of the view in this app will require Leader logs to be forwarded to Splunk. In distributed Cribl Stream environments, Leader logs are currently *NOT* sent via our internal Source. You will have to install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the filename modal to `/opt/cribl/log/*`. For more information on how to deploy a Cribl Edge Node, please refer to our documentation [here](https://docs.cribl.io/edge/deploy-planning).
-
-If sending directly to Splunk from the Edge Node, it is recommended to use the HTTP Event Collector (HEC) protocol to forward events to Splunk.
 
 #### Populate Cribl Stream Worker Lookup Report
 
@@ -120,30 +108,6 @@ If configuring manually, update the `$SPLUNK_HOME/etc/apps/criblvision/local/app
 [install]
 is_configured = true
 ```
-
-### Alerts
-
-This app ships with a number of disabled alerts that can be used to alert when issues in your Cribl Stream environment arise. These alerts take advantage of macros that can be utilized to tweak the alert triggers to better reflect your Cribl Stream environment. The alerts all come with default Splunk's default scheduling configured and no alert actions. The scheduling should be configured for each alert you plan to enable. For more on scheduling alerts, please reference Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/latest/Alert/Definescheduledalerts). Fore more on configuring alert actions, please reference Splunk's documentation [here](https://docs.splunk.com/Documentation/Splunk/9.2.0/Alert/Setupalertactions).
-
-|Macro Name|Related Alert(s)|Description|
-|----------|----------------|-----------|
-|set_alert_ignored_destinations|No Output From Destinations, Unhealthy Destinations|A list of Destinations that should not trigger alerts|
-|set_alert_ignored_sources|No Input From Sources, Unhealthy Sources|A list of Sources that should not trigger alerts|
-|set_alert_lower_limit_unhealthy_memory_usage_mb|RSS Memory Usage Within Threshold|The lower limit of the threshold when alerts for memory usage (in MB) should trigger|
-|set_alert_threshold_backpressure|Destinations Experiencing Backpressure|The threshold of backpressure messages received (for a Worker Group + Worker) before the alert should trigger|
-|set_alert_threshold_blocked_destinations|Blocked Destinations|The threshold of blocked Destination messages received (for a Worker Group + Destination) before the alert should trigger|
-|set_alert_threshold_cluster_communication_errors|Blocked Destinations|The threshold of cluster communcation error messages received (for a Worker Group + Worker) before the alert should trigger|
-|set_alert_threshold_no_destination_thruput_pct|No Output From Destinations|The threshold of times a Destination has not sent any events (for a Worker Group + Destination) before the alert should trigger|
-|set_alert_threshold_no_source_thruput_pct|No Input From Sources|The threshold of times a Source has not received any events (for a Worker Group + Source) before the alert should trigger|
-|set_alert_threshold_unhealthy_cpu_usage_pct|CPU Usage Over Threshold|The threshold of times a host has reported above the unhealthy CPU percentage threshold (for a Worker Group + Worker) before the alert should trigger|
-|set_alert_threshold_unhealthy_destinations_pct|Unhealthy Destinations|The threshold of times a Destination has reported as being unhealthy (for a Worker Group + Destination) before the alert should trigger|
-|set_alert_threshold_unhealthy_memory_usage_mb_pct|RSS Memory Usage Within Threshold|The threshold of times a host has reported memory usage within the unhealthy threshold (for a Worker Group + host) before the alert should trigger|
-|set_alert_threshold_unhealthy_sources_pct|Unhealthy Sources|The threshold of times a Source has reported as being unhealthy (for a Worker Group + Source) before the alert should trigger|
-|set_alert_threshold_worker_process_restarts|Worker Proces Restarted|The threshold of times a host has reported Worker Process restarts (for a Worker Group + host) before the alert should trigger|
-|set_alert_unhealthy_cpu_usage_pct|CPU Usage Over Threshold|The threshold at which a host's CPU usage is deemed to be unhealthy|
-|set_alert_upper_limit_unhealthy_memory_usage_mb|RSS Memory Usage Within Threshold|The upper limit of the threshold when alerts for memory usage (in MB) should trigger|
-
-</table>
 
 ### The CriblVision for Splunk Pack
 
