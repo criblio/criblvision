@@ -18,6 +18,16 @@ Without a clear understanding of the circumstances surrounding an issue, it beco
 
 Answers to the above questions, and many others, will help narrow down the scope of the investigation, enabling you and your team to focus their efforts on the relevant areas. Additionally, contexts aids in replicating the problem, as it enables Support Engineers to understand the exact conditions under which the issue occurs. Knowledge of the environment, along with the context of use-cases and integrations, and ensure that the troubleshooting process is efficient and accurate.
 
+### Configuration
+
+ * [Configuring CriblVision for Splunk App](https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/configuring_criblvision.md)
+ * [Cribl Stream Assets Lookup](https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/cribl_stream_assets_lookup.md)
+ * [CriblVision for Splunk Alerts](https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/criblvision_alerts.md)
+ * [CriblVision for Splunk Pack](https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/criblvision_for_splunk_pack.md)
+ * [Getting Data In](https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md)
+ * [Troubleshooting](https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/troubleshooting.md)
+ * [Upgrading CriblVision for Splunk App](https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/upgrading_criblvision.md)
+
 ## About
 
 * **Author:** Johan Woger
