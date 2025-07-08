@@ -178,6 +178,17 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard displays an overview of log based statistics for all of your configured Sources and Destinations. It shows a breakdown of the bytes/event throughputs and the health of the selected Sources/Destinations, which is useful for getting a high level overview of the health of your Sources/Destinations. For a more detailed view, the button at the bottom of this dashboard will drilldown to the <a href="/app/criblvision/log_analytics">Log Analytics dashboard</a> and automatically filter on the Sources/Destinations that are currently selected.</p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Metrics - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

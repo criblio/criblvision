@@ -99,6 +99,21 @@
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard will show you some basic license usage stats based off Cribl Stream metrics. Please note that the bottom two panels related to Splunk license usage will not populate if your Search Head(s) don't have access to Splunk's <code>license_usage.log</code>
           </p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Metrics - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+             <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Splunk Internal Logs</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

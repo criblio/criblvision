@@ -144,6 +144,21 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard shows persistent queue (PQ) statistics. It is intended to assess the number of Destinations with PQ engaged, current PQ size, and PQ size by Destination, as well as a list of Destinations with PQ engaged. It will also show a panel with persistent queue log messages to aid in troubleshooting. In general, if PQ size is increasing over time, it means that your Destination is not able to ingest data fast enough and is resulting in the Worker Nodes having to queue up data. If you discover this to be the issue, please assess the health of your Destination and/or engage that vendor’s support team to help troubleshoot that Destination.</p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Logs - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Metrics - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

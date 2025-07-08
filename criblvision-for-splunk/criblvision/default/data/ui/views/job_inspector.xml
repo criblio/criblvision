@@ -119,6 +119,17 @@
           <p>
             <b>For more information regarding Collector Jobs and Scheduling / Running, please visit our Documentation:</b> <a href="https://docs.cribl.io/stream/collectors-schedule-run" target="_blank">Scheduling and Running</a>
           </p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Collector Job Results - Leader</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

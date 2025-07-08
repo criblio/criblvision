@@ -178,6 +178,21 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashobard provides an overview into Splunk S2S Destinations configured in Cribl Stream. It shows a breakdown of connectivity issues between Cribl Stream instances and Splunk, as well as issues with subsecond timestamp processing. This can be useful in diagnosing issues between Cribl Stream / Splunk communications with the S2S protocol. For a more detailed view, the button at the bottom of this dashboard will drilldown to the <a href="/app/criblvision/log_analytics">Log Analytics dashboard</a> and automatically filter on the Splunk Destinations that are currently selected.</p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Logs - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+             <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Splunk Internal Logs</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

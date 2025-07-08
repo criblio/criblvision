@@ -131,7 +131,21 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard is designed to show a breakdown of commits and deploys from your Leader Node(s). You can select to have files created, modified, or deleted shown via the File Changes input. A timeline of the commits/deploys over the selected time range is provided. The summary table provides context for each commit. Clicking on a created/modified/deleted file will drilldown into the the configuration updates made to that file in that commit. This is useful to audit what recent configuration changes might have been deployed before an issue started and what those changes were.</p>
-          <p><b>NB:</b> The CriblVision for Splunk Pack v1.1.1+ is required with the Git Commit Logs Collector Job configured to make full use of this dashboard.</p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Leader Logs</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Git Commit Logs</td>
+              <td style="padding: 5px;">No</td>
+            </tr>
+          </table>
+          <p><b>NB:</b> The CriblVision for Splunk Pack v1.1.1+ is required with the Git Commit Logs Collector Job configured to make full use of this dashboard. See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>
