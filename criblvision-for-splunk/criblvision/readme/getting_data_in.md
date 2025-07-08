@@ -22,7 +22,11 @@ Some of the views in this app will require Leader logs to be forwarded to Splunk
 
 ### Cribl Edge Node
 
-You can install a Cribl Edge Node on your Leader Node and configure local log collection via a file monitor input. Configure the file monitor input to collect logs by configuring the search path to `<cribl-root-dir>/log/*` (where `<cribl-root-dir>` is what `$CRIBL_HOME` on your Leader Node evaluates to), depth to `0`, and setting the following filenames in the allowlist:
+You can install a Cribl Edge Node on your Leader Node and configure local log collection via file monitor inputs.
+
+#### Leader Logs
+
+Configure the file monitor input to collect logs by configuring the search path to `<cribl-root-dir>/log` (where `<cribl-root-dir>` is what `$CRIBL_HOME` on your Leader Node evaluates to), depth to `0`, and setting the following filenames in the allowlist:
  * `access.log`
  * `audit.log`
  * `cribl.log`
@@ -63,6 +67,37 @@ The following template can be used as a base configuration:
     }
   ],
   "depth": 0
+}
+```
+
+#### Collector Job Logs
+
+Configure the file monitor input to collect Collector Job logs by configuring the search path to `<cribl-root-dir>/state/jobs` (where `<cribl-root-dir>` is what `$CRIBL_HOME` on your Leader Node evaluates to), and setting the following filenames in the allowlist:
+ * `*.log`
+
+The following template can be used as a base configuration:
+
+```json
+{
+  "id": "collector_job_logs",
+  "disabled": false,
+  "mode": "manual",
+  "interval": 10,
+  "filenames": [
+    "*.log",
+  ],
+  "type": "file",
+  "path": "<cribl-root-dir>/state/jobs",
+  "metadata": [
+    {
+      "name": "index",
+      "value": "'cribl_logs'"
+    },
+    {
+      "name": "sourcetype",
+      "value": "'Cribl:InternalLogs'"
+    }
+  ]
 }
 ```
 
