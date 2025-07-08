@@ -178,6 +178,7 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashobard provides an overview into Splunk S2S Destinations configured in Cribl Stream. It shows a breakdown of connectivity issues between Cribl Stream instances and Splunk, as well as issues with subsecond timestamp processing. This can be useful in diagnosing issues between Cribl Stream / Splunk communications with the S2S protocol. For a more detailed view, the button at the bottom of this dashboard will drilldown to the <a href="/app/criblvision/log_analytics">Log Analytics dashboard</a> and automatically filter on the Splunk Destinations that are currently selected.</p>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

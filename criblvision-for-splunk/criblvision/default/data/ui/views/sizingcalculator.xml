@@ -194,6 +194,7 @@
           <p>
             <i>Please note that this doesn't take any Data Processing Requirements into consideration.</i>
           </p>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

@@ -113,6 +113,7 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This is intended as a general use dashboard to help you troubleshoot any issues you may be having with jobs. You can use the dropdown to filter logs based on Worker Group, job name, and job ID. Improvements to our job logging will be made in future releases which will result in more useful job metrics. For now, we are providing you with just a list of logs.</p>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
           <p>
             <b>For more information regarding Collector Jobs and the Stream Job Inspector, please visit our Documentation:</b> <a href="https://docs.cribl.io/stream/collectors/" target="_blank">Collector Sources</a>
           </p>

@@ -153,8 +153,7 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This view is designed to provide an "at a glance" overview of the health status of the selected Worker Group(s), Single instances, or individual Nodes (via "Worker Group / Single" and "Host" dropdowns). It displays key indicators for Sources and Destinations along with CPU and memory usage for the selected host. Click on any of the high-level panels to drill down further.</p>
-          <p>
-            <b>Note:</b> This dashboard requires both logs and metrics for every panel to populate.</p>
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>
     </panel>

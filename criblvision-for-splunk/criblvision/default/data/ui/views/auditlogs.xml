@@ -68,8 +68,7 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This view will allow you to audit certain actions performed by users on the Leader. Any updates to configuration changes will show up as events in the resulting panel.</p>
-          <p>
-            <b>Note:</b> Leader API log collection via edge must be configured in order for this view to populate.</p>  
+          <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>  
         </div>
       </html>
     </panel>
