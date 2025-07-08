@@ -142,6 +142,16 @@
           <p>This dashboard displays a series of panels iwth searches baseed off our minutely log stats. These stats are logged every minute by the API and Worker processes. Displayed on this page are CPU and memory usage, active vs blocked event processors (EP), event stats, and persistent queue (PQ) stats.</p>
           <p>
             <b>Note:</b> The PQ stats on this dashboard cannot be split by <code>output</code> because our minutely stats currently do not include with Destination these PQ events are associated with. For more detailed info on PQ, visit the <a href="/app/criblvision/persistent_queue_analytics">Persistent Queue Analytics dashboard</a>.</p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Logs - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
           <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>

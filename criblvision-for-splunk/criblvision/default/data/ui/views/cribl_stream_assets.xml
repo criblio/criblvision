@@ -95,6 +95,24 @@
           <p><b>Shutdown:</b> The instance has been shut down and is no longer operational</p>
           <p><b>Inactive:</b> The instance has been manually moved to be shown as inactive</p>
           <p>An instance can be updated to be active/inactive by clicking the hyperlink in the <code>Action</code> column of the <b>Cribl Stream Asset Overview</b> table. It is recommneded to update instances to be inactive if an instance has been intentionally taken offline and is in a missing/shutdown state. Instances that are removed from the assets lookup will no longer appear in dashboard/alert results. Inactive instances are filtered out by default. This can be toggled with the Show Inactive filter. Clicking on any other cells than <code>Action</code> will drill down to the <a href="/app/criblvision/log_viewer">Log Viewer dashboard</a> to view the logs for that particular instance.</p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Logs - Leader/Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Metrics - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Cribl Instance/Worker Details</td>
+              <td style="padding: 5px;">No</td>
+            </tr>
+          </table>
           <p>Not seeing data, or instance information is incorrect? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/cribl_stream_assets_lookup.md" target="_blank">Cribl Stream Assets Lookup</a> documentation for troubleshooting assistance.</p>
         </div>
       </html>

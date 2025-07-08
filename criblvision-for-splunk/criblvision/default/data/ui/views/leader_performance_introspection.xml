@@ -101,6 +101,16 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard is intended to assess the overall health of the Leader’s API process. It displays CPU and memory usage for the Leader Node. It also shows the CPU usage of just the Leader’s API process and API call response times. The API calls can be split by URL or other fields. This is useful to determine which calls are taking the longest. In general, once API calls start taking longer than 1 second, it results in degraded UI performance and potentially impacts other tasks that the Leader has to perform.</p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Leader Logs</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
           <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>

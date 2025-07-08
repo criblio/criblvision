@@ -194,6 +194,20 @@
           <p>
             <i>Please note that this doesn't take any Data Processing Requirements into consideration.</i>
           </p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Logs - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">No</td>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Metrics - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
           <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
         </div>
       </html>

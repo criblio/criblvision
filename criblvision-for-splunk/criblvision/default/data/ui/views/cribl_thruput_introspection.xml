@@ -166,6 +166,16 @@
       <html>
         <div style="font-family: Arial; font-size: 11pt; list-style-type: square; text-align: center;">
           <p>This dashboard is intended to provide insight into thruput metrics from reported metrics events. Metrics on this dashboard are for your Sources and Destinations. For Destinations, there are two panels which show total events and bytes out by Destination. You can select all or just specific Destinations. The Sources panel will display events and total bytes in. However this dashboard has a few options to help troubleshoot issues specific to uneven distribution of events received by Worker Process which can be an indication of TCP pinning or other issues with the origin sending these events. When selecting the split by of Worker Process, a new panel showing CPU by Worker Process appears underneath the total events in panel. We recommend also setting the stack mode to 100% stacked. This mode will allow you to easily identify if there is one Worker Process that is accepting a significantly higher amount of events and also consuming more CPU than other Workers. A single Worker Process with a high event in count and 100% CPU usage is usually indicative of TCP pinning. </p>
+          <table style="border: 2px solid; margin: 0px auto; margin-bottom: 10px;">
+            <tr>
+              <th style="border: 1px solid; padding: 5px;">Data Source(s)</th>
+              <th style="padding: 5px;">Required</th>
+            </tr>
+            <tr style="border: 1px solid;">
+              <td style="border: 1px solid; padding: 5px;">Internal Metrics - Worker/Single/Edge Nodes</td>
+              <td style="padding: 5px;">Yes</td>
+            </tr>
+          </table>
           <p>Not seeing data? See the <a href="https://github.com/criblio/criblvision/blob/main/criblvision-for-splunk/criblvision/readme/getting_data_in.md" target="_blank">Getting Data In</a> documentation for more information.</p>
           <p>
             <b>Note:</b> The <code>CPU Percentage by Worker Process</code> panel search only populates when the Source split by input is set to <code>Worker Process</code>
